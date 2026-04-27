@@ -720,7 +720,35 @@ input[type=file]{display:none;}
 }
 .records-count-note strong{color:var(--text);font-weight:700;}
 
-/* ── 履歴ピッカー ── */
+/* ── EXPORT GROUP ── */
+.export-group{
+  background:var(--bg);border:1px solid var(--line-thin);
+  margin-top:8px;
+}
+.export-group-label{
+  font-size:10px;font-weight:500;color:var(--text3);
+  font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase;
+  padding:7px 12px;border-bottom:1px solid var(--line-thin);
+  background:var(--surface2);
+}
+.export-group-btns{display:flex;flex-direction:column;}
+.export-item-btn{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;background:var(--surface);
+  border:none;border-bottom:1px solid var(--line-thin);
+  cursor:pointer;text-align:left;width:100%;
+  font-family:'DM Sans',sans-serif;
+  transition:background .12s;
+}
+.export-item-btn:last-child{border-bottom:none;}
+.export-item-btn:active{background:var(--surface2);}
+.export-item-num{
+  font-size:13px;font-weight:700;color:var(--text3);
+  font-family:'DM Mono',monospace;flex-shrink:0;width:20px;
+}
+.export-item-text{display:flex;flex-direction:column;gap:1px;flex:1;}
+.export-item-name{font-size:13px;font-weight:500;color:var(--text);}
+.export-item-desc{font-size:11px;color:var(--text3);}
 .hist-modal-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:997;
   display:none;align-items:center;justify-content:center;
@@ -1056,6 +1084,51 @@ input[type=file]{display:none;}
 
 <!-- ===== 出力 ===== -->
 <div id="page-export" class="page">
+  <div class="card">
+    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>CSV出力</div>
+    <div class="form-row" style="margin-bottom:10px">
+      <label>病院で絞り込む（任意）</label>
+      <select id="export-hospital"><option value="">すべての病院</option></select>
+    </div>
+    <div class="export-group" style="margin-bottom:10px">
+      <div class="export-group-label">個別出力</div>
+      <div class="export-group-btns">
+        <button class="export-item-btn" onclick="exportDetailCSV()">
+          <span class="export-item-num">①</span>
+          <span class="export-item-text">
+            <span class="export-item-name">明細</span>
+            <span class="export-item-desc">ベッド1台ごとの詳細</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <button class="export-item-btn" onclick="exportSummaryCSV()">
+          <span class="export-item-num">②</span>
+          <span class="export-item-text">
+            <span class="export-item-name">集計</span>
+            <span class="export-item-desc">病院・病棟・型番・年式別</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <button class="export-item-btn" onclick="exportNgListCSV()">
+          <span class="export-item-num">③</span>
+          <span class="export-item-text">
+            <span class="export-item-name">要対応リスト</span>
+            <span class="export-item-desc">要交換ベッドのみ抽出</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="btn btn-success" onclick="exportAllCSV()" style="display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      全データを1ファイルでDL
+    </button>
+  </div>
+</div>
+
+<!-- ===== 基本情報 ===== -->
+<div id="page-master" class="page">
+  <!-- 保存容量 -->
   <div class="storage-meter">
     <div class="storage-top">
       <span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v6h10V2"/><path d="M7 13h10"/><path d="M7 17h6"/></svg>保存容量</span>
@@ -1064,78 +1137,6 @@ input[type=file]{display:none;}
     <div class="storage-bar"><div id="storageBar" style="width:0%"></div></div>
     <div class="storage-note" id="storageNote"></div>
   </div>
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>CSV出力</div>
-    <p style="font-size:13px;color:var(--text);margin-bottom:12px;line-height:1.7;font-weight:500">
-      明細・集計・要対応リストを<strong>1つのCSVファイル</strong>にまとめてダウンロードします。<br>
-      個別に出力したい場合は下のボタンをご利用ください。
-    </p>
-    <div class="form-row" style="margin-bottom:12px">
-      <label>病院で絞り込む（任意）</label>
-      <select id="export-hospital">
-        <option value="">すべての病院</option>
-      </select>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn btn-success" onclick="exportAllCSV()" style="display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        全データを1ファイルでDL
-      </button>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-        <button class="btn btn-outline" style="font-size:11px;padding:8px 4px" onclick="exportDetailCSV()">①明細</button>
-        <button class="btn btn-outline" style="font-size:11px;padding:8px 4px" onclick="exportSummaryCSV()">②集計</button>
-        <button class="btn btn-outline" style="font-size:11px;padding:8px 4px" onclick="exportNgListCSV()">③要対応</button>
-      </div>
-    </div>
-    <div style="margin-top:12px;font-size:11px;color:var(--text2);line-height:1.8">
-      ① 明細：ベッド1台ごとの詳細データ<br>
-      ② 集計：病院別・病棟別・型番別・年式別・位置別<br>
-      ③ 要対応：要交換ベッドのみ抽出した発注用リスト
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>メール送信</div>
-    <p style="font-size:13px;color:var(--text);margin-bottom:12px;line-height:1.7;font-weight:500">
-      要交換ベッドの一覧をメールで送信します。<br>
-      病院を選んで絞り込むこともできます。
-    </p>
-    <div class="form-row" style="margin-bottom:12px">
-      <label>病院で絞り込む（任意）</label>
-      <select id="email-hospital">
-        <option value="">すべての病院</option>
-      </select>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn btn-primary" onclick="sendEmailReport('ng')" style="display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        要対応リストをメール送信
-      </button>
-      <button class="btn btn-outline" onclick="sendEmailReport('all')" style="display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        全記録の概要をメール送信
-      </button>
-    </div>
-  </div>
-  <div class="card">
-    <p style="font-size:13px;color:var(--text);margin-bottom:12px;line-height:1.7;font-weight:500">
-      指定期間より古い記録を関連写真ごと一括削除します。<br>
-      <strong>事前にCSV出力しておくことを推奨</strong>します。
-    </p>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button class="btn btn-outline btn-sm" style="flex:1" onclick="cleanupOld(30)">1ヶ月より前</button>
-      <button class="btn btn-outline btn-sm" style="flex:1" onclick="cleanupOld(90)">3ヶ月より前</button>
-      <button class="btn btn-outline btn-sm" style="flex:1" onclick="cleanupOld(180)">6ヶ月より前</button>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title" style="color:var(--ng)"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>データ削除</div>
-    <p style="font-size:13px;color:var(--text);margin-bottom:12px;font-weight:500">すべての記録を削除します。元に戻せません。</p>
-    <button class="btn btn-danger" onclick="clearAll()">全データを削除</button>
-  </div>
-</div>
-
-<!-- ===== 基本情報 ===== -->
-<div id="page-master" class="page">
   <div class="card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M10 21v-5h4v5"/></svg>病院名リスト</div>
     <div id="hospitalsEditor"></div>
@@ -1164,6 +1165,45 @@ input[type=file]{display:none;}
   <div class="card info-card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>注意</div>
     <p>部位を削除しても既存の記録は残ります。<br>CSV出力の列は出力時点の部位リストに基づきます。</p>
+  </div>
+
+  <!-- 古い記録削除 -->
+  <div class="card">
+    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>古い記録の一括削除</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;">事前にCSV出力しておくことを推奨します。</p>
+    <div class="export-group">
+      <div class="export-group-label">削除する期間</div>
+      <div class="export-group-btns">
+        <button class="export-item-btn" onclick="cleanupOld(30)">
+          <span class="export-item-text">
+            <span class="export-item-name">1ヶ月より前</span>
+            <span class="export-item-desc">1ヶ月以前の記録を削除</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+        <button class="export-item-btn" onclick="cleanupOld(90)">
+          <span class="export-item-text">
+            <span class="export-item-name">3ヶ月より前</span>
+            <span class="export-item-desc">3ヶ月以前の記録を削除</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+        <button class="export-item-btn" onclick="cleanupOld(180)">
+          <span class="export-item-text">
+            <span class="export-item-name">6ヶ月より前</span>
+            <span class="export-item-desc">6ヶ月以前の記録を削除</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全データ削除 -->
+  <div class="card">
+    <div class="card-title" style="color:var(--ng)"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>データ削除</div>
+    <p style="font-size:12px;color:var(--text);margin-bottom:10px;font-weight:500">すべての記録を削除します。元に戻せません。</p>
+    <button class="btn btn-danger" onclick="clearAll()">全データを削除</button>
   </div>
 </div>
 
@@ -1577,7 +1617,7 @@ function switchTab(name){
   footer.classList.remove('kb-hide');
   if(name==='list')   renderList();
   if(name==='summary') renderSummary();
-  if(name==='export')  { renderStorageMeter(); renderHospitalOptions(); }  if(name==='master'){ renderHospitalsEditor(); renderModelsEditor(); renderPartsEditor(); }
+  if(name==='export')  { renderHospitalOptions(); }  if(name==='master'){ renderHospitalsEditor(); renderModelsEditor(); renderPartsEditor(); renderStorageMeter(); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2836,7 +2876,7 @@ function parseRecordDate(str){
 // HOSPITAL / MODEL / PARTS
 // ═══════════════════════════════════════════════════════
 function renderHospitalOptions(){
-  ['inp-hospital','filter-hospital','export-hospital','email-hospital'].forEach(id=>{
+  ['inp-hospital','filter-hospital','export-hospital'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     const val=el.value;
     el.innerHTML=(id==='filter-hospital'?'<option value="">すべての病院</option>':'<option value="">選択してください</option>')
