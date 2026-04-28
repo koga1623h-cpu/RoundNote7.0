@@ -206,57 +206,126 @@ select{
 }
 .bed-frame svg{width:100%;height:100%;display:block;}
 
+/* ── CASTER CELL ── */
+.caster-cell{position:absolute;width:64px;}
+.caster-cell.head-right{top:10px;left:10px;}
+.caster-cell.head-left {top:10px;right:10px;}
+.caster-cell.foot-right{bottom:10px;left:10px;}
+.caster-cell.foot-left {bottom:10px;right:10px;}
+
 /* ── CASTER BUTTONS ── */
 .caster-btn{
-  position:absolute;
-  width:60px;height:60px;
-  border-radius:0;
+  width:64px;height:54px;
   border:1px solid var(--line);
   background:var(--surface);
+  border-radius:0;
   cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;
+  gap:3px;
   transition:all .15s;
   -webkit-appearance:none;
   font-family:inherit;
+  position:relative;z-index:2;
+  -webkit-tap-highlight-color:transparent;
 }
-.caster-btn .c-label{font-size:11px;font-weight:700;color:#ffffff;transition:color .15s;letter-spacing:.02em;text-align:center;line-height:1.2;}
-
-/* 位置（患者視点：頭が上、画面左=患者の右、画面右=患者の左） */
-.caster-btn.head-right{ top:10px;   left:10px; }
-.caster-btn.head-left { top:10px;   right:10px; }
-.caster-btn.foot-right{ bottom:10px;left:10px; }
-.caster-btn.foot-left { bottom:10px;right:10px; }
-
-/* 状態色 */
-.caster-btn.s-active .c-label{color:#fff;}
-
+.caster-btn .c-dot{width:7px;height:7px;border-radius:50%;background:var(--line);}
+.caster-btn .c-label{font-size:10px;font-weight:700;color:var(--text);transition:color .15s;letter-spacing:.02em;text-align:center;line-height:1.2;}
 .caster-btn:active{transform:scale(.93);}
 
-/* ── キャスター詳細 ── */
-.detail-row{
-  display:flex;align-items:center;gap:10px;
-  padding:8px 12px;
-  background:var(--surface);
-  border-left:2px solid var(--line-thin);
-  margin-bottom:4px;
+/* 状態色 */
+.caster-btn.s-正常  {background:var(--ok-bg);  border-color:var(--ok);}
+.caster-btn.s-正常   .c-dot{background:var(--ok);}
+.caster-btn.s-正常   .c-label{color:var(--ok);}
+.caster-btn.s-要注意{background:var(--warn-bg);border-color:var(--warn);}
+.caster-btn.s-要注意 .c-dot{background:var(--warn);}
+.caster-btn.s-要注意 .c-label{color:var(--warn);}
+.caster-btn.s-要交換{background:var(--ng-bg);  border-color:var(--ng);}
+.caster-btn.s-要交換 .c-dot{background:var(--ng);}
+.caster-btn.s-要交換 .c-label{color:var(--ng);}
+.caster-btn.s-交換済み{background:var(--done-bg);border-color:var(--done);}
+.caster-btn.s-交換済み .c-dot{background:var(--done);}
+.caster-btn.s-交換済み .c-label{color:var(--done);}
+
+/* ── キャスター詳細一括パネル ── */
+.caster-bulk-toggle{
+  width:100%;margin-top:10px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px;border:1px dashed var(--line-thin);background:transparent;
+  font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;
+  font-family:inherit;transition:all .15s;letter-spacing:.04em;
+  -webkit-tap-highlight-color:transparent;
 }
-.detail-pos{
-  font-size:10px;font-weight:500;color:var(--text3);
-  min-width:52px;flex-shrink:0;
-  font-family:'DM Mono',monospace;letter-spacing:.04em;
-  text-transform:uppercase;
+.caster-bulk-toggle:active{background:var(--surface2);}
+.caster-bulk-toggle.has-data{border-color:var(--accent);color:var(--accent);}
+.caster-bulk-toggle .bulk-arrow{transition:transform .2s;font-size:10px;}
+.caster-bulk-toggle.open .bulk-arrow{transform:rotate(180deg);}
+
+.caster-bulk-panel{
+  overflow:hidden;max-height:0;opacity:0;
+  transition:max-height .25s cubic-bezier(0.4,0,0.2,1),opacity .2s;
+  margin-top:0;
 }
-.detail-chips{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
-.detail-chip{
-  padding:3px 10px;font-size:11px;font-weight:400;
+.caster-bulk-panel.open{max-height:300px;opacity:1;}
+
+.bulk-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  padding:10px 0 4px;
+}
+.bulk-cell{
+  background:var(--surface);border:1px solid var(--line-thin);padding:8px 10px;
+}
+.bulk-cell-label{
+  font-size:10px;font-weight:700;color:var(--text2);
+  margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:.06em;
+  display:flex;align-items:center;gap:5px;
+}
+.bulk-cell-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--line);flex-shrink:0;
+}
+.bulk-cell-dot.s-正常   {background:var(--ok);}
+.bulk-cell-dot.s-要注意{background:var(--warn);}
+.bulk-cell-dot.s-要交換{background:var(--ng);}
+.bulk-cell-dot.s-交換済み{background:var(--done);}
+.bulk-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.bulk-chip{
+  font-size:10px;font-weight:700;padding:3px 8px;
   border:1px solid var(--line-thin);background:transparent;
   color:var(--text2);cursor:pointer;transition:all .12s;
-  font-family:'DM Mono',monospace;letter-spacing:.02em;
+  font-family:inherit;-webkit-appearance:none;
 }
-.detail-chip:active{background:var(--surface2);}
-.detail-chip.sel-warn{background:var(--warn);border-color:var(--warn);color:#fff;}
-.detail-chip.sel-ng  {background:var(--ng);  border-color:var(--ng);  color:#fff;}
+.bulk-chip.sel-warn{background:var(--warn);border-color:var(--warn);color:#fff;}
+.bulk-chip.sel-ng  {background:var(--ng);  border-color:var(--ng);  color:#fff;}
+.bulk-chip:active{opacity:.75;}
+.bulk-no-detail{font-size:10px;color:var(--text3);padding:2px 0;}
+
+/* モード切替トグル */
+.bulk-mode-bar{
+  display:flex;gap:0;margin-bottom:10px;
+  border:1px solid var(--line);overflow:hidden;
+}
+.bulk-mode-btn{
+  flex:1;padding:7px 4px;font-size:11px;font-weight:700;
+  background:var(--surface);color:var(--text2);
+  border:none;cursor:pointer;font-family:inherit;
+  transition:all .12s;letter-spacing:.02em;
+  -webkit-tap-highlight-color:transparent;
+}
+.bulk-mode-btn.active{background:var(--text);color:#fff;}
+.bulk-mode-btn:not(.active):active{background:var(--surface2);}
+
+/* 一括チップエリア */
+.bulk-all-area{padding:4px 0 6px;}
+.bulk-all-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.bulk-all-chip{
+  font-size:12px;font-weight:700;padding:7px 14px;
+  border:1px solid var(--line-thin);background:var(--surface);
+  color:var(--text2);cursor:pointer;transition:all .12s;
+  font-family:inherit;-webkit-appearance:none;
+}
+.bulk-all-chip.sel-warn{background:var(--warn);border-color:var(--warn);color:#fff;}
+.bulk-all-chip.sel-ng  {background:var(--ng);  border-color:var(--ng);  color:#fff;}
+.bulk-all-chip:active{opacity:.75;}
+.bulk-all-note{font-size:10px;color:var(--text3);line-height:1.5;}
 
 /* ── SUMMARY CHIPS ── */
 .caster-summary{
@@ -969,37 +1038,36 @@ input[type=file]{display:none;}
           </svg>
 
           <!-- キャスターボタン -->
-          <button class="caster-btn head-right" id="c-HR" onclick="cycleCaster('HR')">
-            <span class="c-label" id="cl-HR">未選択</span>
-          </button>
-          <button class="caster-btn head-left"  id="c-HL" onclick="cycleCaster('HL')">
-            <span class="c-label" id="cl-HL">未選択</span>
-          </button>
-          <button class="caster-btn foot-right" id="c-FR" onclick="cycleCaster('FR')">
-            <span class="c-label" id="cl-FR">未選択</span>
-          </button>
-          <button class="caster-btn foot-left"  id="c-FL" onclick="cycleCaster('FL')">
-            <span class="c-label" id="cl-FL">未選択</span>
-          </button>
+          <div class="caster-cell head-right">
+            <button class="caster-btn" id="c-HR" onclick="handleCasterTap('HR')">
+              <span class="c-dot" id="cd-HR"></span>
+              <span class="c-label" id="cl-HR">未選択</span>
+            </button>
+          </div>
+          <div class="caster-cell head-left">
+            <button class="caster-btn" id="c-HL" onclick="handleCasterTap('HL')">
+              <span class="c-dot" id="cd-HL"></span>
+              <span class="c-label" id="cl-HL">未選択</span>
+            </button>
+          </div>
+          <div class="caster-cell foot-right">
+            <button class="caster-btn" id="c-FR" onclick="handleCasterTap('FR')">
+              <span class="c-dot" id="cd-FR"></span>
+              <span class="c-label" id="cl-FR">未選択</span>
+            </button>
+          </div>
+          <div class="caster-cell foot-left">
+            <button class="caster-btn" id="c-FL" onclick="handleCasterTap('FL')">
+              <span class="c-dot" id="cd-FL"></span>
+              <span class="c-label" id="cl-FL">未選択</span>
+            </button>
+          </div>
         </div>
 
         <div class="bed-side-label">患者の左</div>
       </div>
 
       <div class="bed-label-bottom">── 足 側 ──</div>
-    </div>
-
-    <!-- 詳細状態エリア（要注意・要交換時のみ表示） -->
-    <div id="casterDetailArea" style="display:none;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:400;color:var(--text3);margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;">Detail — optional</div>
-      <div id="casterDetailItems"></div>
-    </div>
-
-    <div class="caster-summary" style="display:none">
-      <div class="c-chip"><span class="c-chip-name">頭側・右</span><span class="c-chip-val s-未選択" id="cs-HR">未選択</span></div>
-      <div class="c-chip"><span class="c-chip-name">頭側・左</span><span class="c-chip-val s-未選択" id="cs-HL">未選択</span></div>
-      <div class="c-chip"><span class="c-chip-name">足側・右</span><span class="c-chip-val s-未選択" id="cs-FR">未選択</span></div>
-      <div class="c-chip"><span class="c-chip-name">足側・左</span><span class="c-chip-val s-未選択" id="cs-FL">未選択</span></div>
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -1009,6 +1077,21 @@ input[type=file]{display:none;}
     <div style="display:flex;gap:6px;margin-bottom:4px">
       <button class="btn btn-outline btn-sm" style="flex:1;font-size:11px;border-color:var(--ng);color:var(--ng)" onclick="setAll('要交換')">全て要交換</button>
       <button class="btn btn-outline btn-sm" style="flex:1;font-size:11px;border-color:var(--done);color:var(--done)" onclick="setAll('交換済み')">全て交換済み</button>
+    </div>
+
+    <!-- 詳細一括入力パネル -->
+    <button class="caster-bulk-toggle" id="bulkToggle" onclick="toggleBulkPanel()">
+      <span class="bulk-arrow">▾</span>
+      <span id="bulkToggleLabel">詳細を入力する</span>
+    </button>
+    <div class="caster-bulk-panel" id="bulkPanel">
+      <div style="padding-top:10px;">
+        <div class="bulk-mode-bar">
+          <button class="bulk-mode-btn active" id="bulkModeAll" onclick="setBulkMode('all')">一括</button>
+          <button class="bulk-mode-btn" id="bulkModeInd" onclick="setBulkMode('individual')">個別</button>
+        </div>
+        <div id="bulkContent"></div>
+      </div>
     </div>
   </div>
 
@@ -1623,99 +1706,196 @@ function switchTab(name){
 // ═══════════════════════════════════════════════════════
 // CASTER INPUT
 // ═══════════════════════════════════════════════════════
-function cycleCaster(pos){
+
+function handleCasterTap(pos){
   const cur = CASTER_STATES.indexOf(formCasters[pos]);
   formCasters[pos] = CASTER_STATES[(cur+1) % CASTER_STATES.length];
-  // 詳細リセット
+  // 状態が変わったら詳細リセット
   if(!CASTER_DETAIL[formCasters[pos]]) formCasterDetail[pos] = '';
-  updateCasterUI();
+  updateOneCasterUI(pos);
+  if(bulkPanelOpen) renderBulkContent();
   scheduleDraftSave();
   updateSaveButtonState();
 }
+
 function setAll(state){
   Object.keys(formCasters).forEach(k=>{
-    formCasters[k]=state;
-    if(!CASTER_DETAIL[state]) formCasterDetail[k]='';
+    formCasters[k] = state;
+    formCasterDetail[k] = '';
   });
   updateCasterUI();
+  renderBulkPanel();
+  if(bulkPanelOpen) renderBulkContent();
   scheduleDraftSave();
   updateSaveButtonState();
 }
-function setDetail(pos, val){
-  formCasterDetail[pos] = formCasterDetail[pos]===val ? '' : val;
-  renderDetailArea();
-  scheduleDraftSave();
-}
+
 function updateCasterUI(){
-  CASTER_POSITIONS.forEach(({id})=>{
-    const state = formCasters[id];
-    const btn   = document.getElementById('c-'+id);
-    const lbl   = document.getElementById('cl-'+id);
-    const chip  = document.getElementById('cs-'+id);
-    btn.className = 'caster-btn ' + posClass(id) + (state!=='未選択' ? ' s-'+state : '');
-    // ボタン背景色を動的に設定
-    const colors = {'正常':'var(--ok)','要注意':'var(--warn)','要交換':'var(--ng)','交換済み':'var(--done)'};
-    if(colors[state]){
-      btn.style.background   = colors[state];
-      btn.style.borderColor  = colors[state];
-    }else{
-      btn.style.background   = '';
-      btn.style.borderColor  = '';
-    }
-    lbl.textContent = state;
-    if(chip){
-      chip.textContent = state;
-      chip.className   = 'c-chip-val s-'+state;
-    }
-  });
-  renderDetailArea();
+  CASTER_POSITIONS.forEach(({id})=> updateOneCasterUI(id));
 }
 
-function renderDetailArea(){
-  const area  = document.getElementById('casterDetailArea');
-  const items = document.getElementById('casterDetailItems');
-  if(!area||!items) return;
-
-  const needDetail = CASTER_POSITIONS.filter(({id})=>CASTER_DETAIL[formCasters[id]]);
-  if(!needDetail.length){
-    area.style.display='none';
-    return;
-  }
-  area.style.display='block';
-
-  // 2×2グリッドでベッド図と同じ配置（頭右・頭左 / 足右・足左）
-  const positions = [
-    {id:'HR', label:'頭・右', grid:'1/1'},
-    {id:'HL', label:'頭・左', grid:'1/2'},
-    {id:'FR', label:'足・右', grid:'2/1'},
-    {id:'FL', label:'足・左', grid:'2/2'},
-  ];
-
-  const cells = positions.map(({id, label, grid})=>{
-    const state = formCasters[id];
-    const [row, col] = grid.split('/');
-    if(!CASTER_DETAIL[state]) return `<div style="grid-row:${row};grid-column:${col}"></div>`;
-    const choices = CASTER_DETAIL[state]||[];
-    const current = formCasterDetail[id]||'';
-    const colorCls = state==='要注意' ? 'sel-warn' : 'sel-ng';
-    const borderColor = state==='要注意' ? 'var(--warn)' : 'var(--ng)';
-    const chips = choices.map(c=>
-      `<span class="detail-chip ${current===c?colorCls:''}" onclick="setDetail('${id}','${c}')">${c}</span>`
-    ).join('');
-    return `<div class="detail-row" style="grid-row:${row};grid-column:${col};border-left-color:${borderColor}">
-      <span class="detail-pos">${label}</span>
-      <div class="detail-chips">${chips}</div>
-    </div>`;
-  }).join('');
-
-  items.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-      ${cells}
-    </div>
-  `;
+function updateOneCasterUI(pos){
+  const state = formCasters[pos];
+  const btn   = document.getElementById('c-'+pos);
+  const lbl   = document.getElementById('cl-'+pos);
+  if(!btn) return;
+  btn.className = 'caster-btn' + (state !== '未選択' ? ' s-'+state : '');
+  btn.style.background = '';
+  btn.style.borderColor = '';
+  lbl.textContent = state;
 }
+
 function posClass(id){
   return {HR:'head-right',HL:'head-left',FR:'foot-right',FL:'foot-left'}[id];
+}
+
+// ═══════════════════════════════════════════════════════
+// キャスター詳細 一括入力パネル
+// ═══════════════════════════════════════════════════════
+let bulkPanelOpen = false;
+let bulkMode = 'all'; // 'all' | 'individual'
+
+function toggleBulkPanel(){
+  bulkPanelOpen = !bulkPanelOpen;
+  renderBulkPanel();
+}
+
+function setBulkMode(mode){
+  bulkMode = mode;
+  document.getElementById('bulkModeAll').classList.toggle('active', mode==='all');
+  document.getElementById('bulkModeInd').classList.toggle('active', mode==='individual');
+  renderBulkContent();
+}
+
+function renderBulkPanel(){
+  const toggle = document.getElementById('bulkToggle');
+  const panel  = document.getElementById('bulkPanel');
+  if(!toggle||!panel) return;
+
+  const hasData = CASTER_POSITIONS.some(({id})=>formCasterDetail[id]);
+  toggle.classList.toggle('open', bulkPanelOpen);
+  toggle.classList.toggle('has-data', hasData);
+  panel.classList.toggle('open', bulkPanelOpen);
+
+  const label = document.getElementById('bulkToggleLabel');
+  if(label) label.textContent = hasData ? '詳細を編集する' : '詳細を入力する';
+
+  if(!bulkPanelOpen) return;
+  renderBulkContent();
+}
+
+function renderBulkContent(){
+  const el = document.getElementById('bulkContent');
+  if(!el) return;
+  if(bulkMode === 'all'){
+    renderBulkAll(el);
+  } else {
+    renderBulkIndividual(el);
+  }
+}
+
+// ── 一括モード：チップ1セット → 要注意/要交換の全ポジションに適用 ──
+function renderBulkAll(el){
+  // 要注意・要交換のポジションを収集
+  const warnPos = CASTER_POSITIONS.filter(({id})=>formCasters[id]==='要注意').map(({id})=>id);
+  const ngPos   = CASTER_POSITIONS.filter(({id})=>formCasters[id]==='要交換').map(({id})=>id);
+
+  if(!warnPos.length && !ngPos.length){
+    el.innerHTML = `<div class="bulk-all-area"><span class="bulk-all-note">要注意・要交換のキャスターがありません</span></div>`;
+    return;
+  }
+
+  // 現在の一括選択値を判定（各グループで最初に見つかった値）
+  const currentWarn = warnPos.length ? (formCasterDetail[warnPos[0]]||'') : '';
+  const currentNg   = ngPos.length   ? (formCasterDetail[ngPos[0]]  ||'') : '';
+
+  let html = `<div class="bulk-all-area">`;
+
+  if(warnPos.length){
+    const choices = CASTER_DETAIL['要注意']||[];
+    const chipsHtml = choices.map(c=>
+      `<button class="bulk-all-chip ${currentWarn===c?'sel-warn':''}"
+        onclick="applyBulkAll('warn','${c}')">${c}</button>`
+    ).join('');
+    html += `<div style="font-size:10px;font-weight:700;color:var(--warn);margin-bottom:5px;font-family:'DM Mono',monospace;letter-spacing:.06em;">要注意（${warnPos.length}箇所）</div>
+      <div class="bulk-all-chips">${chipsHtml}</div>`;
+  }
+  if(ngPos.length){
+    const choices = CASTER_DETAIL['要交換']||[];
+    const chipsHtml = choices.map(c=>
+      `<button class="bulk-all-chip ${currentNg===c?'sel-ng':''}"
+        onclick="applyBulkAll('ng','${c}')">${c}</button>`
+    ).join('');
+    html += `<div style="font-size:10px;font-weight:700;color:var(--ng);margin-bottom:5px;margin-top:${warnPos.length?'10px':'0'};font-family:'DM Mono',monospace;letter-spacing:.06em;">要交換（${ngPos.length}箇所）</div>
+      <div class="bulk-all-chips">${chipsHtml}</div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function applyBulkAll(type, val){
+  const targetState = type==='warn' ? '要注意' : '要交換';
+  CASTER_POSITIONS.forEach(({id})=>{
+    if(formCasters[id]===targetState){
+      formCasterDetail[id] = formCasterDetail[id]===val ? '' : val;
+    }
+  });
+  renderBulkContent();
+  updateBulkToggleState();
+  scheduleDraftSave();
+}
+
+// ── 個別モード：4箇所それぞれ選択 ──
+function renderBulkIndividual(el){
+  const LABELS = {HR:'頭側・右', HL:'頭側・左', FR:'足側・右', FL:'足側・左'};
+  const html = `<div class="bulk-grid">${
+    CASTER_POSITIONS.map(({id})=>{
+      const state   = formCasters[id];
+      const choices = CASTER_DETAIL[state]||[];
+      const current = formCasterDetail[id]||'';
+      const colorCls = state==='要注意' ? 'sel-warn' : 'sel-ng';
+      const dotCls   = state!=='未選択' ? ' s-'+state : '';
+      const chipsHtml = choices.length
+        ? choices.map(c=>
+            `<button class="bulk-chip ${current===c?colorCls:''}"
+              onclick="setBulkDetail('${id}','${c}')">${c}</button>`
+          ).join('')
+        : `<span class="bulk-no-detail">－</span>`;
+      return `<div class="bulk-cell">
+        <div class="bulk-cell-label">
+          <span class="bulk-cell-dot${dotCls}"></span>${LABELS[id]}
+        </div>
+        <div class="bulk-chips" id="bc-${id}">${chipsHtml}</div>
+      </div>`;
+    }).join('')
+  }</div>`;
+  el.innerHTML = html;
+}
+
+function setBulkDetail(pos, val){
+  formCasterDetail[pos] = formCasterDetail[pos]===val ? '' : val;
+  // 個別モードのチップ再描画
+  const state   = formCasters[pos];
+  const choices = CASTER_DETAIL[state]||[];
+  const current = formCasterDetail[pos];
+  const colorCls = state==='要注意' ? 'sel-warn' : 'sel-ng';
+  const col = document.getElementById('bc-'+pos);
+  if(col){
+    col.innerHTML = choices.map(c=>
+      `<button class="bulk-chip ${current===c?colorCls:''}"
+        onclick="setBulkDetail('${pos}','${c}')">${c}</button>`
+    ).join('');
+  }
+  updateBulkToggleState();
+  scheduleDraftSave();
+}
+
+function updateBulkToggleState(){
+  const hasData = CASTER_POSITIONS.some(({id})=>formCasterDetail[id]);
+  const toggle = document.getElementById('bulkToggle');
+  if(toggle) toggle.classList.toggle('has-data', hasData);
+  const label = document.getElementById('bulkToggleLabel');
+  if(label) label.textContent = hasData ? '詳細を編集する' : '詳細を入力する';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1839,7 +2019,9 @@ function editRecord(id){
   formCasterDetail = {HR:'',HL:'',FR:'',FL:'', ...(r.casterDetail||{})};
   formSev      = {...(r.partsSev||{})};
   formPhotoIds = (r.photoIds||[]).filter(pid=>photoStore[pid]);
+  bulkPanelOpen = false;
   updateCasterUI();
+  renderBulkPanel();
   renderPartsInputTable();
   renderPhotoField();
   updateSaveButtonState();
@@ -1968,7 +2150,9 @@ function clearForm(fullClear){
   formCasterDetail={HR:'',HL:'',FR:'',FL:''};
   formSev={};
   formPhotoIds=[];
+  bulkPanelOpen=false;
   updateCasterUI();
+  renderBulkPanel();
   renderPartsInputTable();
   renderPhotoField();
   updateSaveButtonState();
@@ -2552,6 +2736,14 @@ function sendEmailReport(type){
   }
 }
 // ═══════════════════════════════════════════════════════
+// キャスター状態＋詳細を1セルにまとめるヘルパー
+function casterCell(r, pos){
+  const state  = (r.casters && r.casters[pos]) || '';
+  const detail = (r.casterDetail && r.casterDetail[pos]) || '';
+  if(!state) return '';
+  return detail ? `${state}（${detail}）` : state;
+}
+
 function getExportRecords(){
   const hosp = document.getElementById('export-hospital')?.value || '';
   return hosp ? st.records.filter(r=>r.hospital===hosp) : st.records;
@@ -2581,16 +2773,13 @@ function exportDetailCSV(){
   if(!recs.length){ showToast('⚠️ データがありません','warn'); return; }
   const allParts = st.parts;
   const header = ['日付','時刻','病院名','病棟','部屋番号','ベッドNo','型番','年式','床番①','床番②','マットレス','見守り機器','TV',
-    '頭側・右','頭側・右詳細','頭側・左','頭側・左詳細','足側・右','足側・右詳細','足側・左','足側・左詳細',
+    '頭側・右','頭側・左','足側・右','足側・左',
     ...allParts,'写真枚数','メモ'];
   const rows = recs.map(r=>{
     const pc = allParts.map(p=>(r.partsSev&&r.partsSev[p])||'');
     return [r.date,r.time,r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',
       r.year||'',r.floor1||'',r.floor2||'',r.mattress||'',r.monitor||'',r.tv||'',
-      r.casters.HR||'',(r.casterDetail&&r.casterDetail.HR)||'',
-      r.casters.HL||'',(r.casterDetail&&r.casterDetail.HL)||'',
-      r.casters.FR||'',(r.casterDetail&&r.casterDetail.FR)||'',
-      r.casters.FL||'',(r.casterDetail&&r.casterDetail.FL)||'',
+      casterCell(r,'HR'), casterCell(r,'HL'), casterCell(r,'FR'), casterCell(r,'FL'),
       ...pc,(r.photoIds||[]).length,r.memo||''];
   });
   const hosp = document.getElementById('export-hospital')?.value||'全病院';
@@ -2749,16 +2938,13 @@ function exportAllCSV(){
 
   // ① 明細
   const detailHeader = ['日付','時刻','病院名','病棟','部屋番号','ベッドNo','型番','年式','床番①','床番②','マットレス','見守り機器','TV',
-    '頭側・右','頭側・右詳細','頭側・左','頭側・左詳細','足側・右','足側・右詳細','足側・左','足側・左詳細',
+    '頭側・右','頭側・左','足側・右','足側・左',
     ...allParts,'写真枚数','メモ'];
   const detailRows = recs.map(r=>{
     const pc = allParts.map(p=>(r.partsSev&&r.partsSev[p])||'');
     return [r.date,r.time,r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',
       r.year||'',r.floor1||'',r.floor2||'',r.mattress||'',r.monitor||'',r.tv||'',
-      r.casters.HR||'',(r.casterDetail&&r.casterDetail.HR)||'',
-      r.casters.HL||'',(r.casterDetail&&r.casterDetail.HL)||'',
-      r.casters.FR||'',(r.casterDetail&&r.casterDetail.FR)||'',
-      r.casters.FL||'',(r.casterDetail&&r.casterDetail.FL)||'',
+      casterCell(r,'HR'), casterCell(r,'HL'), casterCell(r,'FR'), casterCell(r,'FL'),
       ...pc,(r.photoIds||[]).length,r.memo||''];
   });
 
