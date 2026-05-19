@@ -2750,7 +2750,14 @@ function getExportRecords(){
 }
 
 function csvRow(arr){
-  return arr.map(c=>`"${String(c===null||c===undefined?'':c).replace(/"/g,'""')}"`).join(',');
+  return arr.map(c=>{
+    const s = String(c===null||c===undefined?'':c)
+      .replace(/\r\n/g,'\n')   // CRLFを一旦LFに統一
+      .replace(/\r/g,'\n')     // 単独CRもLFに
+      .replace(/\n/g,'\r\n')   // すべての改行をCRLFに揃える（Excel対応）
+      .replace(/"/g,'""');     // ダブルクォートをエスケープ
+    return `"${s}"`;
+  }).join(',');
 }
 
 function downloadCSV(filename, rows){
