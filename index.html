@@ -2750,18 +2750,12 @@ function getExportRecords(){
 }
 
 function csvRow(arr){
-  return arr.map(c=>{
-    const s = String(c===null||c===undefined?'':c)
-      .replace(/\r\n/g,'\n')   // CRLFを一旦LFに統一
-      .replace(/\r/g,'\n')     // 単独CRもLFに
-      .replace(/\n/g,'\r\n')   // すべての改行をCRLFに揃える（Excel対応）
-      .replace(/"/g,'""');     // ダブルクォートをエスケープ
-    return `"${s}"`;
-  }).join(',');
+  return arr.map(c=>`"${String(c===null||c===undefined?'':c).replace(/"/g,'""')}"`).join(',');
 }
 
 function downloadCSV(filename, rows){
-  const csv = '\uFEFF' + rows.map(r=>csvRow(r)).join('\r\n');
+  // iOS Safariで\r\nを使うとOS変換と二重になり\r\r\nになる問題を回避するため\nのみ使用
+  const csv = '\uFEFF' + rows.map(r=>csvRow(r)).join('\n');
   const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
