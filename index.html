@@ -1532,8 +1532,7 @@ function updateSaveButtonState(){
   const ward     = document.getElementById('inp-ward').value.trim();
   const room     = document.getElementById('inp-room').value.trim();
   const bed      = document.getElementById('inp-bed').value.trim();
-  const hasCaster = Object.values(formCasters).some(v=>v!=='未選択');
-  const ok = hospital && ward && room && bed && hasCaster;
+  const ok = hospital && ward && room && bed;
   // 押せる状態は保ち、見た目だけ変える
   btn.disabled = false;
   btn.classList.toggle('btn-incomplete', !ok);
@@ -2053,7 +2052,6 @@ function saveRecord(){
   if(!room) missing.push('部屋');
   if(!bed)  missing.push('ベッドNo');
   if(missing.length){ showToast('⚠️ 未入力：'+missing.join('・'),'warn'); return; }
-  if(Object.values(formCasters).every(v=>v==='未選択')){ showToast('⚠️ キャスター状態を1つ以上選択','warn'); return; }
 
   // ベッドNo重複チェック（同じ病院・病棟・部屋・ベッドNo）
   if(!editingId){
