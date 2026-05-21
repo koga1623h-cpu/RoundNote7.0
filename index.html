@@ -2789,7 +2789,7 @@ function exportDetailCSV(){
     return [r.date,r.time,r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',
       r.year||'',r.floor1||'',r.floor2||'',r.mattress||'',r.monitor||'',r.tv||'',
       casterCell(r,'HR'), casterCell(r,'HL'), casterCell(r,'FR'), casterCell(r,'FL'),
-      ...pc,(r.photoIds||[]).length,r.memo||''];
+      ...pc,(r.photoIds||[]).length,(r.memo||'').replace(/\r\n|\r|\n/g,'／')];
   });
   const hosp = document.getElementById('export-hospital')?.value||'全病院';
   downloadCSV(`RoundNote_明細_${hosp}_${todayStr()}.csv`, [header, ...rows]);
@@ -3024,7 +3024,7 @@ function exportAllCSV(){
     return [r.date,r.time,r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',
       r.year||'',r.floor1||'',r.floor2||'',r.mattress||'',r.monitor||'',r.tv||'',
       casterCell(r,'HR'), casterCell(r,'HL'), casterCell(r,'FR'), casterCell(r,'FL'),
-      ...pc,(r.photoIds||[]).length,r.memo||''];
+      ...pc,(r.photoIds||[]).length,(r.memo||'').replace(/\r\n|\r|\n/g,'／')];
   });
 
   // ② 集計
@@ -3081,9 +3081,50 @@ function exportAllCSV(){
     ...ngRows,
   ];
 
+  // ④ 型番×年式マトリクス
+  const _models = [...new Set(recs.map(r=>r.model||'未記入'))];
+  const _years  = [...new Set(recs.map(r=>r.year ||'未記入'))];
+  _years.sort((a,b)=>{
+    if(a==='未記入')return 1; if(b==='未記入')return -1;
+    const na=parseInt(a),nb=parseInt(b);
+    if(isNaN(na)&&isNaN(nb))return a.localeCompare(b,'ja');
+    if(isNaN(na))return 1; if(isNaN(nb))return -1;
+    return na-nb;
+  });
+  const _masterOrder = (st.models||[]);
+  _models.sort((a,b)=>{
+    if(a==='未記入')return 1; if(b==='未記入')return -1;
+    const ia=_masterOrder.indexOf(a), ib=_masterOrder.indexOf(b);
+    if(ia>=0&&ib>=0)return ia-ib;
+    if(ia>=0)return -1; if(ib>=0)return 1;
+    return a.localeCompare(b,'ja');
+  });
+  const _matrix = {};
+  _models.forEach(m=>{ _matrix[m]={}; _years.forEach(y=>_matrix[m][y]=0); });
+  recs.forEach(r=>{ _matrix[r.model||'未記入'][r.year||'未記入']++; });
+  const _yearHeaders = _years.map(y=> y==='未記入' ? '未記入' : `${y}年`);
+  const matrixRows = [['【型番×年式 マトリクス】'], ['型番＼年式', ..._yearHeaders, '合計']];
+  const _colTotals = _years.map(()=>0);
+  let _grandTotal = 0;
+  _models.forEach(m=>{
+    let rowSum = 0;
+    const cells = _years.map((y,i)=>{
+      const v = _matrix[m][y];
+      rowSum += v; _colTotals[i] += v;
+      return v;
+    });
+    _grandTotal += rowSum;
+    matrixRows.push([m, ...cells, rowSum]);
+  });
+  matrixRows.push(['合計', ..._colTotals, _grandTotal]);
+
+  allRows.push([]);
+  allRows.push(...matrixRows);
+
   downloadCSV(`RoundNote_${hosp}_${todayStr()}.csv`, allRows);
   showToast('ダウンロードしました');
 }
+
 
 // 旧関数（互換性維持）
 function exportCSV(){ exportDetailCSV(); }
