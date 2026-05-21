@@ -1200,6 +1200,14 @@ input[type=file]{display:none;}
           </span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
+        <button class="export-item-btn" onclick="exportMatrixCSV()">
+          <span class="export-item-num">④</span>
+          <span class="export-item-text">
+            <span class="export-item-name">型番×年式 マトリクス</span>
+            <span class="export-item-desc">行＝型番／列＝年式の台数表</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
       </div>
     </div>
     <button class="btn btn-success" onclick="exportAllCSV()" style="display:flex;align-items:center;justify-content:center;gap:8px">
@@ -1532,7 +1540,8 @@ function updateSaveButtonState(){
   const ward     = document.getElementById('inp-ward').value.trim();
   const room     = document.getElementById('inp-room').value.trim();
   const bed      = document.getElementById('inp-bed').value.trim();
-  const ok = hospital && ward && room && bed;
+  const hasCaster = Object.values(formCasters).some(v=>v!=='未選択');
+  const ok = hospital && ward && room && bed && hasCaster;
   // 押せる状態は保ち、見た目だけ変える
   btn.disabled = false;
   btn.classList.toggle('btn-incomplete', !ok);
@@ -2052,6 +2061,7 @@ function saveRecord(){
   if(!room) missing.push('部屋');
   if(!bed)  missing.push('ベッドNo');
   if(missing.length){ showToast('⚠️ 未入力：'+missing.join('・'),'warn'); return; }
+  if(Object.values(formCasters).every(v=>v==='未選択')){ showToast('⚠️ キャスター状態を1つ以上選択','warn'); return; }
 
   // ベッドNo重複チェック（同じ病院・病棟・部屋・ベッドNo）
   if(!editingId){
@@ -2926,6 +2936,76 @@ function exportNgListCSV(){
   const hosp = document.getElementById('export-hospital')?.value||'全病院';
   downloadCSV(`RoundNote_要対応リスト_${hosp}_${todayStr()}.csv`, [header,...rows]);
   showToast('③ 要対応リスト ダウンロード');
+}
+
+// ④ 型番×年式 マトリクスCSV
+function exportMatrixCSV(){
+  const recs = getExportRecords();
+  if(!recs.length){ showToast('⚠️ データがありません','warn'); return; }
+
+  // 型番・年式の全パターンを収集
+  const models = [...new Set(recs.map(r=>r.model||'未記入'))];
+  const years  = [...new Set(recs.map(r=>r.year ||'未記入'))];
+
+  // 年式ソート：数値優先（昇順）、未記入は最後
+  years.sort((a,b)=>{
+    if(a==='未記入') return 1;
+    if(b==='未記入') return -1;
+    const na=parseInt(a), nb=parseInt(b);
+    if(isNaN(na)&&isNaN(nb)) return a.localeCompare(b,'ja');
+    if(isNaN(na)) return 1;
+    if(isNaN(nb)) return -1;
+    return na-nb;
+  });
+
+  // 型番ソート：マスタ登録順 → 未登録はあいうえお順 → 未記入は最後
+  const masterOrder = (st.models||[]);
+  models.sort((a,b)=>{
+    if(a==='未記入') return 1;
+    if(b==='未記入') return -1;
+    const ia = masterOrder.indexOf(a);
+    const ib = masterOrder.indexOf(b);
+    if(ia>=0 && ib>=0) return ia-ib;
+    if(ia>=0) return -1;
+    if(ib>=0) return 1;
+    return a.localeCompare(b,'ja');
+  });
+
+  // カウント集計
+  const matrix = {};
+  models.forEach(m=>{ matrix[m]={}; years.forEach(y=>matrix[m][y]=0); });
+  recs.forEach(r=>{
+    const m = r.model||'未記入';
+    const y = r.year ||'未記入';
+    matrix[m][y]++;
+  });
+
+  // ヘッダー行（年式 + 合計）
+  const yearHeaders = years.map(y=> y==='未記入' ? '未記入' : `${y}年`);
+  const rows = [];
+  rows.push(['型番＼年式', ...yearHeaders, '合計']);
+
+  // 各型番の行
+  const colTotals = years.map(()=>0);
+  let grandTotal = 0;
+  models.forEach(m=>{
+    let rowSum = 0;
+    const cells = years.map((y,i)=>{
+      const v = matrix[m][y];
+      rowSum += v;
+      colTotals[i] += v;
+      return v;
+    });
+    grandTotal += rowSum;
+    rows.push([m, ...cells, rowSum]);
+  });
+
+  // 合計行
+  rows.push(['合計', ...colTotals, grandTotal]);
+
+  const hosp = document.getElementById('export-hospital')?.value||'全病院';
+  downloadCSV(`RoundNote_型番×年式_${hosp}_${todayStr()}.csv`, rows);
+  showToast('④ マトリクス ダウンロード');
 }
 
 // 一括ダウンロード
