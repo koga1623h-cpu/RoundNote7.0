@@ -1168,52 +1168,24 @@ input[type=file]{display:none;}
 <!-- ===== 出力 ===== -->
 <div id="page-export" class="page">
   <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>CSV出力</div>
+    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>提出用Excel出力</div>
     <div class="form-row" style="margin-bottom:10px">
-      <label>病院で絞り込む（任意）</label>
-      <select id="export-hospital"><option value="">すべての病院</option></select>
+      <label>病院を選択 <span class="required">*</span></label>
+      <select id="export-hospital"><option value="">病院を選んでください</option></select>
     </div>
-    <div class="export-group" style="margin-bottom:10px">
-      <div class="export-group-label">個別出力</div>
-      <div class="export-group-btns">
-        <button class="export-item-btn" onclick="exportDetailCSV()">
-          <span class="export-item-num">①</span>
-          <span class="export-item-text">
-            <span class="export-item-name">明細</span>
-            <span class="export-item-desc">ベッド1台ごとの詳細</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </button>
-        <button class="export-item-btn" onclick="exportSummaryCSV()">
-          <span class="export-item-num">②</span>
-          <span class="export-item-text">
-            <span class="export-item-name">集計</span>
-            <span class="export-item-desc">病院・病棟・型番・年式別</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </button>
-        <button class="export-item-btn" onclick="exportNgListCSV()">
-          <span class="export-item-num">③</span>
-          <span class="export-item-text">
-            <span class="export-item-name">要対応リスト</span>
-            <span class="export-item-desc">要交換ベッドのみ抽出</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </button>
-        <button class="export-item-btn" onclick="exportMatrixCSV()">
-          <span class="export-item-num">④</span>
-          <span class="export-item-text">
-            <span class="export-item-name">型番×年式 マトリクス</span>
-            <span class="export-item-desc">行＝型番／列＝年式の台数表</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </button>
-      </div>
+    <div class="form-row" style="margin-bottom:14px">
+      <label>訪問日</label>
+      <input type="date" id="export-visit-date">
     </div>
-    <button class="btn btn-success" onclick="exportAllCSV()" style="display:flex;align-items:center;justify-content:center;gap:8px">
+    <button class="btn btn-success" onclick="exportReportXLSX()" style="display:flex;align-items:center;justify-content:center;gap:8px">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      全データを1ファイルでDL
+      提出用Excelをダウンロード
     </button>
+    <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.7;">
+      ・ベッド一覧と集計表の2シート構成<br>
+      ・入力された項目のみが列に表示されます<br>
+      ・iPhoneのExcelアプリ・ファイルアプリで開けます
+    </p>
   </div>
 </div>
 
@@ -1255,13 +1227,13 @@ input[type=file]{display:none;}
   </div>
   <div class="card info-card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>注意</div>
-    <p>部位を削除しても既存の記録は残ります。<br>CSV出力の列は出力時点の部位リストに基づきます。</p>
+    <p>部位を削除しても既存の記録は残ります。<br>Excel出力の列は出力時点の部位リストに基づきます。</p>
   </div>
 
   <!-- 古い記録削除 -->
   <div class="card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>古い記録の一括削除</div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;">事前にCSV出力しておくことを推奨します。</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;">事前にExcel出力しておくことを推奨します。</p>
     <div class="export-group">
       <div class="export-group-label">削除する期間</div>
       <div class="export-group-btns">
@@ -1708,7 +1680,11 @@ function switchTab(name){
   footer.classList.remove('kb-hide');
   if(name==='list')   renderList();
   if(name==='summary') renderSummary();
-  if(name==='export')  { renderHospitalOptions(); }  if(name==='master'){ renderHospitalsEditor(); renderModelsEditor(); renderPartsEditor(); renderStorageMeter(); }
+  if(name==='export')  {
+    renderHospitalOptions();
+    const dateEl = document.getElementById('export-visit-date');
+    if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  }  if(name==='master'){ renderHospitalsEditor(); renderModelsEditor(); renderPartsEditor(); renderStorageMeter(); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2757,377 +2733,450 @@ function getExportRecords(){
   return hosp ? st.records.filter(r=>r.hospital===hosp) : st.records;
 }
 
-function csvRow(arr){
-  return arr.map(c=>`"${String(c===null||c===undefined?'':c).replace(/"/g,'""')}"`).join(',');
-}
-
-function downloadCSV(filename, rows){
-  // iOS Safariで\r\nを使うとOS変換と二重になり\r\r\nになる問題を回避するため\nのみ使用
-  const csv = '\uFEFF' + rows.map(r=>csvRow(r)).join('\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href=url; a.download=filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-}
-
 function todayStr(){
   return new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
 }
 
-// ① 明細CSV
-function exportDetailCSV(){
-  const recs = getExportRecords();
-  if(!recs.length){ showToast('⚠️ データがありません','warn'); return; }
-  const allParts = st.parts;
-  const header = ['日付','時刻','病院名','病棟','部屋番号','ベッドNo','型番','年式','床番①','床番②','マットレス','見守り機器','TV',
-    '頭側・右','頭側・左','足側・右','足側・左',
-    ...allParts,'写真枚数','メモ'];
-  const rows = recs.map(r=>{
-    const pc = allParts.map(p=>(r.partsSev&&r.partsSev[p])||'');
-    return [r.date,r.time,r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',
-      r.year||'',r.floor1||'',r.floor2||'',r.mattress||'',r.monitor||'',r.tv||'',
-      casterCell(r,'HR'), casterCell(r,'HL'), casterCell(r,'FR'), casterCell(r,'FL'),
-      ...pc,(r.photoIds||[]).length,(r.memo||'').replace(/\r\n|\r|\n/g,'／')];
-  });
-  const hosp = document.getElementById('export-hospital')?.value||'全病院';
-  downloadCSV(`RoundNote_明細_${hosp}_${todayStr()}.csv`, [header, ...rows]);
-  showToast('① 明細CSV ダウンロード');
+// ═══════════════════════════════════════════════════════
+// XLSX EXPORT (ライブラリ不使用)
+// ═══════════════════════════════════════════════════════
+
+// CRC32（ZIPに必要）
+const CRC32_TABLE = (()=>{
+  const t = new Uint32Array(256);
+  for(let i=0;i<256;i++){
+    let c=i;
+    for(let k=0;k<8;k++) c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+    t[i]=c>>>0;
+  }
+  return t;
+})();
+function crc32(bytes){
+  let c=0xFFFFFFFF;
+  for(let i=0;i<bytes.length;i++) c = CRC32_TABLE[(c^bytes[i])&0xFF] ^ (c>>>8);
+  return (c^0xFFFFFFFF)>>>0;
 }
 
-// ② 集計CSV
-function exportSummaryCSV(){
-  const recs = getExportRecords();
-  if(!recs.length){ showToast('⚠️ データがありません','warn'); return; }
+function utf8Bytes(str){ return new TextEncoder().encode(str); }
 
-  const rows = [];
+// 無圧縮ZIP組み立て（iOS Safariで安定）
+function buildZip(files){
+  const enc = new TextEncoder();
+  const parts = [];
+  const central = [];
+  let offset = 0;
 
-  // ── 病院別集計 ──
-  rows.push(['【病院別 集計】']);
-  rows.push(['病院名','台数','要交換率(%)','正常(個)','要注意(個)','要交換(個)','交換済み(個)','キャスター総数(個)']);
-  const hospMap = {};
-  recs.forEach(r=>{
-    if(!hospMap[r.hospital]) hospMap[r.hospital]={beds:0,ok:0,warn:0,ng:0,done:0,total:0};
-    hospMap[r.hospital].beds++;
-    Object.values(r.casters||{}).forEach(v=>{
-      if(v==='未選択')return;
-      hospMap[r.hospital].total++;
-      if(v==='正常')     hospMap[r.hospital].ok++;
-      else if(v==='要注意') hospMap[r.hospital].warn++;
-      else if(v==='要交換') hospMap[r.hospital].ng++;
-      else if(v==='交換済み') hospMap[r.hospital].done++;
+  files.forEach(f=>{
+    const nameBytes = enc.encode(f.name);
+    const crc = crc32(f.bytes);
+    const size = f.bytes.length;
+
+    const lfh = new Uint8Array(30 + nameBytes.length);
+    const dv = new DataView(lfh.buffer);
+    dv.setUint32(0, 0x04034b50, true);
+    dv.setUint16(4, 20, true);
+    dv.setUint16(6, 0, true);
+    dv.setUint16(8, 0, true);
+    dv.setUint16(10, 0, true);
+    dv.setUint16(12, 0, true);
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, size, true);
+    dv.setUint32(22, size, true);
+    dv.setUint16(26, nameBytes.length, true);
+    dv.setUint16(28, 0, true);
+    lfh.set(nameBytes, 30);
+    parts.push(lfh, f.bytes);
+
+    const cdh = new Uint8Array(46 + nameBytes.length);
+    const dv2 = new DataView(cdh.buffer);
+    dv2.setUint32(0, 0x02014b50, true);
+    dv2.setUint16(4, 20, true);
+    dv2.setUint16(6, 20, true);
+    dv2.setUint32(16, crc, true);
+    dv2.setUint32(20, size, true);
+    dv2.setUint32(24, size, true);
+    dv2.setUint16(28, nameBytes.length, true);
+    dv2.setUint32(42, offset, true);
+    cdh.set(nameBytes, 46);
+    central.push(cdh);
+
+    offset += lfh.length + size;
+  });
+
+  const cdSize = central.reduce((s,c)=>s+c.length, 0);
+  const cdOffset = offset;
+
+  const eocd = new Uint8Array(22);
+  const dv3 = new DataView(eocd.buffer);
+  dv3.setUint32(0, 0x06054b50, true);
+  dv3.setUint16(8, files.length, true);
+  dv3.setUint16(10, files.length, true);
+  dv3.setUint32(12, cdSize, true);
+  dv3.setUint32(16, cdOffset, true);
+
+  const totalSize = offset + cdSize + 22;
+  const out = new Uint8Array(totalSize);
+  let p = 0;
+  parts.forEach(part=>{ out.set(part, p); p += part.length; });
+  central.forEach(c=>{ out.set(c, p); p += c.length; });
+  out.set(eocd, p);
+  return out;
+}
+
+function xmlEsc(s){
+  return String(s===null||s===undefined?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function colName(n){
+  let s='';
+  while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26); }
+  return s;
+}
+
+function sheetXML(rows, colWidths, opts){
+  opts = opts || {};
+  let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  xml += '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+  if(colWidths && colWidths.length){
+    xml += '<cols>';
+    colWidths.forEach((w,i)=>{
+      xml += `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`;
     });
-  });
-  Object.entries(hospMap).sort((a,b)=>b[1].ng-a[1].ng).forEach(([h,d])=>{
-    const rate = d.total ? (d.ng/d.total*100).toFixed(1) : '0.0';
-    rows.push([h,d.beds,rate,d.ok,d.warn,d.ng,d.done,d.total]);
-  });
-  rows.push([]);
-
-  // ── 病棟別集計 ──
-  rows.push(['【病棟別 集計】']);
-  rows.push(['病院名','病棟','台数','要交換率(%)','正常(個)','要注意(個)','要交換(個)','交換済み(個)']);
-  const wardMap = {};
-  recs.forEach(r=>{
-    const key = `${r.hospital}||${r.ward||'未記入'}`;
-    if(!wardMap[key]) wardMap[key]={hosp:r.hospital,ward:r.ward||'未記入',beds:0,ok:0,warn:0,ng:0,done:0,total:0};
-    wardMap[key].beds++;
-    Object.values(r.casters||{}).forEach(v=>{
-      if(v==='未選択')return;
-      wardMap[key].total++;
-      if(v==='正常')      wardMap[key].ok++;
-      else if(v==='要注意') wardMap[key].warn++;
-      else if(v==='要交換') wardMap[key].ng++;
-      else if(v==='交換済み') wardMap[key].done++;
+    xml += '</cols>';
+  }
+  xml += '<sheetData>';
+  rows.forEach((row,ri)=>{
+    xml += `<row r="${ri+1}">`;
+    row.forEach((cell,ci)=>{
+      if(cell===null||cell===undefined)return;
+      // 空文字でもスタイル指定があれば罫線のため出力
+      if(cell===''||(cell.v===''&&!cell.s))return;
+      const ref = colName(ci+1) + (ri+1);
+      const styleAttr = cell.s ? ` s="${cell.s}"` : '';
+      if(cell.t==='n'){
+        xml += `<c r="${ref}"${styleAttr}><v>${cell.v}</v></c>`;
+      }else if(cell.v===''){
+        // 空セル: 罫線のための空要素のみ
+        xml += `<c r="${ref}"${styleAttr}/>`;
+      }else{
+        xml += `<c r="${ref}" t="inlineStr"${styleAttr}><is><t xml:space="preserve">${xmlEsc(cell.v)}</t></is></c>`;
+      }
     });
+    xml += '</row>';
   });
-  Object.values(wardMap).sort((a,b)=>{
-    if(a.hosp!==b.hosp) return a.hosp.localeCompare(b.hosp,'ja');
-    return b.ng-a.ng;
-  }).forEach(d=>{
-    const rate = d.total ? (d.ng/d.total*100).toFixed(1) : '0.0';
-    rows.push([d.hosp,d.ward,d.beds,rate,d.ok,d.warn,d.ng,d.done]);
-  });
-  rows.push([]);
+  xml += '</sheetData>';
+  // 印刷設定: A4横向き、1ページ幅に収める
+  xml += '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>';
+  xml += '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>';
+  xml += '</worksheet>';
+  return xml;
+}
 
-  // ── 型番別台数 ──
-  rows.push(['【型番別 台数】']);
-  rows.push(['型番','台数','要交換率(%)','要交換(個)','キャスター総数(個)']);
-  const modelMap = {};
-  recs.forEach(r=>{
-    const m = r.model||'未記入';
-    if(!modelMap[m]) modelMap[m]={beds:0,ng:0,total:0};
-    modelMap[m].beds++;
-    Object.values(r.casters||{}).forEach(v=>{
-      if(v==='未選択')return;
-      modelMap[m].total++;
-      if(v==='要交換') modelMap[m].ng++;
-    });
-  });
-  Object.entries(modelMap).sort((a,b)=>b[1].beds-a[1].beds).forEach(([m,d])=>{
-    const rate = d.total ? (d.ng/d.total*100).toFixed(1) : '0.0';
-    rows.push([m,d.beds,rate,d.ng,d.total]);
-  });
-  rows.push([]);
+// スタイル: 0=default, 1=太字, 2=ヘッダー(太字+中央+グレー+罫線),
+// 3=中央+罫線, 4=要注意(黄+中央+罫線), 5=要交換(赤+中央+罫線), 6=折り返し+罫線
+function stylesXML(){
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="2">
+<font><sz val="11"/><name val="メイリオ"/></font>
+<font><b/><sz val="11"/><name val="メイリオ"/></font>
+</fonts>
+<fills count="5">
+<fill><patternFill patternType="none"/></fill>
+<fill><patternFill patternType="gray125"/></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFE8E8E8"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFF4CE"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFD6D6"/></patternFill></fill>
+</fills>
+<borders count="2">
+<border><left/><right/><top/><bottom/><diagonal/></border>
+<border><left style="thin"><color rgb="FFB0B0B0"/></left><right style="thin"><color rgb="FFB0B0B0"/></right><top style="thin"><color rgb="FFB0B0B0"/></top><bottom style="thin"><color rgb="FFB0B0B0"/></bottom></border>
+</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="7">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="4" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="標準" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+}
 
-  // ── 年式別台数 ──
-  rows.push(['【年式別 台数】']);
-  rows.push(['年式','台数','要交換率(%)','要交換(個)','キャスター総数(個)']);
-  const yearMap = {};
-  recs.forEach(r=>{
-    const y = r.year||'未記入';
-    if(!yearMap[y]) yearMap[y]={beds:0,ng:0,total:0};
-    yearMap[y].beds++;
-    Object.values(r.casters||{}).forEach(v=>{
-      if(v==='未選択')return;
-      yearMap[y].total++;
-      if(v==='要交換') yearMap[y].ng++;
-    });
-  });
-  Object.entries(yearMap).sort((a,b)=>{
-    const na=parseInt(a[0]),nb=parseInt(b[0]);
-    if(isNaN(na)&&isNaN(nb))return 0;
-    if(isNaN(na))return 1; if(isNaN(nb))return -1;
-    return na-nb;
-  }).forEach(([y,d])=>{
-    const rate = d.total ? (d.ng/d.total*100).toFixed(1) : '0.0';
-    rows.push([y,d.beds,rate,d.ng,d.total]);
-  });
-  rows.push([]);
+function styleForState(state){
+  if(!state)return 3;
+  if(state.startsWith('要注意'))return 4;
+  if(state.startsWith('要交換'))return 5;
+  return 3;
+}
 
-  // ── キャスター位置別 要交換件数 ──
-  rows.push(['【位置別 要交換件数】']);
-  rows.push(['位置','要交換(個)']);
+function txt(v, s){ return {v:v||'', t:'inlineStr', s: s||6}; }
+function num(v, s){ return {v:v, t:'n', s: s||3}; }
+function head(v){ return {v:v, t:'inlineStr', s:2}; }
+
+function formatVisitDate(isoDate){
+  const d = new Date(isoDate);
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+// メイン: 提出用Excel出力
+function exportReportXLSX(){
+  const hosp = document.getElementById('export-hospital').value;
+  if(!hosp){ showToast('⚠️ 病院を選択してください','warn'); return; }
+
+  const recs = st.records.filter(r=>r.hospital===hosp);
+  if(!recs.length){ showToast('⚠️ この病院のデータがありません','warn'); return; }
+
+  const visitDateStr = document.getElementById('export-visit-date').value;
+  const visitDate = visitDateStr ? formatVisitDate(visitDateStr) : formatVisitDate(new Date().toISOString().slice(0,10));
+
+  // 列を動的決定（値がある項目のみ）
+  const cols = [];
+  const candidates = [
+    {key:'date',   label:'日付',     get:r=>r.date||''},
+    {key:'time',   label:'時刻',     get:r=>r.time||''},
+    {key:'ward',   label:'病棟',     get:r=>r.ward||''},
+    {key:'room',   label:'部屋番号', get:r=>r.room||''},
+    {key:'bed',    label:'ベッドNo', get:r=>r.bed||''},
+    {key:'model',  label:'型番',     get:r=>r.model||''},
+    {key:'year',   label:'年式',     get:r=>r.year||''},
+    {key:'floor1', label:'床番①',   get:r=>r.floor1||''},
+    {key:'floor2', label:'床番②',   get:r=>r.floor2||''},
+    {key:'mattress',label:'マットレス',get:r=>r.mattress||''},
+    {key:'monitor',label:'見守り機器',get:r=>r.monitor||''},
+    {key:'tv',     label:'TV',       get:r=>r.tv||''},
+  ];
+  candidates.forEach(c=>{
+    if(recs.some(r=>c.get(r)!=='')) cols.push(c);
+  });
+
   CASTER_POSITIONS.forEach(({id,label})=>{
-    const cnt = recs.filter(r=>r.casters[id]==='要交換').length;
-    rows.push([label,cnt]);
+    cols.push({key:'cast_'+id, label, get:r=>casterCell(r,id), isCaster:true, pos:id});
   });
 
-  const hosp = document.getElementById('export-hospital')?.value||'全病院';
-  downloadCSV(`RoundNote_集計_${hosp}_${todayStr()}.csv`, rows);
-  showToast('② 集計CSV ダウンロード');
-}
-
-// ③ 要対応リストCSV
-function exportNgListCSV(){
-  const recs = getExportRecords();
-  const ngRecs = recs.filter(r=>Object.values(r.casters||{}).includes('要交換'));
-  if(!ngRecs.length){ showToast('⚠️ 要交換のベッドがありません','warn'); return; }
-
-  const header = ['病院名','病棟','部屋番号','ベッドNo','型番','年式','要交換位置','詳細','日付'];
-  const rows = ngRecs.map(r=>{
-    const ngPos = CASTER_POSITIONS
-      .filter(({id})=>r.casters[id]==='要交換')
-      .map(({label})=>label).join('・');
-    const ngDetail = CASTER_POSITIONS
-      .filter(({id})=>r.casters[id]==='要交換'&&r.casterDetail&&r.casterDetail[id])
-      .map(({id,label})=>`${label}:${r.casterDetail[id]}`).join('・');
-    return [r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',r.year||'',ngPos,ngDetail,r.date];
+  st.parts.forEach(p=>{
+    if(recs.some(r=>r.partsSev && r.partsSev[p])){
+      cols.push({key:'part_'+p, label:p, get:r=>(r.partsSev&&r.partsSev[p])||''});
+    }
   });
 
-  // 病院→病棟→部屋の順でソート
-  rows.sort((a,b)=>{
-    if(a[0]!==b[0]) return a[0].localeCompare(b[0],'ja');
-    if(a[1]!==b[1]) return a[1].localeCompare(b[1],'ja');
-    return a[2].localeCompare(b[2],'ja');
+  if(recs.some(r=>(r.photoIds||[]).length>0)){
+    cols.push({key:'photos', label:'写真枚数', get:r=>(r.photoIds||[]).length, num:true});
+  }
+  if(recs.some(r=>r.memo)){
+    cols.push({key:'memo', label:'メモ', get:r=>r.memo||''});
+  }
+
+  // シート1: ラウンド結果
+  const sheet1Rows = [];
+  sheet1Rows.push([null, txt(`${hosp} 様`, 1), txt(`訪問日：${visitDate}`, 1)]);
+  sheet1Rows.push([]);
+  sheet1Rows.push(cols.map(c=>head(c.label)));
+
+  const sortedRecs = [...recs].sort((a,b)=>{
+    const wa = (a.ward||''), wb = (b.ward||'');
+    if(wa!==wb) return wa.localeCompare(wb,'ja');
+    const ra = (a.room||''), rb = (b.room||'');
+    if(ra!==rb) return ra.localeCompare(rb,'ja',{numeric:true});
+    return (a.bed||'').localeCompare(b.bed||'','ja',{numeric:true});
+  });
+  sortedRecs.forEach(r=>{
+    const row = cols.map(c=>{
+      const v = c.get(r);
+      if(c.isCaster){
+        const state = r.casters && r.casters[c.pos];
+        return txt(v, styleForState(state));
+      }
+      if(c.num) return num(v||0);
+      if(c.key.startsWith('part_') && v){
+        return txt(v, v==='重大' ? 5 : v==='中程度' ? 4 : 3);
+      }
+      return txt(v, c.key==='memo' ? 6 : 3);
+    });
+    sheet1Rows.push(row);
   });
 
-  const hosp = document.getElementById('export-hospital')?.value||'全病院';
-  downloadCSV(`RoundNote_要対応リスト_${hosp}_${todayStr()}.csv`, [header,...rows]);
-  showToast('③ 要対応リスト ダウンロード');
-}
-
-// ④ 型番×年式 マトリクスCSV
-function exportMatrixCSV(){
-  const recs = getExportRecords();
-  if(!recs.length){ showToast('⚠️ データがありません','warn'); return; }
-
-  // 型番・年式の全パターンを収集
-  const models = [...new Set(recs.map(r=>r.model||'未記入'))];
-  const years  = [...new Set(recs.map(r=>r.year ||'未記入'))];
-
-  // 年式ソート：数値優先（昇順）、未記入は最後
-  years.sort((a,b)=>{
-    if(a==='未記入') return 1;
-    if(b==='未記入') return -1;
-    const na=parseInt(a), nb=parseInt(b);
-    if(isNaN(na)&&isNaN(nb)) return a.localeCompare(b,'ja');
-    if(isNaN(na)) return 1;
-    if(isNaN(nb)) return -1;
-    return na-nb;
+  const widths1 = cols.map(c=>{
+    if(c.key==='memo')return 30;
+    if(c.key==='model'||c.key==='floor1')return 18;
+    if(c.key.startsWith('part_'))return 12;
+    if(c.key.startsWith('cast_'))return 12;
+    return 10;
   });
 
-  // 型番ソート：マスタ登録順 → 未登録はあいうえお順 → 未記入は最後
-  const masterOrder = (st.models||[]);
-  models.sort((a,b)=>{
-    if(a==='未記入') return 1;
-    if(b==='未記入') return -1;
-    const ia = masterOrder.indexOf(a);
-    const ib = masterOrder.indexOf(b);
-    if(ia>=0 && ib>=0) return ia-ib;
-    if(ia>=0) return -1;
-    if(ib>=0) return 1;
-    return a.localeCompare(b,'ja');
-  });
-
-  // カウント集計
-  const matrix = {};
-  models.forEach(m=>{ matrix[m]={}; years.forEach(y=>matrix[m][y]=0); });
+  // シート2: 集計表
+  const sheet2Rows = [];
+  let ok=0, warn=0, ng=0, done=0, total=0;
   recs.forEach(r=>{
-    const m = r.model||'未記入';
-    const y = r.year ||'未記入';
-    matrix[m][y]++;
+    Object.values(r.casters||{}).forEach(v=>{
+      if(v==='未選択')return;
+      total++;
+      if(v==='正常')ok++;
+      else if(v==='要注意')warn++;
+      else if(v==='要交換')ng++;
+      else if(v==='交換済み')done++;
+    });
+  });
+  const rate = total ? (ng/total*100).toFixed(1) : '0.0';
+
+  sheet2Rows.push([txt('【病院別 集計】', 1)]);
+  sheet2Rows.push([]);
+  sheet2Rows.push(['病院名','台数','要交換率(%)','正常(個)','要注意(個)','要交換(個)','交換済み(個)'].map(head));
+  sheet2Rows.push([txt(hosp,3), num(recs.length), num(rate), num(ok), num(warn), num(ng), num(done)]);
+  sheet2Rows.push([]);
+
+  sheet2Rows.push([txt('【位置別 要交換件数】', 1)]);
+  sheet2Rows.push([]);
+  sheet2Rows.push(['位置','要交換(個)'].map(head));
+  CASTER_POSITIONS.forEach(({id,label})=>{
+    const cnt = recs.filter(r=>r.casters && r.casters[id]==='要交換').length;
+    sheet2Rows.push([txt(label,3), num(cnt)]);
+  });
+  sheet2Rows.push([]);
+
+  const ngRecs = recs.filter(r=>Object.values(r.casters||{}).includes('要交換'));
+  if(ngRecs.length){
+    sheet2Rows.push([txt('【要交換ベッド 要対応リスト】', 1)]);
+    sheet2Rows.push([]);
+    sheet2Rows.push(['病棟','部屋番号','ベッドNo','型番','年式','要交換位置','詳細','日付'].map(head));
+    ngRecs.sort((a,b)=>{
+      if((a.ward||'')!==(b.ward||'')) return (a.ward||'').localeCompare(b.ward||'','ja');
+      return (a.room||'').localeCompare(b.room||'','ja',{numeric:true});
+    });
+    ngRecs.forEach(r=>{
+      const ngPos = CASTER_POSITIONS.filter(({id})=>r.casters[id]==='要交換').map(({label})=>label).join('・');
+      const ngDetail = CASTER_POSITIONS
+        .filter(({id})=>r.casters[id]==='要交換' && r.casterDetail && r.casterDetail[id])
+        .map(({id,label})=>`${label}:${r.casterDetail[id]}`).join('・');
+      sheet2Rows.push([
+        txt(r.ward||'',3), txt(r.room||'',3), txt(r.bed||'',3),
+        txt(r.model||'',3), txt(r.year||'',3),
+        txt(ngPos,5), txt(ngDetail,6), txt(r.date||'',3)
+      ]);
+    });
+  }
+
+  // 型番×年式 クロス集計
+  sheet2Rows.push([]);
+  sheet2Rows.push([txt('【型番 × 年式 集計（台数）】', 1)]);
+  sheet2Rows.push([]);
+
+  // 行(型番)・列(年式)を収集
+  const modelSet = new Set();
+  const yearSet = new Set();
+  recs.forEach(r=>{
+    modelSet.add(r.model || '不明');
+    yearSet.add(r.year || '不明');
+  });
+  // 年式: 数値→昇順、「不明」は最後
+  const years = [...yearSet].sort((a,b)=>{
+    if(a==='不明') return 1;
+    if(b==='不明') return -1;
+    return String(a).localeCompare(String(b), 'ja', {numeric:true});
+  });
+  // 型番: 五十音順、「不明」は最後
+  const models = [...modelSet].sort((a,b)=>{
+    if(a==='不明') return 1;
+    if(b==='不明') return -1;
+    return a.localeCompare(b, 'ja');
   });
 
-  // ヘッダー行（年式 + 合計）
-  const yearHeaders = years.map(y=> y==='未記入' ? '未記入' : `${y}年`);
-  const rows = [];
-  rows.push(['型番＼年式', ...yearHeaders, '合計']);
+  // ヘッダー行: 型番 | 年式1 | 年式2 | … | 合計
+  sheet2Rows.push([head('型番＼年式'), ...years.map(head), head('合計')]);
 
-  // 各型番の行
+  // 各型番ごとの集計
   const colTotals = years.map(()=>0);
   let grandTotal = 0;
   models.forEach(m=>{
-    let rowSum = 0;
-    const cells = years.map((y,i)=>{
-      const v = matrix[m][y];
-      rowSum += v;
-      colTotals[i] += v;
-      return v;
+    let rowTotal = 0;
+    const cells = [txt(m, 6)]; // 型番セルは折り返し
+    years.forEach((y, idx)=>{
+      const cnt = recs.filter(r=>(r.model||'不明')===m && (r.year||'不明')===y).length;
+      cells.push(cnt>0 ? num(cnt) : txt('',3));
+      rowTotal += cnt;
+      colTotals[idx] += cnt;
     });
-    grandTotal += rowSum;
-    rows.push([m, ...cells, rowSum]);
+    cells.push(num(rowTotal, 2)); // 行合計は太字ヘッダースタイル
+    sheet2Rows.push(cells);
+    grandTotal += rowTotal;
   });
-
   // 合計行
-  rows.push(['合計', ...colTotals, grandTotal]);
+  sheet2Rows.push([head('合計'), ...colTotals.map(c=>({v:c, t:'n', s:2})), {v:grandTotal, t:'n', s:2}]);
 
-  const hosp = document.getElementById('export-hospital')?.value||'全病院';
-  downloadCSV(`RoundNote_型番×年式_${hosp}_${todayStr()}.csv`, rows);
-  showToast('④ マトリクス ダウンロード');
-}
+  // シート2 列幅（複数の表が縦に並ぶため、A列は最も広い「型番」に合わせる）
+  const colCountNeeded = Math.max(8, years.length + 2);
+  const widths2 = [];
+  for(let i=0; i<colCountNeeded; i++){
+    if(i===0) widths2.push(25);      // 型番／病棟／病院名／位置／【見出し】
+    else if(i===1) widths2.push(10); // 部屋番号／年式／台数
+    else if(i===2) widths2.push(11); // ベッドNo／要交換率
+    else if(i===3) widths2.push(18); // 型番（要対応リスト）
+    else if(i===4) widths2.push(10); // 年式
+    else if(i===5) widths2.push(20); // 要交換位置
+    else if(i===6) widths2.push(22); // 詳細
+    else if(i===7) widths2.push(12); // 日付
+    else widths2.push(9);            // 年式拡張列
+  }
 
-// 一括ダウンロード
-function exportAllCSV(){
-  const recs = getExportRecords();
-  if(!recs.length){ showToast('⚠️ データがありません','warn'); return; }
-  const hosp = document.getElementById('export-hospital')?.value||'全病院';
-  const allParts = st.parts;
+  // XLSX組み立て
+  const sheet1XML = sheetXML(sheet1Rows, widths1);
+  const sheet2XML = sheetXML(sheet2Rows, widths2);
 
-  // ① 明細
-  const detailHeader = ['日付','時刻','病院名','病棟','部屋番号','ベッドNo','型番','年式','床番①','床番②','マットレス','見守り機器','TV',
-    '頭側・右','頭側・左','足側・右','足側・左',
-    ...allParts,'写真枚数','メモ'];
-  const detailRows = recs.map(r=>{
-    const pc = allParts.map(p=>(r.partsSev&&r.partsSev[p])||'');
-    return [r.date,r.time,r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',
-      r.year||'',r.floor1||'',r.floor2||'',r.mattress||'',r.monitor||'',r.tv||'',
-      casterCell(r,'HR'), casterCell(r,'HL'), casterCell(r,'FR'), casterCell(r,'FL'),
-      ...pc,(r.photoIds||[]).length,(r.memo||'').replace(/\r\n|\r|\n/g,'／')];
-  });
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`;
 
-  // ② 集計
-  const hospMap = {};
-  recs.forEach(r=>{
-    if(!hospMap[r.hospital]) hospMap[r.hospital]={beds:0,ok:0,warn:0,ng:0,done:0,total:0};
-    hospMap[r.hospital].beds++;
-    Object.values(r.casters||{}).forEach(v=>{
-      if(v==='未選択')return; hospMap[r.hospital].total++;
-      if(v==='正常') hospMap[r.hospital].ok++;
-      else if(v==='要注意') hospMap[r.hospital].warn++;
-      else if(v==='要交換') hospMap[r.hospital].ng++;
-      else if(v==='交換済み') hospMap[r.hospital].done++;
-    });
-  });
-  const summaryRows = [
-    ['【病院別 集計】'],
-    ['病院名','台数','要交換率(%)','正常(個)','要注意(個)','要交換(個)','交換済み(個)'],
-    ...Object.entries(hospMap).sort((a,b)=>b[1].ng-a[1].ng).map(([h,d])=>{
-      const rate = d.total ? (d.ng/d.total*100).toFixed(1) : '0.0';
-      return [h,d.beds,rate,d.ok,d.warn,d.ng,d.done];
-    }),
-    [],
-    ['【位置別 要交換件数】'],
-    ['位置','要交換(個)'],
-    ...CASTER_POSITIONS.map(({id,label})=>[label, recs.filter(r=>r.casters[id]==='要交換').length]),
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets>
+<sheet name="ラウンド結果" sheetId="1" r:id="rId1"/>
+<sheet name="集計表" sheetId="2" r:id="rId2"/>
+</sheets>
+</workbook>`;
+
+  const workbookRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const files = [
+    {name:'[Content_Types].xml', bytes:utf8Bytes(contentTypes)},
+    {name:'_rels/.rels', bytes:utf8Bytes(rels)},
+    {name:'xl/workbook.xml', bytes:utf8Bytes(workbook)},
+    {name:'xl/_rels/workbook.xml.rels', bytes:utf8Bytes(workbookRels)},
+    {name:'xl/styles.xml', bytes:utf8Bytes(stylesXML())},
+    {name:'xl/worksheets/sheet1.xml', bytes:utf8Bytes(sheet1XML)},
+    {name:'xl/worksheets/sheet2.xml', bytes:utf8Bytes(sheet2XML)},
   ];
 
-  // ③ 要対応
-  const ngRecs = recs.filter(r=>Object.values(r.casters||{}).includes('要交換'));
-  const ngRows = ngRecs.length ? [
-    ['【要交換ベッド 要対応リスト】'],
-    ['病院名','病棟','部屋番号','ベッドNo','型番','年式','要交換位置','詳細','日付'],
-    ...ngRecs.sort((a,b)=>{
-      if(a.hospital!==b.hospital) return a.hospital.localeCompare(b.hospital,'ja');
-      return (a.ward||'').localeCompare(b.ward||'','ja');
-    }).map(r=>{
-      const ngPos = CASTER_POSITIONS.filter(({id})=>r.casters[id]==='要交換').map(({label})=>label).join('・');
-      const ngDetail = CASTER_POSITIONS
-        .filter(({id})=>r.casters[id]==='要交換'&&r.casterDetail&&r.casterDetail[id])
-        .map(({id,label})=>`${label}:${r.casterDetail[id]}`).join('・');
-      return [r.hospital,r.ward||'',r.room||'',r.bed||'',r.model||'',r.year||'',ngPos,ngDetail,r.date];
-    })
-  ] : [['【要交換ベッド 要対応リスト】'],['該当なし']];
-
-  // 3セクションを縦に結合して1ファイルに
-  const allRows = [
-    ['■ 明細'],
-    detailHeader,
-    ...detailRows,
-    [],
-    ...summaryRows,
-    [],
-    ...ngRows,
-  ];
-
-  // ④ 型番×年式マトリクス
-  const _models = [...new Set(recs.map(r=>r.model||'未記入'))];
-  const _years  = [...new Set(recs.map(r=>r.year ||'未記入'))];
-  _years.sort((a,b)=>{
-    if(a==='未記入')return 1; if(b==='未記入')return -1;
-    const na=parseInt(a),nb=parseInt(b);
-    if(isNaN(na)&&isNaN(nb))return a.localeCompare(b,'ja');
-    if(isNaN(na))return 1; if(isNaN(nb))return -1;
-    return na-nb;
-  });
-  const _masterOrder = (st.models||[]);
-  _models.sort((a,b)=>{
-    if(a==='未記入')return 1; if(b==='未記入')return -1;
-    const ia=_masterOrder.indexOf(a), ib=_masterOrder.indexOf(b);
-    if(ia>=0&&ib>=0)return ia-ib;
-    if(ia>=0)return -1; if(ib>=0)return 1;
-    return a.localeCompare(b,'ja');
-  });
-  const _matrix = {};
-  _models.forEach(m=>{ _matrix[m]={}; _years.forEach(y=>_matrix[m][y]=0); });
-  recs.forEach(r=>{ _matrix[r.model||'未記入'][r.year||'未記入']++; });
-  const _yearHeaders = _years.map(y=> y==='未記入' ? '未記入' : `${y}年`);
-  const matrixRows = [['【型番×年式 マトリクス】'], ['型番＼年式', ..._yearHeaders, '合計']];
-  const _colTotals = _years.map(()=>0);
-  let _grandTotal = 0;
-  _models.forEach(m=>{
-    let rowSum = 0;
-    const cells = _years.map((y,i)=>{
-      const v = _matrix[m][y];
-      rowSum += v; _colTotals[i] += v;
-      return v;
-    });
-    _grandTotal += rowSum;
-    matrixRows.push([m, ...cells, rowSum]);
-  });
-  matrixRows.push(['合計', ..._colTotals, _grandTotal]);
-
-  allRows.push([]);
-  allRows.push(...matrixRows);
-
-  downloadCSV(`RoundNote_${hosp}_${todayStr()}.csv`, allRows);
-  showToast('ダウンロードしました');
+  const zip = buildZip(files);
+  const blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${hosp}様_ラウンド結果表_${todayStr()}.xlsx`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('📋 Excelをダウンロード');
 }
-
-
-// 旧関数（互換性維持）
-function exportCSV(){ exportDetailCSV(); }
 
 function clearAll(){
   if(!confirm('すべての記録と写真を削除します。\n元に戻せません。'))return;
@@ -3185,7 +3234,10 @@ function renderHospitalOptions(){
   ['inp-hospital','filter-hospital','export-hospital'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     const val=el.value;
-    el.innerHTML=(id==='filter-hospital'?'<option value="">すべての病院</option>':'<option value="">選択してください</option>')
+    const placeholder = id==='filter-hospital' ? 'すべての病院'
+      : id==='export-hospital' ? '病院を選んでください'
+      : '選択してください';
+    el.innerHTML=`<option value="">${placeholder}</option>`
       +st.hospitals.map(h=>`<option value="${h}">${h}</option>`).join('');
     if(val) el.value=val;
   });
