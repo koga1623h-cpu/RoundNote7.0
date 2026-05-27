@@ -2876,26 +2876,32 @@ function sheetXML(rows, colWidths, opts){
 
 // スタイル: 0=default, 1=太字, 2=ヘッダー(太字+中央+グレー+罫線),
 // 3=中央+罫線, 4=要注意(黄+中央+罫線), 5=要交換(赤+中央+罫線), 6=折り返し+罫線
+// 7=買い替え警告(黄背景+罫線), 8=即買い替え(赤背景+罫線), 9=左寄せ+折り返し+罫線
+// 10=チェック欄(太枠), 11=合計行(太字+グレー背景+中央+罫線)
 function stylesXML(){
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<fonts count="2">
+<fonts count="3">
 <font><sz val="11"/><name val="メイリオ"/></font>
 <font><b/><sz val="11"/><name val="メイリオ"/></font>
+<font><b/><sz val="12"/><name val="メイリオ"/></font>
 </fonts>
-<fills count="5">
+<fills count="7">
 <fill><patternFill patternType="none"/></fill>
 <fill><patternFill patternType="gray125"/></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFE8E8E8"/></patternFill></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFFFF4CE"/></patternFill></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFFFD6D6"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFE8B0"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFB0B0"/></patternFill></fill>
 </fills>
-<borders count="2">
+<borders count="3">
 <border><left/><right/><top/><bottom/><diagonal/></border>
 <border><left style="thin"><color rgb="FFB0B0B0"/></left><right style="thin"><color rgb="FFB0B0B0"/></right><top style="thin"><color rgb="FFB0B0B0"/></top><bottom style="thin"><color rgb="FFB0B0B0"/></bottom></border>
+<border><left style="medium"><color rgb="FF606060"/></left><right style="medium"><color rgb="FF606060"/></right><top style="medium"><color rgb="FF606060"/></top><bottom style="medium"><color rgb="FF606060"/></bottom></border>
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="7">
+<cellXfs count="12">
 <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
 <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
 <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
@@ -2903,6 +2909,11 @@ function stylesXML(){
 <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="0" fillId="4" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="5" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="1" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="標準" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
@@ -3009,123 +3020,207 @@ function exportReportXLSX(){
     return 10;
   });
 
-  // シート2: 集計表
-  const sheet2Rows = [];
-  let ok=0, warn=0, ng=0, done=0, total=0;
-  recs.forEach(r=>{
-    Object.values(r.casters||{}).forEach(v=>{
-      if(v==='未選択')return;
-      total++;
-      if(v==='正常')ok++;
-      else if(v==='要注意')warn++;
-      else if(v==='要交換')ng++;
-      else if(v==='交換済み')done++;
-    });
-  });
-  const rate = total ? (ng/total*100).toFixed(1) : '0.0';
+  // ═════════════════════════════════════════════
+  // シート2: 型番別 破損箇所サマリー
+  // ═════════════════════════════════════════════
+  const sheet3Rows = [];
+  sheet3Rows.push([txt('【型番別 破損箇所サマリー】', 1)]);
+  sheet3Rows.push([txt('部品発注用：型番ごとに、どの部位が・何個・どの程度の損傷か', 0)]);
+  sheet3Rows.push([]);
 
-  sheet2Rows.push([txt('【病院別 集計】', 1)]);
-  sheet2Rows.push([]);
-  sheet2Rows.push(['病院名','台数','要交換率(%)','正常(個)','要注意(個)','要交換(個)','交換済み(個)'].map(head));
-  sheet2Rows.push([txt(hosp,3), num(recs.length), num(rate), num(ok), num(warn), num(ng), num(done)]);
-  sheet2Rows.push([]);
-
-  sheet2Rows.push([txt('【位置別 要交換件数】', 1)]);
-  sheet2Rows.push([]);
-  sheet2Rows.push(['位置','要交換(個)'].map(head));
-  CASTER_POSITIONS.forEach(({id,label})=>{
-    const cnt = recs.filter(r=>r.casters && r.casters[id]==='要交換').length;
-    sheet2Rows.push([txt(label,3), num(cnt)]);
-  });
-  sheet2Rows.push([]);
-
-  const ngRecs = recs.filter(r=>Object.values(r.casters||{}).includes('要交換'));
-  if(ngRecs.length){
-    sheet2Rows.push([txt('【要交換ベッド 要対応リスト】', 1)]);
-    sheet2Rows.push([]);
-    sheet2Rows.push(['病棟','部屋番号','ベッドNo','型番','年式','要交換位置','詳細','日付'].map(head));
-    ngRecs.sort((a,b)=>{
-      if((a.ward||'')!==(b.ward||'')) return (a.ward||'').localeCompare(b.ward||'','ja');
-      return (a.room||'').localeCompare(b.room||'','ja',{numeric:true});
-    });
-    ngRecs.forEach(r=>{
-      const ngPos = CASTER_POSITIONS.filter(({id})=>r.casters[id]==='要交換').map(({label})=>label).join('・');
-      const ngDetail = CASTER_POSITIONS
-        .filter(({id})=>r.casters[id]==='要交換' && r.casterDetail && r.casterDetail[id])
-        .map(({id,label})=>`${label}:${r.casterDetail[id]}`).join('・');
-      sheet2Rows.push([
-        txt(r.ward||'',3), txt(r.room||'',3), txt(r.bed||'',3),
-        txt(r.model||'',3), txt(r.year||'',3),
-        txt(ngPos,5), txt(ngDetail,6), txt(r.date||'',3)
-      ]);
-    });
-  }
-
-  // 型番×年式 クロス集計
-  sheet2Rows.push([]);
-  sheet2Rows.push([txt('【型番 × 年式 集計（台数）】', 1)]);
-  sheet2Rows.push([]);
-
-  // 行(型番)・列(年式)を収集
-  const modelSet = new Set();
-  const yearSet = new Set();
-  recs.forEach(r=>{
-    modelSet.add(r.model || '不明');
-    yearSet.add(r.year || '不明');
-  });
-  // 年式: 数値→昇順、「不明」は最後
-  const years = [...yearSet].sort((a,b)=>{
-    if(a==='不明') return 1;
-    if(b==='不明') return -1;
-    return String(a).localeCompare(String(b), 'ja', {numeric:true});
-  });
-  // 型番: 五十音順、「不明」は最後
-  const models = [...modelSet].sort((a,b)=>{
-    if(a==='不明') return 1;
-    if(b==='不明') return -1;
+  // 型番一覧（未入力は「不明」）
+  const modelSet3 = new Set();
+  recs.forEach(r=>{ modelSet3.add(r.model || '不明'); });
+  const models3 = [...modelSet3].sort((a,b)=>{
+    if(a==='不明')return 1; if(b==='不明')return -1;
     return a.localeCompare(b, 'ja');
   });
 
-  // ヘッダー行: 型番 | 年式1 | 年式2 | … | 合計
-  sheet2Rows.push([head('型番＼年式'), ...years.map(head), head('合計')]);
-
-  // 各型番ごとの集計
-  const colTotals = years.map(()=>0);
-  let grandTotal = 0;
-  models.forEach(m=>{
-    let rowTotal = 0;
-    const cells = [txt(m, 6)]; // 型番セルは折り返し
-    years.forEach((y, idx)=>{
-      const cnt = recs.filter(r=>(r.model||'不明')===m && (r.year||'不明')===y).length;
-      cells.push(cnt>0 ? num(cnt) : txt('',3));
-      rowTotal += cnt;
-      colTotals[idx] += cnt;
-    });
-    cells.push(num(rowTotal, 2)); // 行合計は太字ヘッダースタイル
-    sheet2Rows.push(cells);
-    grandTotal += rowTotal;
+  // 部位一覧（実際に使われているもの＋キャスター4点）
+  const usedParts = new Set();
+  recs.forEach(r=>{
+    if(r.partsSev){
+      Object.keys(r.partsSev).forEach(p=>{ if(r.partsSev[p]) usedParts.add(p); });
+    }
   });
-  // 合計行
-  sheet2Rows.push([head('合計'), ...colTotals.map(c=>({v:c, t:'n', s:2})), {v:grandTotal, t:'n', s:2}]);
+  const parts3 = st.parts.filter(p=>usedParts.has(p));
+  const casterCols = CASTER_POSITIONS.map(c=>c.label);
 
-  // シート2 列幅（複数の表が縦に並ぶため、A列は最も広い「型番」に合わせる）
-  const colCountNeeded = Math.max(8, years.length + 2);
-  const widths2 = [];
-  for(let i=0; i<colCountNeeded; i++){
-    if(i===0) widths2.push(25);      // 型番／病棟／病院名／位置／【見出し】
-    else if(i===1) widths2.push(10); // 部屋番号／年式／台数
-    else if(i===2) widths2.push(11); // ベッドNo／要交換率
-    else if(i===3) widths2.push(18); // 型番（要対応リスト）
-    else if(i===4) widths2.push(10); // 年式
-    else if(i===5) widths2.push(20); // 要交換位置
-    else if(i===6) widths2.push(22); // 詳細
-    else if(i===7) widths2.push(12); // 日付
-    else widths2.push(9);            // 年式拡張列
+  // ヘッダー
+  const headerRow3 = [head('型番'), head('台数')];
+  parts3.forEach(p=> headerRow3.push(head(p)));
+  casterCols.forEach(c=> headerRow3.push(head('キャスター\n'+c)));
+  headerRow3.push(head('要対応\n合計'));
+  sheet3Rows.push(headerRow3);
+
+  models3.forEach(m=>{
+    const mRecs = recs.filter(r=>(r.model||'不明')===m);
+    const row = [txt(m, 6), num(mRecs.length)];
+    let urgentTotal = 0;
+    // 各部位の損傷度集計
+    parts3.forEach(p=>{
+      const counts = {軽微:0, 中程度:0, 重大:0};
+      mRecs.forEach(r=>{
+        const sev = r.partsSev && r.partsSev[p];
+        if(sev && counts[sev]!==undefined) counts[sev]++;
+      });
+      const tot = counts.軽微 + counts.中程度 + counts.重大;
+      if(tot===0){ row.push(txt('-', 3)); }
+      else {
+        const parts = [];
+        if(counts.重大) parts.push(`重大${counts.重大}`);
+        if(counts.中程度) parts.push(`中${counts.中程度}`);
+        if(counts.軽微) parts.push(`軽微${counts.軽微}`);
+        const cellStyle = counts.重大>0 ? 5 : counts.中程度>0 ? 4 : 3;
+        row.push(txt(`${tot}\n(${parts.join('・')})`, cellStyle));
+        urgentTotal += counts.重大 + counts.中程度;
+      }
+    });
+    // キャスター4点
+    CASTER_POSITIONS.forEach(({id})=>{
+      const counts = {要注意:0, 要交換:0};
+      mRecs.forEach(r=>{
+        const s = r.casters && r.casters[id];
+        if(s==='要注意') counts.要注意++;
+        else if(s==='要交換') counts.要交換++;
+      });
+      const tot = counts.要注意 + counts.要交換;
+      if(tot===0){ row.push(txt('-', 3)); }
+      else{
+        const parts = [];
+        if(counts.要交換) parts.push(`交換${counts.要交換}`);
+        if(counts.要注意) parts.push(`注意${counts.要注意}`);
+        const cellStyle = counts.要交換>0 ? 5 : 4;
+        row.push(txt(`${tot}\n(${parts.join('・')})`, cellStyle));
+        urgentTotal += counts.要交換;
+      }
+    });
+    row.push(num(urgentTotal, urgentTotal>0 ? 2 : 3));
+    sheet3Rows.push(row);
+  });
+
+  const widths3 = [22, 8];
+  parts3.forEach(()=>widths3.push(14));
+  CASTER_POSITIONS.forEach(()=>widths3.push(13));
+  widths3.push(11);
+
+  // ═════════════════════════════════════════════
+  // シート5: 買い替え提案（型番×年式 + 個別リスト）
+  // ═════════════════════════════════════════════
+  const sheet5Rows = [];
+  const currentYear = new Date().getFullYear();
+  sheet5Rows.push([null, txt(`${hosp} 様 ベッド買い替え提案資料`, 2)]);
+  sheet5Rows.push([null, txt(`訪問日：${visitDate}`, 0)]);
+  sheet5Rows.push([]);
+
+  // 買い替え推奨度の判定（経過年数）
+  function ageOf(yearStr){
+    const y = parseInt(String(yearStr).replace(/\D/g,''), 10);
+    if(!y || y < 1980) return null;
+    return currentYear - y;
+  }
+  function recommendLevel(age){
+    if(age===null) return {label:'-', style:3};
+    if(age>=20) return {label:'🔴 即買替推奨', style:8};
+    if(age>=15) return {label:'🟡 計画的買替', style:7};
+    return {label:'継続使用可', style:3};
   }
 
-  // XLSX組み立て
+  // 個別リスト
+  sheet5Rows.push([txt('【ベッド別 買い替え推奨度】', 1)]);
+  sheet5Rows.push([]);
+  sheet5Rows.push(['病棟','部屋','ベッドNo','型番','年式','経過年数','推奨度'].map(head));
+
+  const sortedForReplace = [...recs].sort((a,b)=>{
+    const ageA = ageOf(a.year) ?? -1;
+    const ageB = ageOf(b.year) ?? -1;
+    return ageB - ageA; // 古い順
+  });
+  let cnt15=0, cnt20=0;
+  sortedForReplace.forEach(r=>{
+    const age = ageOf(r.year);
+    const rec = recommendLevel(age);
+    if(age!==null && age>=20) cnt20++;
+    else if(age!==null && age>=15) cnt15++;
+    sheet5Rows.push([
+      txt(r.ward||'',3), txt(r.room||'',3), txt(r.bed||'',3),
+      txt(r.model||'',9),
+      txt(r.year||'',3),
+      txt(age===null ? '-' : age+'年', age!==null && age>=20 ? 8 : age!==null && age>=15 ? 7 : 3),
+      txt(rec.label, rec.style),
+    ]);
+  });
+
+  // サマリー
+  sheet5Rows.push([]);
+  sheet5Rows.push([txt('【サマリー】', 1)]);
+  sheet5Rows.push([]);
+  sheet5Rows.push([head('区分'), head('台数')]);
+  sheet5Rows.push([txt('🔴 即買替推奨（20年以上）', 8), num(cnt20, cnt20>0 ? 8 : 3)]);
+  sheet5Rows.push([txt('🟡 計画的買替検討（15〜19年）', 7), num(cnt15, cnt15>0 ? 7 : 3)]);
+  sheet5Rows.push([txt('継続使用可（〜14年）', 3), num(recs.length - cnt15 - cnt20)]);
+
+  // 型番×年式クロス表
+  sheet5Rows.push([]);
+  sheet5Rows.push([txt('【型番 × 年式 クロス表（黄=15年以上、赤=20年以上）】', 1)]);
+  sheet5Rows.push([]);
+
+  const modelSet5 = new Set();
+  const yearSet5 = new Set();
+  recs.forEach(r=>{
+    modelSet5.add(r.model || '不明');
+    yearSet5.add(r.year || '不明');
+  });
+  const years5 = [...yearSet5].sort((a,b)=>{
+    if(a==='不明')return 1; if(b==='不明')return -1;
+    return String(a).localeCompare(String(b), 'ja', {numeric:true});
+  });
+  const models5 = [...modelSet5].sort((a,b)=>{
+    if(a==='不明')return 1; if(b==='不明')return -1;
+    return a.localeCompare(b, 'ja');
+  });
+
+  // ヘッダー: 年式に経過年数を併記＋色付け
+  const yearHeaderCells = years5.map(y=>{
+    const age = ageOf(y);
+    if(age===null) return head(y);
+    const label = `${y}\n(${age}年)`;
+    if(age>=20) return {v:label, t:'inlineStr', s:8};
+    if(age>=15) return {v:label, t:'inlineStr', s:7};
+    return head(label);
+  });
+  sheet5Rows.push([head('型番＼年式'), ...yearHeaderCells, head('合計')]);
+
+  const colTotals5 = years5.map(()=>0);
+  let grandTotal5 = 0;
+  models5.forEach(m=>{
+    let rowTotal = 0;
+    const cells = [txt(m, 6)];
+    years5.forEach((y, idx)=>{
+      const cnt = recs.filter(r=>(r.model||'不明')===m && (r.year||'不明')===y).length;
+      const age = ageOf(y);
+      if(cnt===0){ cells.push(txt('', 3)); }
+      else if(age!==null && age>=20){ cells.push({v:cnt, t:'n', s:8}); }
+      else if(age!==null && age>=15){ cells.push({v:cnt, t:'n', s:7}); }
+      else { cells.push(num(cnt)); }
+      rowTotal += cnt;
+      colTotals5[idx] += cnt;
+    });
+    cells.push(num(rowTotal, 2));
+    sheet5Rows.push(cells);
+    grandTotal5 += rowTotal;
+  });
+  sheet5Rows.push([head('合計'), ...colTotals5.map(c=>({v:c, t:'n', s:2})), {v:grandTotal5, t:'n', s:2}]);
+
+  const widths5 = [22, 8, 9, 18, 8, 11, 16];
+  // 年式列の数だけ拡張（クロス表用）
+  for(let i=widths5.length; i<2+years5.length+1; i++) widths5.push(10);
+
+  // XLSX組み立て（3シート構成）
+  // sheet1=ラウンド結果, sheet2=型番別 破損箇所, sheet3=買い替え提案
   const sheet1XML = sheetXML(sheet1Rows, widths1);
-  const sheet2XML = sheetXML(sheet2Rows, widths2);
+  const sheet2XML = sheetXML(sheet3Rows, widths3);
+  const sheet3XML = sheetXML(sheet5Rows, widths5);
 
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -3134,6 +3229,7 @@ function exportReportXLSX(){
 <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
 <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 </Types>`;
 
@@ -3146,7 +3242,8 @@ function exportReportXLSX(){
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheets>
 <sheet name="ラウンド結果" sheetId="1" r:id="rId1"/>
-<sheet name="集計表" sheetId="2" r:id="rId2"/>
+<sheet name="型番別 破損箇所" sheetId="2" r:id="rId2"/>
+<sheet name="買い替え提案" sheetId="3" r:id="rId3"/>
 </sheets>
 </workbook>`;
 
@@ -3154,7 +3251,8 @@ function exportReportXLSX(){
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
 <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
-<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
+<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`;
 
   const files = [
@@ -3165,6 +3263,7 @@ function exportReportXLSX(){
     {name:'xl/styles.xml', bytes:utf8Bytes(stylesXML())},
     {name:'xl/worksheets/sheet1.xml', bytes:utf8Bytes(sheet1XML)},
     {name:'xl/worksheets/sheet2.xml', bytes:utf8Bytes(sheet2XML)},
+    {name:'xl/worksheets/sheet3.xml', bytes:utf8Bytes(sheet3XML)},
   ];
 
   const zip = buildZip(files);
