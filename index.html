@@ -1294,6 +1294,12 @@ input[type=file]{display:none;}
     <div class="form-row" style="margin-bottom:10px">
       <input type="text" id="round-label" placeholder="端末名・担当者（任意：例 田中／3F班）" maxlength="30">
     </div>
+    <div class="form-row" style="margin-bottom:10px">
+      <select id="export-round-hospital" style="width:100%;font-size:14px;padding:9px 11px;min-height:42px"><option value="">すべての病院</option></select>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);margin-bottom:12px;cursor:pointer">
+      <input type="checkbox" id="export-round-today" style="width:18px;height:18px;flex-shrink:0"> 今日の記録だけにする
+    </label>
     <button class="btn btn-outline" onclick="exportRoundFile()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       このデータを書き出す（写真込み）
@@ -1578,6 +1584,7 @@ updateCasterUI();
 renderPhotoField();
 renderStorageMeter();
 renderCleanupHospitalOptions();
+renderExportRoundOptions();
 document.getElementById('saveFooter').classList.add('show');
 
 function updateBadge(){
@@ -1834,6 +1841,7 @@ function switchTab(name){
   if(name==='summary') renderSummary();
   if(name==='export')  {
     renderHospitalOptions();
+    renderExportRoundOptions();
     const dateEl = document.getElementById('export-visit-date');
     if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
   }  if(name==='master'){ renderHospitalsEditor(); renderModelsEditor(); renderPartsEditor(); renderStorageMeter(); renderCleanupHospitalOptions(); }
@@ -3560,16 +3568,24 @@ function clearAll(){
   showToast('削除しました');
 }
 
-function renderCleanupHospitalOptions(){
-  const el = document.getElementById('cleanup-hospital');
+// 病院（件数つき）でセレクトを埋める共通関数
+function fillHospitalCountSelect(id, placeholder){
+  const el = document.getElementById(id);
   if(!el) return;
   const prev = el.value;
   const counts = {};
   st.records.forEach(r=>{ const h = r.hospital || '（病院未記入）'; counts[h] = (counts[h]||0) + 1; });
   const names = Object.keys(counts).sort((a,b)=>a.localeCompare(b,'ja'));
-  el.innerHTML = '<option value="">病院を選択</option>'
+  el.innerHTML = `<option value="">${placeholder}</option>`
     + names.map(h=>`<option value="${h.replace(/"/g,'&quot;')}">${h}（${counts[h]}台）</option>`).join('');
   if(prev && counts[prev]) el.value = prev;
+}
+
+function renderCleanupHospitalOptions(){
+  fillHospitalCountSelect('cleanup-hospital','病院を選択');
+}
+function renderExportRoundOptions(){
+  fillHospitalCountSelect('export-round-hospital','すべての病院');
 }
 
 function deleteByHospital(){
@@ -3815,8 +3831,22 @@ function roundStamp(r){ return (r.date||'') + ' ' + (r.time||''); }
 
 // ① 書き出し：記録＋参照中の写真を1ファイルに（写真込み）
 function exportRoundFile(){
-  const recs = st.records || [];
+  let recs = st.records || [];
   if(recs.length === 0){ showToast('書き出す記録がありません','err'); return; }
+
+  // 絞り込み（病院 / 今日の分だけ）
+  const hosp = document.getElementById('export-round-hospital')?.value || '';
+  const todayOnly = document.getElementById('export-round-today')?.checked;
+  if(hosp) recs = recs.filter(r => (r.hospital||'（病院未記入）')===hosp);
+  if(todayOnly){
+    const now = new Date();
+    recs = recs.filter(r=>{
+      const d = parseRecordDate(r.date);
+      return d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+    });
+  }
+  if(recs.length === 0){ showToast('絞り込み条件に合う記録がありません','warn'); return; }
+
   // 記録から参照されている写真だけ同梱（孤立写真は除外して軽量化）
   const usedPhotos = {};
   recs.forEach(r => (r.photoIds||[]).forEach(pid => {
