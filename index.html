@@ -54,79 +54,6 @@ body{
 }
 .save-footer.show{display:flex;}
 .save-footer.kb-hide{display:none !important;}
-
-/* ── メモ FAB ── */
-.fab-memo{
-  position:fixed;right:14px;bottom:calc(20px + env(safe-area-inset-bottom));
-  width:54px;height:54px;border-radius:50%;z-index:96;
-  background:var(--accent);color:#fff;border:none;
-  box-shadow:0 3px 10px rgba(26,37,64,.32);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;opacity:.94;
-  transition:opacity .2s,transform .2s,bottom .2s;
-}
-.fab-memo:active{transform:scale(.92);}
-.fab-memo svg{width:24px;height:24px;}
-.fab-memo .fab-dot{
-  position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;padding:0 4px;
-  background:var(--ng);color:#fff;font-size:11px;font-weight:700;border-radius:9px;
-  display:none;align-items:center;justify-content:center;line-height:18px;
-}
-.fab-memo.has-todo .fab-dot{display:flex;}
-/* 記録画面では保存フッターを避けて上へ */
-body.footer-on .fab-memo{bottom:calc(74px + env(safe-area-inset-bottom));}
-/* スクロール中は控えめに */
-.fab-memo.dim{opacity:.4;transform:scale(.85);}
-.fab-memo.kb-hide{display:none;}
-
-/* ── メモ モーダル ── */
-.memo-modal{position:fixed;inset:0;z-index:9000;display:none;}
-.memo-modal.show{display:block;}
-.memo-modal .memo-back{position:absolute;inset:0;background:rgba(26,37,64,.45);}
-.memo-sheet{
-  position:absolute;left:0;right:0;bottom:0;top:0;
-  background:var(--bg);display:flex;flex-direction:column;
-  animation:memoUp .22s ease;
-}
-@keyframes memoUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-.memo-head{
-  display:flex;align-items:center;gap:10px;padding:14px;
-  background:var(--surface);border-bottom:1px solid var(--line);
-  padding-top:calc(14px + env(safe-area-inset-top));
-}
-.memo-head .memo-title{font-size:17px;font-weight:700;flex:1;}
-.memo-head .memo-close{
-  width:34px;height:34px;border:none;background:var(--surface2);color:var(--text);
-  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-}
-.memo-add{display:flex;gap:8px;padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--line);}
-.memo-add input{
-  flex:1;padding:11px 12px;font-size:15px;border:1px solid var(--line);
-  background:var(--surface);color:var(--text);
-}
-.memo-add button{
-  padding:0 18px;border:none;background:var(--accent);color:#fff;font-size:20px;font-weight:700;cursor:pointer;
-}
-.memo-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 0 40px;}
-.memo-empty{text-align:center;color:var(--text3);font-size:14px;padding:40px 20px;}
-.memo-item{
-  display:flex;align-items:flex-start;gap:11px;padding:13px 14px;
-  border-bottom:1px solid var(--line-thin);background:var(--surface);
-}
-.memo-item .memo-check{
-  flex-shrink:0;width:24px;height:24px;border:2px solid var(--accent);border-radius:50%;
-  margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  font-size:14px;color:#fff;background:transparent;
-}
-.memo-item.done .memo-check{background:var(--done);border-color:var(--done);}
-.memo-item .memo-body{flex:1;min-width:0;}
-.memo-item .memo-text{font-size:15px;color:var(--text);word-break:break-word;white-space:pre-wrap;line-height:1.4;}
-.memo-item.done .memo-text{text-decoration:line-through;color:var(--text3);}
-.memo-item .memo-time{font-size:12px;color:var(--text3);margin-top:3px;}
-.memo-item .memo-del{
-  flex-shrink:0;border:none;background:transparent;color:var(--text3);
-  font-size:13px;cursor:pointer;padding:2px 4px;margin-top:1px;
-}
 .btn-save-main{
   flex:1;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;
 }
@@ -650,8 +577,8 @@ select{
 .ward-stat-of{font-size:10px;color:var(--text3);margin-left:2px;}
 
 /* ── FILTER ── */
-.filter-bar{display:flex;gap:8px;margin-bottom:12px;}
-.filter-bar select{flex:1;font-size:13px;padding:9px 11px;min-height:40px;}
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.filter-bar select{flex:1 1 40%;min-width:110px;font-size:13px;padding:9px 11px;min-height:40px;}
 
 /* ── MASTER EDITOR ── */
 .part-row{display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1.5px solid var(--line-thin);}
@@ -1212,33 +1139,11 @@ input[type=file]{display:none;}
   </button>
 </div>
 
-<!-- ===== メモ FAB ===== -->
-<button class="fab-memo" id="fabMemo" onclick="openMemo()" title="メモ" aria-label="メモを開く">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-  <span class="fab-dot" id="fabDot">0</span>
-</button>
-
-<!-- ===== メモ モーダル ===== -->
-<div class="memo-modal" id="memoModal">
-  <div class="memo-back" onclick="closeMemo()"></div>
-  <div class="memo-sheet">
-    <div class="memo-head">
-      <span class="memo-title">📝 メモ</span>
-      <button class="memo-close" onclick="closeMemo()" aria-label="閉じる">✕</button>
-    </div>
-    <div class="memo-add">
-      <input type="text" id="memoInput" placeholder="後でやること・気づきを書き留める..." enterkeyhint="done"
-             onkeydown="if(event.key==='Enter'){event.preventDefault();addMemo();}">
-      <button onclick="addMemo()" aria-label="追加">＋</button>
-    </div>
-    <div class="memo-list" id="memoList"></div>
-  </div>
-</div>
-
 <!-- ===== 一覧 ===== -->
 <div id="page-list" class="page">
   <div class="filter-bar">
-    <select id="filter-hospital" onchange="renderList()"><option value="">すべての病院</option></select>
+    <select id="filter-hospital" onchange="onHospitalFilterChange()"><option value="">すべての病院</option></select>
+    <select id="filter-ward" onchange="renderList()"><option value="">すべての病棟</option></select>
     <select id="filter-worst" onchange="renderList()">
       <option value="">すべての状態</option>
       <option>正常</option><option>要注意</option><option>要交換</option><option>交換済み</option>
@@ -1281,35 +1186,6 @@ input[type=file]{display:none;}
       ・ベッド一覧と集計表の2シート構成<br>
       ・入力された項目のみが列に表示されます<br>
       ・iPhoneのExcelアプリ・ファイルアプリで開けます
-    </p>
-  </div>
-
-  <!-- 複数人ラウンドの統合 -->
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>複数人ラウンドの統合</div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7;">分担して回ったあと、各自が①で書き出し → AirDropで親機へ送り → 親機が②で取り込むと、ベッド単位でまとめて統合されます（写真込み）。</p>
-
-    <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">① 自分のデータを書き出す</label>
-    <div class="form-row" style="margin-bottom:10px">
-      <input type="text" id="round-label" placeholder="端末名・担当者（任意：例 田中／3F班）" maxlength="30">
-    </div>
-    <button class="btn btn-outline" onclick="exportRoundFile()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      このデータを書き出す（写真込み）
-    </button>
-
-    <div style="height:1px;background:var(--border, #e5e7eb);margin:18px 0;"></div>
-
-    <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">② 受け取ったファイルを取り込む</label>
-    <input type="file" id="roundImportInput" accept=".json,application/json" style="display:none" onchange="handleRoundImport(event)">
-    <button class="btn btn-success" onclick="document.getElementById('roundImportInput').click()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      ラウンドファイルを取り込んで統合
-    </button>
-    <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.7;">
-      ・同じベッド（病院＋病棟＋部屋＋ベッド）は新しい記録で上書き<br>
-      ・取り込み前に内容を確認できます。既存データは消えません<br>
-      ・病棟・部屋・ベッドの表記は全員でそろえてください
     </p>
   </div>
 </div>
@@ -1474,6 +1350,7 @@ let formPhotoIds = []; // 現在フォームに追加中の写真ID
 
 // 一覧タブの状態
 let expandedRecs = new Set();
+const WARD_BLANK='__no_ward__';
 let listSort = 'newest'; // newest / oldest / ng
 
 function loadState(){
@@ -1481,10 +1358,9 @@ function loadState(){
     const s = JSON.parse(localStorage.getItem('casterInspect')||'null');
     if(!s) throw 'new';
     if(!s.parts) s.parts = [...DEFAULT_PARTS];
-    if(!s.memos) s.memos = [];
     return s;
   }catch(e){
-    return { records:[], hospitals:[...DEFAULT_HOSPITALS], models:[...DEFAULT_MODELS], parts:[...DEFAULT_PARTS], memos:[] };
+    return { records:[], hospitals:[...DEFAULT_HOSPITALS], models:[...DEFAULT_MODELS], parts:[...DEFAULT_PARTS] };
   }
 }
 function loadPhotos(){
@@ -1550,8 +1426,6 @@ renderHospitalsEditor();
 renderModelsEditor();
 renderPartsEditor();
 updateBadge();
-updateMemoBadge();
-document.body.classList.add('footer-on');
 updateCasterUI();
 renderPhotoField();
 renderStorageMeter();
@@ -1806,8 +1680,7 @@ function switchTab(name){
   const footer = document.getElementById('saveFooter');
   footer.classList.toggle('show', name==='input');
   footer.classList.remove('kb-hide');
-  document.body.classList.toggle('footer-on', name==='input');
-  if(name==='list')   renderList();
+  if(name==='list'){ renderWardFilterOptions(); renderList(); }
   if(name==='summary') renderSummary();
   if(name==='export')  {
     renderHospitalOptions();
@@ -1815,87 +1688,6 @@ function switchTab(name){
     if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
   }  if(name==='master'){ renderHospitalsEditor(); renderModelsEditor(); renderPartsEditor(); renderStorageMeter(); }
 }
-
-// ═══════════════════════════════════════════════════════
-// メモ（後でやること）
-// ═══════════════════════════════════════════════════════
-function openMemo(){
-  document.getElementById('memoModal').classList.add('show');
-  renderMemos();
-  setTimeout(()=>{ const i=document.getElementById('memoInput'); if(i) i.focus(); }, 250);
-}
-function closeMemo(){
-  document.getElementById('memoModal').classList.remove('show');
-  const i=document.getElementById('memoInput'); if(i) i.blur();
-}
-function addMemo(){
-  const i = document.getElementById('memoInput');
-  const text = i.value.trim();
-  if(!text) return;
-  st.memos.unshift({ id:'m'+Date.now(), text, done:false, ts:Date.now() });
-  persistState();
-  i.value='';
-  renderMemos();
-  updateMemoBadge();
-}
-function toggleMemo(id){
-  const m = st.memos.find(x=>x.id===id);
-  if(!m) return;
-  m.done = !m.done;
-  m.ts = Date.now(); // 完了/復帰で並び替え基準を更新
-  persistState();
-  renderMemos();
-  updateMemoBadge();
-}
-function deleteMemo(id){
-  st.memos = st.memos.filter(x=>x.id!==id);
-  persistState();
-  renderMemos();
-  updateMemoBadge();
-}
-function fmtMemoTime(ts){
-  const d = new Date(ts);
-  const mm = d.getMonth()+1, dd = d.getDate();
-  const hh = String(d.getHours()).padStart(2,'0'), mi = String(d.getMinutes()).padStart(2,'0');
-  return `${mm}/${dd} ${hh}:${mi}`;
-}
-function renderMemos(){
-  const wrap = document.getElementById('memoList');
-  if(!st.memos || st.memos.length===0){
-    wrap.innerHTML = '<div class="memo-empty">まだメモはありません。<br>点検中に「後でやること」を書き留めておけます。</div>';
-    return;
-  }
-  // 未完了を上、完了を下。各グループ内は新しい順
-  const todo = st.memos.filter(m=>!m.done).sort((a,b)=>b.ts-a.ts);
-  const done = st.memos.filter(m=>m.done).sort((a,b)=>b.ts-a.ts);
-  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const item = m => `
-    <div class="memo-item ${m.done?'done':''}">
-      <button class="memo-check" onclick="toggleMemo('${m.id}')" aria-label="完了切替">${m.done?'✓':''}</button>
-      <div class="memo-body">
-        <div class="memo-text">${esc(m.text)}</div>
-        <div class="memo-time">${fmtMemoTime(m.ts)}${m.done?' ・済み':''}</div>
-      </div>
-      <button class="memo-del" onclick="deleteMemo('${m.id}')">削除</button>
-    </div>`;
-  wrap.innerHTML = todo.map(item).join('') + done.map(item).join('');
-}
-function updateMemoBadge(){
-  const fab = document.getElementById('fabMemo');
-  const dot = document.getElementById('fabDot');
-  const n = (st.memos||[]).filter(m=>!m.done).length;
-  if(n>0){ fab.classList.add('has-todo'); dot.textContent = n>99?'99':n; }
-  else fab.classList.remove('has-todo');
-}
-// スクロール中はFABを控えめに
-let _fabScrollTimer=null;
-window.addEventListener('scroll', ()=>{
-  const fab=document.getElementById('fabMemo');
-  if(!fab) return;
-  fab.classList.add('dim');
-  clearTimeout(_fabScrollTimer);
-  _fabScrollTimer=setTimeout(()=>fab.classList.remove('dim'), 500);
-}, {passive:true, capture:true});
 
 // ═══════════════════════════════════════════════════════
 // CASTER INPUT
@@ -2364,8 +2156,13 @@ function toggleRec(id){
 function toggleAllRecs(){
   const recs = st.records;
   const fh = document.getElementById('filter-hospital')?.value||'';
+  const fwd = document.getElementById('filter-ward')?.value||'';
   const fw = document.getElementById('filter-worst')?.value||'';
-  const visible = recs.filter(r=>(!fh||r.hospital===fh)&&(!fw||r.worst===fw));
+  const visible = recs.filter(r=>
+    (!fh||r.hospital===fh) &&
+    (fwd===WARD_BLANK ? !r.ward : (!fwd||r.ward===fwd)) &&
+    (!fw||r.worst===fw)
+  );
   const allExpanded = visible.length>0 && visible.every(r=>expandedRecs.has(r.id));
   if(allExpanded){
     visible.forEach(r=>expandedRecs.delete(r.id));
@@ -2396,11 +2193,46 @@ function dateWithDay(dateStr, timeStr){
   return `${dateStr} ${timeStr||''}`.trim();
 }
 
+function renderWardFilterOptions(keepValue){
+  const el = document.getElementById('filter-ward');
+  if(!el) return;
+  const fh = document.getElementById('filter-hospital')?.value||'';
+  const prev = keepValue!==undefined ? keepValue : el.value;
+  let recs = st.records;
+  if(fh) recs = recs.filter(r=>r.hospital===fh);
+  const wards = [...new Set(recs.map(r=>r.ward||'').filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));
+  const hasBlank = recs.some(r=>!r.ward);
+  el.innerHTML = '<option value="">すべての病棟</option>'
+    + wards.map(w=>`<option value="${w.replace(/"/g,'&quot;')}">${w}</option>`).join('')
+    + (hasBlank?`<option value="${WARD_BLANK}">（病棟未記入）</option>`:'');
+  if(prev && (prev===WARD_BLANK ? hasBlank : wards.includes(prev))) el.value = prev;
+  else el.value = '';
+}
+
+function onHospitalFilterChange(){
+  renderWardFilterOptions('');   // 病院が変われば病棟選択はリセット
+  renderList();
+}
+
+// 集計の病棟行タップ → 一覧タブへ飛び、その病院＋病棟で絞り込んだ状態で開く
+function gotoListByWard(hospName, wardVal){
+  document.getElementById('hospModal')?.classList.remove('show');
+  const fh = document.getElementById('filter-hospital');
+  if(fh) fh.value = hospName;
+  const fw = document.getElementById('filter-worst');
+  if(fw) fw.value = '';
+  renderWardFilterOptions(wardVal);
+  switchTab('list');
+}
+
 function renderList(){
   const fh = document.getElementById('filter-hospital')?.value||'';
+  const fwd = document.getElementById('filter-ward')?.value||'';
   const fw = document.getElementById('filter-worst')?.value||'';
   let recs = st.records.slice();
   if(fh) recs = recs.filter(r=>r.hospital===fh);
+  if(fwd===WARD_BLANK) recs = recs.filter(r=>!r.ward);
+  else if(fwd) recs = recs.filter(r=>r.ward===fwd);
   if(fw) recs = recs.filter(r=>r.worst===fw);
 
   // ソート
@@ -2679,8 +2511,9 @@ function openHospDetail(hospName){
       ${wardEntries.map(([w,d])=>{
         const rate = d.total ? (d.ng/d.total*100) : 0;
         const cls = rate>=20?'r-high':rate>=10?'r-mid':'r-low';
-        return `<div class="ward-row">
-          <div class="ward-name">${w}</div>
+        const fval = w==='（未記入）' ? WARD_BLANK : w;
+        return `<div class="ward-row" style="cursor:pointer" onclick="gotoListByWard('${hospName.replace(/'/g,"\\'")}','${fval.replace(/'/g,"\\'")}')">
+          <div class="ward-name">${w} <span style="color:var(--text3);font-size:12px;font-weight:600">›</span></div>
           <div class="ward-stats">
             <div class="ward-stat-item">
               <span class="ward-stat-lbl">登録台数</span>
@@ -3700,145 +3533,6 @@ function addModelMgr(){
 // TOAST
 // ═══════════════════════════════════════════════════════
 let toastTimer;
-// ═══════════════════════════════════════════════════════
-// 複数人ラウンドの統合（書き出し・取り込み）
-// ═══════════════════════════════════════════════════════
-// ベッドの自然キー：病院＋病棟＋部屋＋ベッド（表記ゆれ対策でtrim）
-function roundKey(r){
-  const n = s => (s==null?'':String(s)).trim();
-  return [n(r.hospital), n(r.ward), n(r.room), n(r.bed)].join('\u0001');
-}
-// 記録の新しさ（date+time）。文字列比較でOK（ゼロ埋め前提）
-function roundStamp(r){ return (r.date||'') + ' ' + (r.time||''); }
-
-// ① 書き出し：記録＋参照中の写真を1ファイルに（写真込み）
-function exportRoundFile(){
-  const recs = st.records || [];
-  if(recs.length === 0){ showToast('書き出す記録がありません','err'); return; }
-  // 記録から参照されている写真だけ同梱（孤立写真は除外して軽量化）
-  const usedPhotos = {};
-  recs.forEach(r => (r.photoIds||[]).forEach(pid => {
-    if(photoStore[pid]) usedPhotos[pid] = photoStore[pid];
-  }));
-  const label = (document.getElementById('round-label')?.value || '').trim();
-  const payload = {
-    app: 'roundnote', type: 'round-export', version: 1,
-    label, exportedAt: new Date().toISOString(),
-    records: recs,
-    photos: usedPhotos,
-    lists: { hospitals: st.hospitals||[], models: st.models||[], parts: st.parts||[] }
-  };
-  let blob;
-  try{ blob = new Blob([JSON.stringify(payload)], {type:'application/json'}); }
-  catch(e){ showToast('書き出しに失敗しました','err'); return; }
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  const safe = label.replace(/[^\w\u3040-\u30ff\u4e00-\u9fafー]/g,'').slice(0,16);
-  const fname = 'roundnote_' + now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate())
-    + '_' + pad(now.getHours()) + pad(now.getMinutes()) + (safe ? '_' + safe : '') + '.json';
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = fname;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 1500);
-  const mb = (blob.size/1048576).toFixed(1);
-  showToast('📤 書き出しました（' + recs.length + '件 / ' + mb + 'MB）');
-}
-
-// ② 取り込み：ベッドキーで突き合わせ、新しい記録を優先（last-write-wins）
-function handleRoundImport(event){
-  const file = event.target.files && event.target.files[0];
-  event.target.value = ''; // 同じファイルを連続で選べるようにリセット
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    let data;
-    try{ data = JSON.parse(e.target.result); }
-    catch(err){ showToast('⚠️ ファイルを読めませんでした','err'); return; }
-    if(!data || data.type !== 'round-export' || !Array.isArray(data.records)){
-      showToast('⚠️ ラウンドノートの書き出しファイルではありません','err'); return;
-    }
-    applyRoundMerge(data);
-  };
-  reader.onerror = ()=> showToast('⚠️ 読み込みに失敗しました','err');
-  reader.readAsText(file);
-}
-
-function applyRoundMerge(data){
-  const incoming = data.records;
-  const incPhotos = data.photos || {};
-  // 既存記録をベッドキーで索引化
-  const existingByKey = {};
-  st.records.forEach(r => { existingByKey[roundKey(r)] = r; });
-  const usedIds = new Set(st.records.map(r => r.id));
-
-  let added=0, updated=0, unchanged=0;
-  const ops = []; // 確定時に適用する操作を貯める
-
-  incoming.forEach(inc => {
-    const key = roundKey(inc);
-    const cur = existingByKey[key];
-    if(!cur){
-      // 新規。id衝突を避けて一意な数値idを振り直す
-      let nid = (typeof inc.id === 'number') ? inc.id : Date.now();
-      while(usedIds.has(nid)) nid++;
-      usedIds.add(nid);
-      ops.push({kind:'add', rec:{...inc, id:nid}});
-      added++;
-    } else if(roundStamp(inc) > roundStamp(cur)){
-      // 取り込み側が新しい → 既存idを保ったまま中身を差し替え
-      ops.push({kind:'update', oldRec:cur, rec:{...inc, id:cur.id}});
-      updated++;
-    } else {
-      unchanged++;
-    }
-  });
-
-  if(added===0 && updated===0){
-    showToast('統合済みでした（変更なし ' + unchanged + '件）');
-    return;
-  }
-  const label = data.label ? '「' + data.label + '」' : 'ファイル';
-  const msg = label + ' を取り込みます。\n\n'
-    + '新規追加：' + added + '件\n'
-    + '上書き更新：' + updated + '件\n'
-    + '変更なし：' + unchanged + '件\n\n統合しますか？';
-  if(!confirm(msg)) return;
-
-  // 適用
-  ops.forEach(op => {
-    if(op.kind==='add'){
-      // 同梱写真を取り込み（写真IDは端末をまたいでも衝突しない設計）
-      (op.rec.photoIds||[]).forEach(pid => { if(incPhotos[pid]) photoStore[pid]=incPhotos[pid]; });
-      st.records.unshift(op.rec);
-    } else {
-      const idx = st.records.findIndex(r => r.id === op.oldRec.id);
-      if(idx >= 0){
-        // 旧記録の写真を掃除（孤立化防止）
-        (op.oldRec.photoIds||[]).forEach(pid => { delete photoStore[pid]; });
-        (op.rec.photoIds||[]).forEach(pid => { if(incPhotos[pid]) photoStore[pid]=incPhotos[pid]; });
-        st.records[idx] = op.rec;
-      }
-    }
-  });
-
-  // リスト類（病院・型番・部位）も和集合でマージ
-  if(data.lists){
-    const uni = (a=[],b=[]) => Array.from(new Set([...a, ...b]));
-    st.hospitals = uni(st.hospitals, data.lists.hospitals);
-    st.models    = uni(st.models,    data.lists.models);
-    st.parts     = uni(st.parts,     data.lists.parts);
-  }
-
-  const okS = persistState();
-  const okP = persistPhotos();
-  if(!okS || !okP){ showToast('⚠️ 保存に失敗（容量を確認）','err'); return; }
-  updateBadge();
-  showToast('✅ 統合完了：新規' + added + ' / 更新' + updated);
-  switchTab('list');
-}
-
 function showToast(msg,type){
   const t=document.getElementById('toast');
   t.textContent=msg;
