@@ -1486,6 +1486,15 @@ function loadState(){
     if(!s.memos) s.memos = [];
     return s;
   }catch(e){
+    // メインが壊れていたらバックアップから復旧を試みる
+    try{
+      const b = JSON.parse(localStorage.getItem('casterInspect_backup')||'null');
+      if(b && b.records){
+        if(!b.parts) b.parts = [...DEFAULT_PARTS];
+        if(!b.memos) b.memos = [];
+        return b;
+      }
+    }catch(e2){}
     return { records:[], hospitals:[...DEFAULT_HOSPITALS], models:[...DEFAULT_MODELS], parts:[...DEFAULT_PARTS], memos:[] };
   }
 }
@@ -1500,9 +1509,11 @@ function loadPhotos(){
 // ═══════════════════════════════════════════════════════
 function persistState(){
   try{
-    // 自動バックアップ
+    // 自動バックアップ（記録のみ・軽量）。現行が壊れていれば退避せず良いバックアップを守る
     const prev = localStorage.getItem('casterInspect');
-    if(prev) localStorage.setItem('casterInspect_backup', prev);
+    if(prev){
+      try{ JSON.parse(prev); localStorage.setItem('casterInspect_backup', prev); }catch(e){}
+    }
     localStorage.setItem('casterInspect', JSON.stringify(st));
     return true;
   }catch(e){
@@ -1512,8 +1523,8 @@ function persistState(){
 }
 function persistPhotos(){
   try{
-    const prev = localStorage.getItem('casterPhotos');
-    if(prev) localStorage.setItem('casterPhotos_backup', prev);
+    // 写真はバックアップしない（容量が重いため）。古い写真バックアップが残っていれば削除
+    localStorage.removeItem('casterPhotos_backup');
     localStorage.setItem('casterPhotos', JSON.stringify(photoStore));
     return true;
   }catch(e){
@@ -1543,6 +1554,7 @@ function canAddPhoto(base64){
 // ═══════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════
+try{ localStorage.removeItem('casterPhotos_backup'); }catch(e){}  // 旧版の重い写真バックアップを解放
 renderHospitalOptions();
 renderModelOptions();
 renderPartsInputTable();
