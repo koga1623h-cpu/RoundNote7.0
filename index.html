@@ -1292,7 +1292,7 @@ input[type=file]{display:none;}
 
     <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">① 自分のデータを書き出す</label>
     <div class="form-row" style="margin-bottom:10px">
-      <input type="text" id="round-label" placeholder="端末名・担当者（任意：例 田中／3F班）" maxlength="30">
+      <input type="text" id="round-label" placeholder="自分の名前" maxlength="30">
     </div>
     <div class="form-row" style="margin-bottom:10px">
       <select id="export-round-hospital" style="width:100%;font-size:14px;padding:9px 11px;min-height:42px"><option value="">すべての病院</option></select>
@@ -3217,6 +3217,124 @@ function formatVisitDate(isoDate){
   return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 }
 
+// ═══════════════════════════════════════════════════════
+// 写真シート（4枚目）- ライブラリ不使用で画像を埋め込み
+// ═══════════════════════════════════════════════════════
+function dataUrlToBytes(dataUrl){
+  const base64 = (dataUrl||'').split(',')[1] || '';
+  const bin = atob(base64);
+  const arr = new Uint8Array(bin.length);
+  for(let j=0;j<bin.length;j++) arr[j] = bin.charCodeAt(j);
+  return arr;
+}
+
+// JPEGバイナリから幅・高さを取得（アスペクト比保持のため）
+function jpegSize(bytes){
+  let i = 2;
+  const len = bytes.length;
+  while(i < len){
+    if(bytes[i] !== 0xFF){ i++; continue; }
+    const marker = bytes[i+1];
+    if(marker>=0xC0 && marker<=0xCF && marker!==0xC4 && marker!==0xC8 && marker!==0xCC){
+      const h = (bytes[i+5]<<8)|bytes[i+6];
+      const w = (bytes[i+7]<<8)|bytes[i+8];
+      if(w && h) return {w,h};
+    }
+    const segLen = (bytes[i+2]<<8)|bytes[i+3];
+    if(segLen<2) break;
+    i += 2 + segLen;
+  }
+  return {w:800, h:600};
+}
+
+// 写真シートを組み立て（写真ありの記録のみ）。写真ゼロなら null を返す
+function buildPhotoSheet(recs){
+  const EMU = 9525;            // 1px = 9525 EMU
+  const boxW = 240, boxH = 210, gapX = 14;  // 表示枠(px)
+  const photoRowHt = Math.round(boxH * 0.75) + 8;  // 行高さ(pt)
+
+  const withPhotos = recs.filter(r => (r.photoIds||[]).some(id=>photoStore[id]));
+  if(!withPhotos.length) return null;
+
+  const media = [];     // {name, bytes}
+  const drawRels = [];  // drawing→media リレーション
+  const anchors = [];   // 画像配置XML
+  let imgCount = 0;
+
+  const rowsXml = [];
+  let rowNum = 1;       // 1始まり（sheetData用）
+
+  // タイトル行
+  rowsXml.push(`<row r="${rowNum}"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">写真一覧（${xmlEsc(withPhotos[0].hospital||'')}）</t></is></c></row>`);
+  rowNum += 2; // タイトル＋空行
+
+  withPhotos.forEach(r=>{
+    const loc = [r.ward, r.room, r.bed].filter(Boolean).join(' / ');
+    const ng = Object.values(r.casters||{}).includes('要交換');
+    const labelTxt = `${ng?'⚠ ':''}${loc}　${r.model||''}${r.year?'　'+r.year+'年式':''}`;
+    rowsXml.push(`<row r="${rowNum}"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">${xmlEsc(labelTxt)}</t></is></c></row>`);
+    rowNum++;
+
+    const photoRow0 = rowNum - 1; // drawingは0始まり行
+    rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"></row>`);
+    rowNum += 2; // 写真行＋空行
+
+    const ids = (r.photoIds||[]).filter(id=>photoStore[id]);
+    ids.forEach((id,i)=>{
+      const bytes = dataUrlToBytes(photoStore[id]);
+      const {w,h} = jpegSize(bytes);
+      const scale = Math.min(boxW/w, boxH/h);
+      const cx = Math.round(w*scale)*EMU;
+      const cy = Math.round(h*scale)*EMU;
+      imgCount++;
+      const fname = `image${imgCount}.jpeg`;
+      media.push({name:`xl/media/${fname}`, bytes});
+      const rid = `rId${imgCount}`;
+      drawRels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${fname}"/>`);
+      const colOff = (i*(boxW+gapX))*EMU;
+      anchors.push(
+        `<xdr:oneCellAnchor>`+
+        `<xdr:from><xdr:col>0</xdr:col><xdr:colOff>${colOff}</xdr:colOff><xdr:row>${photoRow0}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>`+
+        `<xdr:ext cx="${cx}" cy="${cy}"/>`+
+        `<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${imgCount}" name="${fname}"/><xdr:cNvPicPr/></xdr:nvPicPr>`+
+        `<xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>`+
+        `<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>`+
+        `</xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`
+      );
+    });
+  });
+
+  const sheetXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+    '<cols><col min="1" max="1" width="14" customWidth="1"/></cols>'+
+    '<sheetData>'+rowsXml.join('')+'</sheetData>'+
+    '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'+
+    '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>'+
+    '<drawing r:id="rId1"/>'+
+    '</worksheet>';
+
+  const drawingXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+    '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'+
+    anchors.join('')+
+    '</xdr:wsDr>';
+
+  const drawingRelsXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    drawRels.join('')+
+    '</Relationships>';
+
+  const sheetRelsXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>'+
+    '</Relationships>';
+
+  return {sheetXml, drawingXml, drawingRelsXml, sheetRelsXml, media};
+}
+
 // メイン: 提出用Excel出力
 function exportReportXLSX(){
   const hosp = document.getElementById('export-hospital').value;
@@ -3503,6 +3621,7 @@ function exportReportXLSX(){
   const sheet1XML = sheetXML(sheet1Rows, widths1);
   const sheet2XML = sheetXML(sheet3Rows, widths3);
   const sheet3XML = sheetXML(sheet5Rows, widths5);
+  const photoSheet = buildPhotoSheet(recs);
 
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -3513,6 +3632,7 @@ function exportReportXLSX(){
 <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ''}
 </Types>`;
 
   const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3526,6 +3646,7 @@ function exportReportXLSX(){
 <sheet name="ラウンド結果" sheetId="1" r:id="rId1"/>
 <sheet name="型番別 破損箇所" sheetId="2" r:id="rId2"/>
 <sheet name="買い替え提案" sheetId="3" r:id="rId3"/>
+${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
 </sheets>
 </workbook>`;
 
@@ -3535,6 +3656,7 @@ function exportReportXLSX(){
 <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
 <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
 <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/>' : ''}
 </Relationships>`;
 
   const files = [
@@ -3546,6 +3668,13 @@ function exportReportXLSX(){
     {name:'xl/worksheets/sheet1.xml', bytes:utf8Bytes(sheet1XML)},
     {name:'xl/worksheets/sheet2.xml', bytes:utf8Bytes(sheet2XML)},
     {name:'xl/worksheets/sheet3.xml', bytes:utf8Bytes(sheet3XML)},
+    ...(photoSheet ? [
+      {name:'xl/worksheets/sheet4.xml', bytes:utf8Bytes(photoSheet.sheetXml)},
+      {name:'xl/worksheets/_rels/sheet4.xml.rels', bytes:utf8Bytes(photoSheet.sheetRelsXml)},
+      {name:'xl/drawings/drawing1.xml', bytes:utf8Bytes(photoSheet.drawingXml)},
+      {name:'xl/drawings/_rels/drawing1.xml.rels', bytes:utf8Bytes(photoSheet.drawingRelsXml)},
+      ...photoSheet.media,
+    ] : []),
   ];
 
   const zip = buildZip(files);
