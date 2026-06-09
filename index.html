@@ -1628,15 +1628,17 @@ function loadDraft(){
   try{
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
     if(!d) return;
-    // 何か入力済みの下書きかチェック
+    // 病院・病棟・部屋は連続入力の「引き継ぎ」項目。
+    // 画面が裏で破棄→再読込されても消えないよう、下書きの有無に関わらず必ず復元する。
+    document.getElementById('inp-hospital').value = d.hospital||'';
+    document.getElementById('inp-ward').value     = d.ward||'';
+    document.getElementById('inp-room').value     = d.room||'';
+    // ベッド以降に実入力がある「本物の下書き」かチェック
     const hasContent = d.bed||d.memo||
       Object.values(d.casters||{}).some(v=>v&&v!=='未選択')||
       Object.values(d.sev||{}).some(v=>v)||
       (d.photoIds||[]).length>0;
-    if(!hasContent) return;
-    document.getElementById('inp-hospital').value = d.hospital||'';
-    document.getElementById('inp-ward').value     = d.ward||'';
-    document.getElementById('inp-room').value     = d.room||'';
+    if(!hasContent){ updateSaveButtonState(); return; }
     document.getElementById('inp-bed').value      = d.bed||'';
     document.getElementById('inp-model').value    = d.model||'';
     document.getElementById('inp-year').value     = d.year||'';
@@ -2346,7 +2348,7 @@ function saveRecord(){
   }
   updateBadge();
   clearForm(false);
-  clearDraft();
+  saveDraft();   // 病院・病棟・部屋の引き継ぎを保存（画面破棄→再読込でも消えないように）
   editingId = null;
   document.getElementById('saveBtnLabel').textContent = '記録を保存';
   window.scrollTo({top:0, behavior:'smooth'});
@@ -2361,6 +2363,7 @@ function clearForm(fullClear){
     document.getElementById('inp-hospital').value='';
     document.getElementById('inp-ward').value='';
     document.getElementById('inp-room').value='';
+    clearDraft();  // 引き継ぎ用に保存した下書きも消す（再読込で復活しないように）
   }
   document.getElementById('inp-bed').value='';
   document.getElementById('inp-model').value='';
