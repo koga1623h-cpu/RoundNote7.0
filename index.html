@@ -456,6 +456,27 @@ select{
 }
 .rec-compact.expanded{border-color:var(--line);}
 
+/* ── 要確認フラグ ── */
+.nc-card{padding:0;}
+.nc-toggle{display:flex;align-items:center;gap:11px;padding:13px 14px;cursor:pointer;}
+.nc-toggle input{position:absolute;opacity:0;width:0;height:0;}
+.nc-box{flex-shrink:0;width:24px;height:24px;border:2px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;}
+.nc-box svg{width:15px;height:15px;color:#fff;opacity:0;}
+.nc-toggle input:checked + .nc-box{background:var(--warn);border-color:var(--warn);}
+.nc-toggle input:checked + .nc-box svg{opacity:1;}
+.nc-toggle input:checked ~ .nc-txt .nc-ttl{color:var(--warn);}
+.nc-ttl{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;color:var(--text);}
+.nc-ttl svg{width:14px;height:14px;}
+.nc-chip{font-size:11px;font-weight:400;padding:5px 10px;background:var(--surface);border:1px solid var(--line);color:var(--text2);cursor:pointer;font-family:'DM Mono',monospace;display:inline-flex;align-items:center;gap:5px;letter-spacing:.03em;}
+.nc-chip svg{width:13px;height:13px;}
+.nc-chip .nc-num{background:var(--warn);color:#fff;font-size:10px;padding:0 5px;font-family:inherit;}
+.nc-chip.active{background:var(--warn);border-color:var(--warn);color:#fff;}
+.nc-chip.active .nc-num{background:#fff;color:var(--warn);}
+.nc-chip.zero{opacity:.45;}
+.rec-compact.nc{border-left:3px solid var(--warn);}
+.rec-nc-tag{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:#7a4a1c;background:var(--warn-bg);padding:3px 12px;border-top:1px solid var(--line-thin);}
+.rec-nc-tag svg{width:12px;height:12px;flex-shrink:0;}
+
 .rec-head{
   display:flex;justify-content:space-between;align-items:center;
   padding:10px 14px;cursor:pointer;gap:8px;
@@ -1046,14 +1067,14 @@ input[type=file]{display:none;}
       </div>
     </div>
     <div class="form-row">
-      <label>床番①</label>
+      <label>床番上段</label>
       <div class="hist-wrap">
         <input type="text" id="inp-floor1" class="hist-input">
         <button class="hist-btn" onclick="openHistPicker('inp-floor1','floor1')" type="button">▾</button>
       </div>
     </div>
     <div class="form-row">
-      <label>床番②</label>
+      <label>床番下段</label>
       <div class="hist-wrap">
         <input type="text" id="inp-floor2" class="hist-input">
         <button class="hist-btn" onclick="openHistPicker('inp-floor2','floor2')" type="button">▾</button>
@@ -1198,6 +1219,16 @@ input[type=file]{display:none;}
     <textarea id="inp-memo" placeholder="特記事項など..."></textarea>
   </div>
 
+  <div class="card nc-card">
+    <label class="nc-toggle" for="inp-needscheck">
+      <input type="checkbox" id="inp-needscheck">
+      <span class="nc-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+      <span class="nc-txt">
+        <span class="nc-ttl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>あとで確認する</span>
+      </span>
+    </label>
+  </div>
+
   <div style="height:20px"></div>
 </div>
 
@@ -1249,6 +1280,7 @@ input[type=file]{display:none;}
     <span class="sort-chip active" data-sort="newest" onclick="setListSort('newest')">新しい順</span>
     <span class="sort-chip" data-sort="oldest" onclick="setListSort('oldest')">古い順</span>
     <span class="sort-chip" data-sort="ng" onclick="setListSort('ng')">要交換順</span>
+    <span class="nc-chip zero" id="ncChip" onclick="toggleNeedsCheckFilter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>未確認のみ<span class="nc-num" id="ncNum">0</span></span>
     <span class="sort-chip-action" onclick="toggleAllRecs()">全て展開／折りたたみ</span>
   </div>
   <div id="listContainer"></div>
@@ -1491,6 +1523,7 @@ let formPhotoIds = []; // 現在フォームに追加中の写真ID
 let expandedRecs = new Set();
 const WARD_BLANK='__no_ward__';
 let listSort = 'newest'; // newest / oldest / ng
+let filterNeedsCheck = false; // 「未確認のみ」絞り込み
 
 function loadState(){
   try{
@@ -1721,7 +1754,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 // 病院別入力履歴ピッカー
 // ═══════════════════════════════════════════════════════
 const HIST_LABELS = {
-  year:'年式', floor1:'床番①', floor2:'床番②',
+  year:'年式', floor1:'床番上段', floor2:'床番下段',
   mattress:'マットレス', monitor:'見守り機器', tv:'TV'
 };
 
@@ -2242,6 +2275,7 @@ function editRecord(id){
   document.getElementById('inp-monitor').value  = r.monitor||'';
   document.getElementById('inp-tv').value       = r.tv||'';
   document.getElementById('inp-memo').value     = r.memo||'';
+  const _ncCb=document.getElementById('inp-needscheck'); if(_ncCb) _ncCb.checked = !!r.needsCheck;
   formCasters  = {HR:'未選択',HL:'未選択',FR:'未選択',FL:'未選択', ...(r.casters||{})};
   formCasterDetail = {HR:'',HL:'',FR:'',FL:'', ...(r.casterDetail||{})};
   formSev      = {...(r.partsSev||{})};
@@ -2273,6 +2307,7 @@ function saveRecord(){
   const monitor  = document.getElementById('inp-monitor').value.trim();
   const tv       = document.getElementById('inp-tv').value.trim();
   const memo     = document.getElementById('inp-memo').value.trim();
+  const needsCheck = document.getElementById('inp-needscheck').checked;
 
   if(!hospital){ showToast('⚠️ 病院名を選択してください','warn'); return; }
   const missing = [];
@@ -2307,6 +2342,7 @@ function saveRecord(){
     st.records[idx] = {
       ...old,
       hospital, ward, room, bed, model, year, floor1, floor2, mattress, monitor, tv, memo,
+      needsCheck,
       worst,
       casters: {...formCasters},
       partsSev: {...formSev},
@@ -2333,6 +2369,7 @@ function saveRecord(){
     date: new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-'),
     time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),
     hospital, ward, room, bed, model, year, floor1, floor2, mattress, monitor, tv, memo,
+    needsCheck,
     worst,
     casters: {...formCasters},
     casterDetail: {...formCasterDetail},
@@ -2374,6 +2411,7 @@ function clearForm(fullClear){
   document.getElementById('inp-monitor').value='';
   document.getElementById('inp-tv').value='';
   document.getElementById('inp-memo').value='';
+  const _ncCb=document.getElementById('inp-needscheck'); if(_ncCb) _ncCb.checked=false;
   formCasters={HR:'未選択',HL:'未選択',FR:'未選択',FL:'未選択'};
   formCasterDetail={HR:'',HL:'',FR:'',FL:''};
   formSev={};
@@ -2419,6 +2457,11 @@ function setListSort(s){
   document.querySelectorAll('.sort-chip').forEach(el=>{
     el.classList.toggle('active', el.dataset.sort===s);
   });
+  renderList();
+}
+
+function toggleNeedsCheckFilter(){
+  filterNeedsCheck = !filterNeedsCheck;
   renderList();
 }
 
@@ -2476,6 +2519,17 @@ function renderList(){
   if(fwd===WARD_BLANK) recs = recs.filter(r=>!r.ward);
   else if(fwd) recs = recs.filter(r=>r.ward===fwd);
   if(fw) recs = recs.filter(r=>r.worst===fw);
+  if(filterNeedsCheck) recs = recs.filter(r=>r.needsCheck);
+
+  // 未確認バッジの更新（絞り込みに関わらず全体の件数）
+  const ncTotal = st.records.filter(r=>r.needsCheck).length;
+  const ncChip = document.getElementById('ncChip');
+  if(ncChip){
+    const ncNum = document.getElementById('ncNum');
+    if(ncNum) ncNum.textContent = ncTotal;
+    ncChip.classList.toggle('active', filterNeedsCheck);
+    ncChip.classList.toggle('zero', ncTotal===0 && !filterNeedsCheck);
+  }
 
   // ソート
   if(listSort === 'oldest'){
@@ -2488,7 +2542,7 @@ function renderList(){
   }
 
   const c = document.getElementById('listContainer');
-  if(!recs.length){ c.innerHTML='<div class="empty">記録なし</div>'; return; }
+  if(!recs.length){ c.innerHTML='<div class="empty">'+(filterNeedsCheck?'未確認の記録はありません':'記録なし')+'</div>'; return; }
 
   c.innerHTML = recs.map(r=>{
     const expanded = expandedRecs.has(r.id);
@@ -2525,7 +2579,8 @@ function renderList(){
         </div>
       </div>`;
 
-    if(!expanded) return `<div class="rec-compact">${header}</div>`;
+    const ncTag = r.needsCheck ? `<div class="rec-nc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>要確認</div>` : '';
+    if(!expanded) return `<div class="rec-compact${r.needsCheck?' nc':''}">${header}${ncTag}</div>`;
 
     // 展開時：詳細
     const castHtml = CASTER_POSITIONS.map(({id,label})=>`
@@ -2537,8 +2592,8 @@ function renderList(){
       `<img src="${photoStore[id]}" onclick="openPhotoModal('${id}')" alt="photo">`
     ).join('');
 
-    return `<div class="rec-compact expanded">
-      ${header}
+    return `<div class="rec-compact expanded${r.needsCheck?' nc':''}">
+      ${header}${ncTag}
       <div class="rec-body">
         ${r.model?`<div class="rec-meta-line"><span class="rml-lbl">型番</span><span class="rml-val">${r.model}</span></div>`:''}
         ${r.year?`<div class="rec-meta-line"><span class="rml-lbl">年式</span><span class="rml-val">${r.year}</span></div>`:''}
@@ -3359,11 +3414,12 @@ function exportReportXLSX(){
     {key:'bed',    label:'ベッドNo', get:r=>r.bed||''},
     {key:'model',  label:'型番',     get:r=>r.model||''},
     {key:'year',   label:'年式',     get:r=>r.year||''},
-    {key:'floor1', label:'床番①',   get:r=>r.floor1||''},
-    {key:'floor2', label:'床番②',   get:r=>r.floor2||''},
+    {key:'floor1', label:'床番上段',   get:r=>r.floor1||''},
+    {key:'floor2', label:'床番下段',   get:r=>r.floor2||''},
     {key:'mattress',label:'マットレス',get:r=>r.mattress||''},
     {key:'monitor',label:'見守り機器',get:r=>r.monitor||''},
     {key:'tv',     label:'TV',       get:r=>r.tv||''},
+    {key:'needscheck', label:'要確認', get:r=>r.needsCheck?'要確認':''},
   ];
   candidates.forEach(c=>{
     if(recs.some(r=>c.get(r)!=='')) cols.push(c);
