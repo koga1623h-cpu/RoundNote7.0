@@ -3207,9 +3207,15 @@ function sheetXML(rows, colWidths, opts){
     xml += '</row>';
   });
   xml += '</sheetData>';
-  // 印刷設定: A4横向き、1ページ幅に収める
+  if(opts.merges && opts.merges.length){
+    xml += `<mergeCells count="${opts.merges.length}">`;
+    opts.merges.forEach(m=>{ xml += `<mergeCell ref="${m}"/>`; });
+    xml += '</mergeCells>';
+  }
+  // 印刷設定: A4、1ページ幅に収める（既定は横向き）
   xml += '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>';
-  xml += '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>';
+  const orient = opts.portrait ? 'portrait' : 'landscape';
+  xml += `<pageSetup paperSize="9" orientation="${orient}" fitToWidth="1" fitToHeight="0"/>`;
   xml += '</worksheet>';
   return xml;
 }
@@ -3226,7 +3232,7 @@ function stylesXML(){
 <font><b/><sz val="11"/><name val="メイリオ"/></font>
 <font><b/><sz val="12"/><name val="メイリオ"/></font>
 </fonts>
-<fills count="7">
+<fills count="10">
 <fill><patternFill patternType="none"/></fill>
 <fill><patternFill patternType="gray125"/></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFE8E8E8"/></patternFill></fill>
@@ -3234,6 +3240,9 @@ function stylesXML(){
 <fill><patternFill patternType="solid"><fgColor rgb="FFFFD6D6"/></patternFill></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFFFE8B0"/></patternFill></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFFFB0B0"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFF3F7FF"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFF8EC"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFEFEFEF"/></patternFill></fill>
 </fills>
 <borders count="3">
 <border><left/><right/><top/><bottom/><diagonal/></border>
@@ -3241,7 +3250,7 @@ function stylesXML(){
 <border><left style="medium"><color rgb="FF606060"/></left><right style="medium"><color rgb="FF606060"/></right><top style="medium"><color rgb="FF606060"/></top><bottom style="medium"><color rgb="FF606060"/></bottom></border>
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="12">
+<cellXfs count="15">
 <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
 <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
 <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
@@ -3254,6 +3263,9 @@ function stylesXML(){
 <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
 <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="7" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="8" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="9" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="標準" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
@@ -3675,11 +3687,88 @@ function exportReportXLSX(){
   // 年式列の数だけ拡張（クロス表用）
   for(let i=widths5.length; i<2+years5.length+1; i++) widths5.push(10);
 
-  // XLSX組み立て（3シート構成）
+  // ═════════════════════════════════════════════
+  // 追加シート: 部品集計（発注用）／ ベッド明細
+  //   発注対象 = キャスター「要交換」＋ 部品「重大」
+  // ═════════════════════════════════════════════
+  const aggMap = new Map();   // model -> Map(key -> qty)  key: 'C\u0001'+部位 / 'P\u0001'+部品
+  recs.forEach(r=>{
+    const m = r.model || '不明';
+    if(!aggMap.has(m)) aggMap.set(m, new Map());
+    const im = aggMap.get(m);
+    CASTER_POSITIONS.forEach(({id,label})=>{
+      if(r.casters && r.casters[id]==='要交換'){ const k='C\u0001'+label; im.set(k,(im.get(k)||0)+1); }
+    });
+    if(r.partsSev) st.parts.forEach(p=>{
+      if(r.partsSev[p]==='重大'){ const k='P\u0001'+p; im.set(k,(im.get(k)||0)+1); }
+    });
+  });
+  const aggModels = [...aggMap.keys()].filter(m=>aggMap.get(m).size>0)
+    .sort((a,b)=>{ if(a==='不明')return 1; if(b==='不明')return -1; return a.localeCompare(b,'ja'); });
+
+  // ── シート: 部品集計 ──
+  const partsRows = [], partsMerges = ['A1:F1','A2:F2','A3:F3','A4:F4'];
+  partsRows.push([txt('ベッドキャスター・部品交換　集計（発注用）',1)]);
+  partsRows.push([txt(`施設：${hosp} 様`,0)]);
+  partsRows.push([txt(`訪問日：${visitDate}`,0)]);
+  partsRows.push([txt('対象：× 判定のみ（要交換キャスター・重大部品）。△要注意・交換済みは除く',0)]);
+  partsRows.push([]);
+  partsRows.push([head('No'),head('型番（機種）'),head('項目'),head('種別'),head('部品名・部品番号\n（記入欄）'),head('必要数\n(個)')]);
+  let pno = 1, totalQty = 0;
+  aggModels.forEach(m=>{
+    const im = aggMap.get(m);
+    const keys = [...im.keys()];
+    const blockStart = partsRows.length + 1;          // 1-based Excel行
+    keys.forEach((k,ki)=>{
+      const isCaster = k[0]==='C';
+      const fs = isCaster ? 12 : 13;
+      const qty = im.get(k); totalQty += qty;
+      partsRows.push([ num(pno,fs), ki===0?txt(m,9):null, txt(k.slice(2),fs),
+                       txt(isCaster?'キャスター':'部品',fs), txt('',14), num(qty,fs) ]);
+      pno++;
+    });
+    const blockEnd = partsRows.length;
+    if(blockEnd>blockStart) partsMerges.push(`B${blockStart}:B${blockEnd}`);
+  });
+  const totRow = partsRows.length + 1;
+  partsRows.push([ txt('合計数量',11), null, null, null, null, num(totalQty,11) ]);
+  partsMerges.push(`A${totRow}:E${totRow}`);
+  partsRows.push([txt('※ 部品名・部番は事務／カタログにてご確認ください。対象ベッドは「ベッド明細」参照。',0)]);
+  const widthsP = [5,26,11,9,22,7];
+
+  // ── シート: ベッド明細（対象ベッド一覧）──
+  const bedRows = [];
+  bedRows.push([txt('対象ベッド明細（×：要交換キャスター・重大部品）',1)]);
+  bedRows.push([]);
+  bedRows.push([head('No'),head('型番'),head('病棟'),head('部屋'),head('ベッドNo'),head('交換項目'),head('個数'),head('備考')]);
+  let bno = 1, totBed = 0;
+  [...recs].sort((a,b)=>{
+    const ma=(a.model||''),mb=(b.model||''); if(ma!==mb)return ma.localeCompare(mb,'ja');
+    const wa=(a.ward||''),wb=(b.ward||''); if(wa!==wb)return wa.localeCompare(wb,'ja');
+    return (a.room||'').localeCompare(b.room||'','ja',{numeric:true});
+  }).forEach(r=>{
+    const items = [];
+    CASTER_POSITIONS.forEach(({id,label})=>{ if(r.casters&&r.casters[id]==='要交換') items.push(label.replace('頭側・','頭').replace('足側・','足')); });
+    if(r.partsSev) st.parts.forEach(p=>{ if(r.partsSev[p]==='重大') items.push(p); });
+    if(!items.length) return;
+    totBed += items.length;
+    bedRows.push([ num(bno,3), txt(r.model||'',9), txt(r.ward||'',3), txt(r.room||'',3),
+                   txt(r.bed||'',3), txt(items.join(' / '),9), num(items.length,3), txt(r.memo||'',9) ]);
+    bno++;
+  });
+  const bedTot = bedRows.length + 1;
+  bedRows.push([ txt('合計',11), null, null, null, null, null, num(totBed,11), txt('',11) ]);
+  const bedMerges = [`A${bedTot}:F${bedTot}`];
+  const widthsB = [5,26,7,8,9,22,7,18];
+
+  // XLSX組み立て
   // sheet1=ラウンド結果, sheet2=型番別 破損箇所, sheet3=買い替え提案
+  // sheet5=部品集計, sheet6=ベッド明細（タブ順は<sheets>で制御）
   const sheet1XML = sheetXML(sheet1Rows, widths1);
   const sheet2XML = sheetXML(sheet3Rows, widths3);
   const sheet3XML = sheetXML(sheet5Rows, widths5);
+  const sheetPartsXML = sheetXML(partsRows, widthsP, {merges:partsMerges, portrait:true});
+  const sheetBedXML   = sheetXML(bedRows,   widthsB, {merges:bedMerges});
   const photoSheet = buildPhotoSheet(recs);
 
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3690,6 +3779,8 @@ function exportReportXLSX(){
 <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet5.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet6.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ''}
 </Types>`;
@@ -3704,6 +3795,8 @@ ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override Pa
 <sheets>
 <sheet name="ラウンド結果" sheetId="1" r:id="rId1"/>
 <sheet name="型番別 破損箇所" sheetId="2" r:id="rId2"/>
+<sheet name="部品集計" sheetId="5" r:id="rId6"/>
+<sheet name="ベッド明細" sheetId="6" r:id="rId7"/>
 <sheet name="買い替え提案" sheetId="3" r:id="rId3"/>
 ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
 </sheets>
@@ -3715,6 +3808,8 @@ ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
 <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
 <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
 <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+<Relationship Id="rId6" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet5.xml"/>
+<Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet6.xml"/>
 ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/>' : ''}
 </Relationships>`;
 
@@ -3727,6 +3822,8 @@ ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/
     {name:'xl/worksheets/sheet1.xml', bytes:utf8Bytes(sheet1XML)},
     {name:'xl/worksheets/sheet2.xml', bytes:utf8Bytes(sheet2XML)},
     {name:'xl/worksheets/sheet3.xml', bytes:utf8Bytes(sheet3XML)},
+    {name:'xl/worksheets/sheet5.xml', bytes:utf8Bytes(sheetPartsXML)},
+    {name:'xl/worksheets/sheet6.xml', bytes:utf8Bytes(sheetBedXML)},
     ...(photoSheet ? [
       {name:'xl/worksheets/sheet4.xml', bytes:utf8Bytes(photoSheet.sheetXml)},
       {name:'xl/worksheets/_rels/sheet4.xml.rels', bytes:utf8Bytes(photoSheet.sheetRelsXml)},
