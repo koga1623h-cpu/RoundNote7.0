@@ -234,6 +234,16 @@ header h1{font-size:18px;font-weight:700;flex:1;color:var(--text);letter-spacing
   margin-bottom:14px;display:flex;align-items:center;gap:8px;
   padding-bottom:8px;border-bottom:1px solid var(--line-thin);
 }
+.help-btn{
+  margin-left:auto;flex:0 0 18px;width:18px;height:18px;
+  border:1px solid var(--line);border-radius:50%;background:none;
+  font-size:11px;font-weight:600;line-height:1;color:var(--text3);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.help-btn:active{background:var(--line-thin);color:var(--text);}
+.help-text{display:none;}
+.help-text.show{display:block;}
 .ct-icon{width:18px;height:18px;flex-shrink:0;}
 
 /* ── FORM ── */
@@ -473,6 +483,7 @@ select{
 .nc-chip.active{background:var(--warn);border-color:var(--warn);color:#fff;}
 .nc-chip.active .nc-num{background:#fff;color:var(--warn);}
 .nc-chip.zero{opacity:.45;}
+.nc-chip.zero .nc-num{background:transparent;color:var(--text3);}
 .rec-compact.nc{border-left:3px solid var(--warn);}
 .rec-nc-tag{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:#7a4a1c;background:var(--warn-bg);padding:3px 12px;border-top:1px solid var(--line-thin);}
 .rec-nc-tag svg{width:12px;height:12px;flex-shrink:0;}
@@ -1281,6 +1292,7 @@ input[type=file]{display:none;}
     <span class="sort-chip" data-sort="oldest" onclick="setListSort('oldest')">古い順</span>
     <span class="sort-chip" data-sort="ng" onclick="setListSort('ng')">要交換順</span>
     <span class="nc-chip zero" id="ncChip" onclick="toggleNeedsCheckFilter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>未確認のみ<span class="nc-num" id="ncNum">0</span></span>
+    <span class="nc-chip zero" id="unkChip" onclick="toggleUnknownModelFilter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>型番不明のみ<span class="nc-num" id="unkNum">0</span></span>
     <span class="sort-chip-action" onclick="toggleAllRecs()">全て展開／折りたたみ</span>
   </div>
   <div id="listContainer"></div>
@@ -1310,17 +1322,12 @@ input[type=file]{display:none;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       提出用Excelをダウンロード
     </button>
-    <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.7;">
-      ・ベッド一覧と集計表の2シート構成<br>
-      ・入力された項目のみが列に表示されます<br>
-      ・iPhoneのExcelアプリ・ファイルアプリで開けます
-    </p>
   </div>
 
   <!-- 複数人ラウンドの統合 -->
   <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>複数人ラウンドの統合</div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7;">分担して回ったあと、各自が①で書き出し → AirDropで親機へ送り → 親機が②で取り込むと、ベッド単位でまとめて統合されます（写真込み）。</p>
+    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>複数人ラウンドの統合<span class="help-btn" onclick="toggleHelp(this)">?</span></div>
+    <p class="help-text" style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7;">分担して回ったあと、各自が①で書き出し → AirDropで親機へ送り → 親機が②で取り込むと、ベッド単位でまとめて統合されます（写真込み）。</p>
 
     <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">① 自分のデータを書き出す</label>
     <div class="form-row" style="margin-bottom:10px">
@@ -1339,13 +1346,13 @@ input[type=file]{display:none;}
 
     <div style="height:1px;background:var(--border, #e5e7eb);margin:18px 0;"></div>
 
-    <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">② 受け取ったファイルを取り込む</label>
+    <label style="font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;margin-bottom:6px;">② 受け取ったファイルを取り込む<span class="help-btn" onclick="toggleHelp(this)">?</span></label>
     <input type="file" id="roundImportInput" accept=".json,application/json" style="display:none" onchange="handleRoundImport(event)">
     <button class="btn btn-success" onclick="document.getElementById('roundImportInput').click()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       ラウンドファイルを取り込んで統合
     </button>
-    <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.7;">
+    <p class="help-text" style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.7;">
       ・同じベッド（病院＋病棟＋部屋＋ベッド）は新しい記録で上書き<br>
       ・取り込み前に内容を確認できます。既存データは消えません<br>
       ・病棟・部屋・ベッドの表記は全員でそろえてください
@@ -1524,6 +1531,7 @@ let expandedRecs = new Set();
 const WARD_BLANK='__no_ward__';
 let listSort = 'newest'; // newest / oldest / ng
 let filterNeedsCheck = false; // 「未確認のみ」絞り込み
+let filterUnknownModel = false; // 「型番不明のみ」絞り込み
 
 function loadState(){
   try{
@@ -2465,6 +2473,11 @@ function toggleNeedsCheckFilter(){
   renderList();
 }
 
+function toggleUnknownModelFilter(){
+  filterUnknownModel = !filterUnknownModel;
+  renderList();
+}
+
 function dateWithDay(dateStr, timeStr){
   if(!dateStr) return timeStr||'';
   try{
@@ -2520,6 +2533,7 @@ function renderList(){
   else if(fwd) recs = recs.filter(r=>r.ward===fwd);
   if(fw) recs = recs.filter(r=>r.worst===fw);
   if(filterNeedsCheck) recs = recs.filter(r=>r.needsCheck);
+  if(filterUnknownModel) recs = recs.filter(r=>!(r.model||'').trim());
 
   // 未確認バッジの更新（絞り込みに関わらず全体の件数）
   const ncTotal = st.records.filter(r=>r.needsCheck).length;
@@ -2529,6 +2543,16 @@ function renderList(){
     if(ncNum) ncNum.textContent = ncTotal;
     ncChip.classList.toggle('active', filterNeedsCheck);
     ncChip.classList.toggle('zero', ncTotal===0 && !filterNeedsCheck);
+  }
+
+  // 型番不明バッジの更新（全体の件数）
+  const unkTotal = st.records.filter(r=>!(r.model||'').trim()).length;
+  const unkChip = document.getElementById('unkChip');
+  if(unkChip){
+    const unkNum = document.getElementById('unkNum');
+    if(unkNum) unkNum.textContent = unkTotal;
+    unkChip.classList.toggle('active', filterUnknownModel);
+    unkChip.classList.toggle('zero', unkTotal===0 && !filterUnknownModel);
   }
 
   // ソート
@@ -2542,7 +2566,7 @@ function renderList(){
   }
 
   const c = document.getElementById('listContainer');
-  if(!recs.length){ c.innerHTML='<div class="empty">'+(filterNeedsCheck?'未確認の記録はありません':'記録なし')+'</div>'; return; }
+  if(!recs.length){ c.innerHTML='<div class="empty">'+(filterUnknownModel?'型番不明の記録はありません':filterNeedsCheck?'未確認の記録はありません':'記録なし')+'</div>'; return; }
 
   c.innerHTML = recs.map(r=>{
     const expanded = expandedRecs.has(r.id);
@@ -3073,6 +3097,14 @@ function getExportRecords(){
   return hosp ? st.records.filter(r=>r.hospital===hosp) : st.records;
 }
 
+function toggleHelp(btn){
+  // ？ボタンより後ろにある同カード内の最初の .help-text を開閉（①②どちらの配置でも対応）
+  const scope = btn.closest('.card') || document;
+  const target = [...scope.querySelectorAll('.help-text')]
+    .find(p => btn.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING);
+  if(target) target.classList.toggle('show');
+}
+
 function todayStr(){
   return new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
 }
@@ -3196,7 +3228,11 @@ function sheetXML(rows, colWidths, opts){
       const ref = colName(ci+1) + (ri+1);
       const styleAttr = cell.s ? ` s="${cell.s}"` : '';
       if(cell.t==='n'){
-        xml += `<c r="${ref}"${styleAttr}><v>${cell.v}</v></c>`;
+        if(cell.f){
+          xml += `<c r="${ref}"${styleAttr}><f>${xmlEsc(cell.f)}</f><v>${cell.v}</v></c>`;
+        }else{
+          xml += `<c r="${ref}"${styleAttr}><v>${cell.v}</v></c>`;
+        }
       }else if(cell.v===''){
         // 空セル: 罫線のための空要素のみ
         xml += `<c r="${ref}"${styleAttr}/>`;
@@ -3211,6 +3247,11 @@ function sheetXML(rows, colWidths, opts){
     xml += `<mergeCells count="${opts.merges.length}">`;
     opts.merges.forEach(m=>{ xml += `<mergeCell ref="${m}"/>`; });
     xml += '</mergeCells>';
+  }
+  if(opts.condFmt && opts.condFmt.length){
+    opts.condFmt.forEach(cf=>{
+      xml += `<conditionalFormatting sqref="${cf.sqref}"><cfRule type="cellIs" dxfId="0" priority="1" operator="greaterThan"><formula>0</formula></cfRule></conditionalFormatting>`;
+    });
   }
   // 印刷設定: A4、1ページ幅に収める（既定は横向き）
   xml += '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>';
@@ -3268,6 +3309,7 @@ function stylesXML(){
 <xf numFmtId="0" fontId="0" fillId="9" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="標準" xfId="0" builtinId="0"/></cellStyles>
+<dxfs count="1"><dxf><font><b/><color rgb="FF990000"/></font><fill><patternFill><bgColor rgb="FFFFB0B0"/></patternFill></fill></dxf></dxfs>
 </styleSheet>`;
 }
 
@@ -3280,6 +3322,7 @@ function styleForState(state){
 
 function txt(v, s){ return {v:v||'', t:'inlineStr', s: s||6}; }
 function num(v, s){ return {v:v, t:'n', s: s||3}; }
+function fnum(f, v, s){ return {v:v, t:'n', s: s||3, f:f}; }
 function head(v){ return {v:v, t:'inlineStr', s:2}; }
 
 function formatVisitDate(isoDate){
@@ -3434,7 +3477,8 @@ function exportReportXLSX(){
     {key:'needscheck', label:'要確認', get:r=>r.needsCheck?'要確認':''},
   ];
   candidates.forEach(c=>{
-    if(recs.some(r=>c.get(r)!=='')) cols.push(c);
+    // model列は数式連動の参照先のため、値が無くても常に出力
+    if(c.key==='model' || recs.some(r=>c.get(r)!=='')) cols.push(c);
   });
 
   CASTER_POSITIONS.forEach(({id,label})=>{
@@ -3491,89 +3535,6 @@ function exportReportXLSX(){
     return 10;
   });
 
-  // ═════════════════════════════════════════════
-  // シート2: 型番別 破損箇所サマリー
-  // ═════════════════════════════════════════════
-  const sheet3Rows = [];
-  sheet3Rows.push([txt('【型番別 破損箇所サマリー】', 1)]);
-  sheet3Rows.push([txt('部品発注用：型番ごとに、どの部位が・何個・どの程度の損傷か', 0)]);
-  sheet3Rows.push([]);
-
-  // 型番一覧（未入力は「不明」）
-  const modelSet3 = new Set();
-  recs.forEach(r=>{ modelSet3.add(r.model || '不明'); });
-  const models3 = [...modelSet3].sort((a,b)=>{
-    if(a==='不明')return 1; if(b==='不明')return -1;
-    return a.localeCompare(b, 'ja');
-  });
-
-  // 部位一覧（実際に使われているもの＋キャスター4点）
-  const usedParts = new Set();
-  recs.forEach(r=>{
-    if(r.partsSev){
-      Object.keys(r.partsSev).forEach(p=>{ if(r.partsSev[p]) usedParts.add(p); });
-    }
-  });
-  const parts3 = st.parts.filter(p=>usedParts.has(p));
-  const casterCols = CASTER_POSITIONS.map(c=>c.label);
-
-  // ヘッダー
-  const headerRow3 = [head('型番'), head('台数')];
-  parts3.forEach(p=> headerRow3.push(head(p)));
-  casterCols.forEach(c=> headerRow3.push(head('キャスター\n'+c)));
-  headerRow3.push(head('要対応\n合計'));
-  sheet3Rows.push(headerRow3);
-
-  models3.forEach(m=>{
-    const mRecs = recs.filter(r=>(r.model||'不明')===m);
-    const row = [txt(m, 6), num(mRecs.length)];
-    let urgentTotal = 0;
-    // 各部位の損傷度集計
-    parts3.forEach(p=>{
-      const counts = {軽微:0, 中程度:0, 重大:0};
-      mRecs.forEach(r=>{
-        const sev = r.partsSev && r.partsSev[p];
-        if(sev && counts[sev]!==undefined) counts[sev]++;
-      });
-      const tot = counts.軽微 + counts.中程度 + counts.重大;
-      if(tot===0){ row.push(txt('-', 3)); }
-      else {
-        const parts = [];
-        if(counts.重大) parts.push(`重大${counts.重大}`);
-        if(counts.中程度) parts.push(`中${counts.中程度}`);
-        if(counts.軽微) parts.push(`軽微${counts.軽微}`);
-        const cellStyle = counts.重大>0 ? 5 : counts.中程度>0 ? 4 : 3;
-        row.push(txt(`${tot}\n(${parts.join('・')})`, cellStyle));
-        urgentTotal += counts.重大 + counts.中程度;
-      }
-    });
-    // キャスター4点
-    CASTER_POSITIONS.forEach(({id})=>{
-      const counts = {要注意:0, 要交換:0};
-      mRecs.forEach(r=>{
-        const s = r.casters && r.casters[id];
-        if(s==='要注意') counts.要注意++;
-        else if(s==='要交換') counts.要交換++;
-      });
-      const tot = counts.要注意 + counts.要交換;
-      if(tot===0){ row.push(txt('-', 3)); }
-      else{
-        const parts = [];
-        if(counts.要交換) parts.push(`交換${counts.要交換}`);
-        if(counts.要注意) parts.push(`注意${counts.要注意}`);
-        const cellStyle = counts.要交換>0 ? 5 : 4;
-        row.push(txt(`${tot}\n(${parts.join('・')})`, cellStyle));
-        urgentTotal += counts.要交換;
-      }
-    });
-    row.push(num(urgentTotal, urgentTotal>0 ? 2 : 3));
-    sheet3Rows.push(row);
-  });
-
-  const widths3 = [22, 8];
-  parts3.forEach(()=>widths3.push(14));
-  CASTER_POSITIONS.forEach(()=>widths3.push(13));
-  widths3.push(11);
 
   // ═════════════════════════════════════════════
   // シート5: 買い替え提案（型番×年式 + 個別リスト）
@@ -3706,6 +3667,29 @@ function exportReportXLSX(){
   const aggModels = [...aggMap.keys()].filter(m=>aggMap.get(m).size>0)
     .sort((a,b)=>{ if(a==='不明')return 1; if(b==='不明')return -1; return a.localeCompare(b,'ja'); });
 
+  // ── 数式連動用：ラウンド結果シートの列位置とデータ範囲 ──
+  //   ヘッダー=3行目, データ=4行目〜(3+台数)行目。型番セルを直すとCOUNTIFSが自動再計算される
+  const R1_FIRST = 4, R1_LAST = 3 + recs.length;
+  const colIdxByKey = {};
+  cols.forEach((c,i)=>{ colIdxByKey[c.key] = i; });
+  const modelColIdx = colIdxByKey['model'];
+  const r1Range = (idx)=>{ const L = colName(idx+1); return `'ラウンド結果'!$${L}$${R1_FIRST}:$${L}$${R1_LAST}`; };
+  const escCond = (v)=> String(v).replace(/"/g,'""');
+  // 型番m（不明=型番空欄）× 判定列 の該当台数を返すCOUNTIFS式
+  const orderFormula = (m, condIdx, cond)=>{
+    const mCond = (m==='不明') ? '' : escCond(m);
+    return `COUNTIFS(${r1Range(modelColIdx)},"${mCond}",${r1Range(condIdx)},"${cond}")`;
+  };
+  // 集計キー（C/P）→ ラウンド結果シート上の判定列インデックスと一致条件
+  const condForKey = (k)=>{
+    const isCaster = k[0]==='C', name = k.slice(2);
+    if(isCaster){
+      const cp = CASTER_POSITIONS.find(c=>c.label===name);
+      return { idx: cp ? colIdxByKey['cast_'+cp.id] : undefined, cond:'要交換*' };
+    }
+    return { idx: colIdxByKey['part_'+name], cond:'重大*' };
+  };
+
   // ── シート: 部品集計 ──
   const partsRows = [], partsMerges = ['A1:F1','A2:F2','A3:F3','A4:F4'];
   partsRows.push([txt('ベッドキャスター・部品交換　集計（発注用）',1)]);
@@ -3723,16 +3707,43 @@ function exportReportXLSX(){
       const isCaster = k[0]==='C';
       const fs = isCaster ? 12 : 13;
       const qty = im.get(k); totalQty += qty;
+      // 必要数は確定値ではなくCOUNTIFS式。ラウンド結果の型番を直すと自動再計算
+      const { idx, cond } = condForKey(k);
+      const qtyCell = (idx!=null && modelColIdx!=null)
+        ? fnum(orderFormula(m, idx, cond), qty, fs)
+        : num(qty, fs);
       partsRows.push([ num(pno,fs), ki===0?txt(m,9):null, txt(k.slice(2),fs),
-                       txt(isCaster?'キャスター':'部品',fs), txt('',14), num(qty,fs) ]);
+                       txt(isCaster?'キャスター':'部品',fs), txt('',14), qtyCell ]);
       pno++;
     });
     const blockEnd = partsRows.length;
     if(blockEnd>blockStart) partsMerges.push(`B${blockStart}:B${blockEnd}`);
   });
   const totRow = partsRows.length + 1;
-  partsRows.push([ txt('合計数量',11), null, null, null, null, num(totalQty,11) ]);
+  const _sumEnd = totRow - 1;  // 必要数(F列)のデータ最終行
+  const totCell = (_sumEnd >= 7) ? fnum(`SUM(F7:F${_sumEnd})`, totalQty, 11) : num(totalQty, 11);
+  partsRows.push([ txt('合計数量',11), null, null, null, null, totCell ]);
   partsMerges.push(`A${totRow}:E${totRow}`);
+
+  // 計上漏れの番人：あるべき総数（型番に依存しないCOUNTIFの合計）− 計上合計（SUM）
+  //   一覧に無い新型番へ直して台数が抜けると、ここが0以外になり0超で赤く光る → 発注漏れを検知
+  let partsCondFmt = null;
+  const guardTerms = [];
+  CASTER_POSITIONS.forEach(({id})=>{
+    const ci = colIdxByKey['cast_'+id];
+    if(ci!=null) guardTerms.push(`COUNTIF(${r1Range(ci)},"要交換*")`);
+  });
+  cols.forEach((c,i)=>{
+    if(c.key && c.key.startsWith('part_')) guardTerms.push(`COUNTIF(${r1Range(i)},"重大*")`);
+  });
+  if(guardTerms.length && _sumEnd >= 7){
+    const guardRow = partsRows.length + 1;
+    const guardFormula = `(${guardTerms.join('+')})-SUM(F7:F${_sumEnd})`;
+    partsRows.push([ txt('⚠ 一覧に無い型番ぶん（0以外は要確認）',11), null, null, null, null, fnum(guardFormula, 0, 11) ]);
+    partsMerges.push(`A${guardRow}:E${guardRow}`);
+    partsCondFmt = [{ sqref:'F'+guardRow }];
+  }
+
   partsRows.push([txt('※ 部品名・部番は事務／カタログにてご確認ください。対象ベッドは「ベッド明細」参照。',0)]);
   const widthsP = [5,26,11,9,22,7];
 
@@ -3762,12 +3773,11 @@ function exportReportXLSX(){
   const widthsB = [5,26,7,8,9,22,7,18];
 
   // XLSX組み立て
-  // sheet1=ラウンド結果, sheet2=型番別 破損箇所, sheet3=買い替え提案
+  // sheet1=ラウンド結果, sheet3=買い替え提案
   // sheet5=部品集計, sheet6=ベッド明細（タブ順は<sheets>で制御）
   const sheet1XML = sheetXML(sheet1Rows, widths1);
-  const sheet2XML = sheetXML(sheet3Rows, widths3);
   const sheet3XML = sheetXML(sheet5Rows, widths5);
-  const sheetPartsXML = sheetXML(partsRows, widthsP, {merges:partsMerges, portrait:true});
+  const sheetPartsXML = sheetXML(partsRows, widthsP, {merges:partsMerges, portrait:true, condFmt:partsCondFmt});
   const sheetBedXML   = sheetXML(bedRows,   widthsB, {merges:bedMerges});
   const photoSheet = buildPhotoSheet(recs);
 
@@ -3777,7 +3787,6 @@ function exportReportXLSX(){
 <Default Extension="xml" ContentType="application/xml"/>
 <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
 <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet5.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet6.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
@@ -3794,7 +3803,6 @@ ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override Pa
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheets>
 <sheet name="ラウンド結果" sheetId="1" r:id="rId1"/>
-<sheet name="型番別 破損箇所" sheetId="2" r:id="rId2"/>
 <sheet name="部品集計" sheetId="5" r:id="rId6"/>
 <sheet name="ベッド明細" sheetId="6" r:id="rId7"/>
 <sheet name="買い替え提案" sheetId="3" r:id="rId3"/>
@@ -3805,7 +3813,6 @@ ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
   const workbookRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
 <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
 <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 <Relationship Id="rId6" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet5.xml"/>
@@ -3820,7 +3827,6 @@ ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/
     {name:'xl/_rels/workbook.xml.rels', bytes:utf8Bytes(workbookRels)},
     {name:'xl/styles.xml', bytes:utf8Bytes(stylesXML())},
     {name:'xl/worksheets/sheet1.xml', bytes:utf8Bytes(sheet1XML)},
-    {name:'xl/worksheets/sheet2.xml', bytes:utf8Bytes(sheet2XML)},
     {name:'xl/worksheets/sheet3.xml', bytes:utf8Bytes(sheet3XML)},
     {name:'xl/worksheets/sheet5.xml', bytes:utf8Bytes(sheetPartsXML)},
     {name:'xl/worksheets/sheet6.xml', bytes:utf8Bytes(sheetBedXML)},
