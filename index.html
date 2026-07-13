@@ -3490,10 +3490,11 @@ function buildPhotoSheet(recs){
     rowNum++;
 
     const photoRow0 = rowNum - 1; // drawingは0始まり行
-    rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"></row>`);
+    // 空セルを1つ入れる: セルのない行は一部ビューアで高さ指定が無視され、写真が下のラベルにかぶるため
+    rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"><c r="A${rowNum}"/></row>`);
     rowNum++;
     // 記録間の空行も高さを明示（次のラベルとの間隔を確保）
-    rowsXml.push(`<row r="${rowNum}" ht="14" customHeight="1"></row>`);
+    rowsXml.push(`<row r="${rowNum}" ht="14" customHeight="1"><c r="A${rowNum}"/></row>`);
     rowNum++;
 
     const ids = (r.photoIds||[]).filter(id=>photoStore[id]);
