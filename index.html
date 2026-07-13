@@ -1518,7 +1518,7 @@ const PHOTO_QUALITY = 0.6;
 
 // データ構造（写真は別管理）
 let st = loadState();
-let photoStore = loadPhotos(); // {photoId: base64}
+let photoStore = {}; // {photoId: base64} 起動時にIndexedDBから非同期読込(initPhotos)
 
 // 現在の入力状態
 let formCasters = {HR:'未選択', HL:'未選択', FR:'未選択', FL:'未選択'};
@@ -1560,6 +1560,84 @@ function loadPhotos(){
 }
 
 // ═══════════════════════════════════════════════════════
+// 写真ストレージ v2: IndexedDB（大容量・localStorage 4MB制限の回避）
+// 記録本体(casterInspect)は従来どおりlocalStorage。写真のみIndexedDBへ。
+// ═══════════════════════════════════════════════════════
+const IDB_NAME = 'roundNoteDB', IDB_STORE = 'photos';
+let idb = null;
+let idbFallback = false;           // IndexedDB不可の環境では従来のlocalStorage方式
+let idbWrittenKeys = new Set();    // 差分書き込み用：DBに書き込み済みのキー
+
+function openPhotoDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+function idbReadAll(){
+  return new Promise((resolve, reject)=>{
+    const out = {};
+    const tx = idb.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).openCursor();
+    req.onsuccess = ()=>{
+      const c = req.result;
+      if(c){ out[c.key] = c.value; c.continue(); }
+      else resolve(out);
+    };
+    req.onerror = ()=>reject(req.error);
+  });
+}
+// snapshotとDBの差分だけ書き込み（写真IDは一意・内容不変のため追加/削除のみ）
+function idbApplyDiff(snapshot){
+  return new Promise((resolve, reject)=>{
+    const tx = idb.transaction(IDB_STORE, 'readwrite');
+    const store = tx.objectStore(IDB_STORE);
+    const keys = new Set(Object.keys(snapshot));
+    keys.forEach(k=>{ if(!idbWrittenKeys.has(k)) store.put(snapshot[k], k); });
+    idbWrittenKeys.forEach(k=>{ if(!keys.has(k)) store.delete(k); });
+    tx.oncomplete = ()=>{ idbWrittenKeys = keys; resolve(); };
+    tx.onerror = ()=>reject(tx.error);
+    tx.onabort = ()=>reject(tx.error);
+  });
+}
+
+async function initPhotos(){
+  try{
+    if(!window.indexedDB) throw new Error('no-indexeddb');
+    idb = await openPhotoDB();
+    photoStore = await idbReadAll();
+    idbWrittenKeys = new Set(Object.keys(photoStore));
+    // 旧localStorage写真の自動移行（書き込み成功を確認してから旧データ削除）
+    const legacy = localStorage.getItem('casterPhotos');
+    if(legacy !== null){
+      const old = JSON.parse(legacy) || {};
+      Object.keys(old).forEach(k=>{ if(!(k in photoStore)) photoStore[k] = old[k]; });
+      await idbApplyDiff({...photoStore});
+      const check = await idbReadAll();
+      if(Object.keys(old).every(k=> k in check)){
+        localStorage.removeItem('casterPhotos');
+      }
+    }
+  }catch(e){
+    console.error('IndexedDB利用不可のためlocalStorage方式で継続', e);
+    idbFallback = true;
+    photoStore = loadPhotos();
+  }
+  // 写真読込完了後に再描画
+  renderList(); renderSummary(); renderStorageMeter();
+  // 下書きの写真ID再復元（起動直後は写真未読込のためフィルタで落ちている可能性がある）
+  try{
+    const d = JSON.parse(localStorage.getItem('roundNoteDraft')||'null');
+    if(d && (d.photoIds||[]).length && formPhotoIds.length === 0){
+      formPhotoIds = d.photoIds.filter(id=>photoStore[id]);
+    }
+  }catch(e){}
+  renderPhotoField();
+}
+
+// ═══════════════════════════════════════════════════════
 // SAFE SAVE - 試し書き＋自動バックアップ
 // ═══════════════════════════════════════════════════════
 function persistState(){
@@ -1576,19 +1654,33 @@ function persistState(){
     return false;
   }
 }
+let photoWriteChain = Promise.resolve(); // 書き込みの直列化（順序保証）
 function persistPhotos(){
-  try{
-    // 写真はバックアップしない（容量が重いため）。古い写真バックアップが残っていれば削除
-    localStorage.removeItem('casterPhotos_backup');
-    localStorage.setItem('casterPhotos', JSON.stringify(photoStore));
-    return true;
-  }catch(e){
-    return false;
+  if(idbFallback){
+    // 従来方式（IndexedDB不可の環境のみ）
+    try{
+      localStorage.removeItem('casterPhotos_backup');
+      localStorage.setItem('casterPhotos', JSON.stringify(photoStore));
+      return true;
+    }catch(e){
+      return false;
+    }
   }
+  // IndexedDBへ差分書き込み（非同期）。呼び出し側の互換のため即trueを返す
+  const snapshot = {...photoStore};
+  photoWriteChain = photoWriteChain.then(async ()=>{
+    if(!idb) idb = await openPhotoDB();
+    await idbApplyDiff(snapshot);
+  }).catch(e=>{
+    console.error(e);
+    showToast('⚠️ 写真の保存に失敗','err');
+  });
+  return true;
 }
 
 // 試し書き：写真追加前に容量チェック
 function canAddPhoto(base64){
+  if(!idbFallback) return true; // IndexedDBは大容量のため実質制限なし
   const test = {...photoStore, ['__test_'+Date.now()]: base64};
   try{
     const json = JSON.stringify(test);
@@ -1627,6 +1719,7 @@ renderStorageMeter();
 renderCleanupHospitalOptions();
 renderExportRoundOptions();
 document.getElementById('saveFooter').classList.add('show');
+initPhotos(); // 写真をIndexedDBから非同期読込（完了後に一覧・写真欄を再描画）
 
 function updateBadge(){
   // バッジ非表示のため処理なし
@@ -2987,22 +3080,28 @@ function closeNgModal(e){
 function renderStorageMeter(){
   const stSize = new Blob([JSON.stringify(st)]).size;
   const phSize = new Blob([JSON.stringify(photoStore)]).size;
-  const total  = stSize + phSize;
-  const pct    = Math.min(100, Math.round(total / STORAGE_LIMIT * 100));
+  const phCount = Object.keys(photoStore).length;
   const text   = document.getElementById('storageText');
   const bar    = document.getElementById('storageBar');
   const note   = document.getElementById('storageNote');
-  text.textContent = `${(total/1024/1024).toFixed(2)} MB / ${(STORAGE_LIMIT/1024/1024).toFixed(1)} MB`;
+  // IndexedDB利用時：4MB制限は記録(localStorage)のみに適用。写真は容量表示だけ。
+  const gauge = idbFallback ? (stSize + phSize) : stSize;
+  const pct   = Math.min(100, Math.round(gauge / STORAGE_LIMIT * 100));
+  if(idbFallback){
+    text.textContent = `${(gauge/1024/1024).toFixed(2)} MB / ${(STORAGE_LIMIT/1024/1024).toFixed(1)} MB`;
+  }else{
+    text.textContent = `記録 ${(stSize/1024/1024).toFixed(2)} MB / ${(STORAGE_LIMIT/1024/1024).toFixed(1)} MB ・ 写真 ${(phSize/1024/1024).toFixed(1)} MB`;
+  }
   bar.style.width = pct + '%';
   bar.className = pct >= 90 ? 'full' : (pct >= 70 ? 'warn' : '');
   if(pct >= 90){
-    note.textContent = '⚠️ 容量がほぼ満杯です。古い記録や写真の削除、またはバックアップ＆削除を推奨します。';
+    note.textContent = '⚠️ 記録の容量がほぼ満杯です。古い記録の削除、またはバックアップ＆削除を推奨します。';
     note.style.color = 'var(--ng)';
   }else if(pct >= 70){
-    note.textContent = '写真：' + Object.keys(photoStore).length + '枚 / 記録：' + st.records.length + '件 / 残量注意';
+    note.textContent = '写真：' + phCount + '枚 / 記録：' + st.records.length + '件 / 残量注意';
     note.style.color = 'var(--warn)';
   }else{
-    note.textContent = '写真：' + Object.keys(photoStore).length + '枚 / 記録：' + st.records.length + '台';
+    note.textContent = '写真：' + phCount + '枚 / 記録：' + st.records.length + '台';
     note.style.color = 'var(--text2)';
   }
 }
