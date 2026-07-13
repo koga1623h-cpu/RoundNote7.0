@@ -3462,8 +3462,9 @@ function jpegSize(bytes){
 // 写真シートを組み立て（写真ありの記録のみ）。写真ゼロなら null を返す
 function buildPhotoSheet(recs){
   const EMU = 9525;            // 1px = 9525 EMU
-  const boxW = 240, boxH = 210, gapX = 14;  // 表示枠(px)
-  const photoRowHt = Math.round(boxH * 0.75) + 8;  // 行高さ(pt)
+  const boxW = 240, boxH = 210;             // 表示枠(px)
+  const padX = 4, padY = 5;                 // セル内マージン(px) ラベルや隣写真とのかぶり防止
+  const photoRowHt = Math.round((boxH + padY*2) * 0.75) + 4;  // 行高さ(pt)
 
   const withPhotos = recs.filter(r => (r.photoIds||[]).some(id=>photoStore[id]));
   if(!withPhotos.length) return null;
@@ -3503,10 +3504,10 @@ function buildPhotoSheet(recs){
       media.push({name:`xl/media/${fname}`, bytes});
       const rid = `rId${imgCount}`;
       drawRels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${fname}"/>`);
-      const colOff = (i*(boxW+gapX))*EMU;
+      // 写真1枚=1列(A/B/C)。列内オフセットに頼らないため、どのビューアでも重ならない
       anchors.push(
         `<xdr:oneCellAnchor>`+
-        `<xdr:from><xdr:col>0</xdr:col><xdr:colOff>${colOff}</xdr:colOff><xdr:row>${photoRow0}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>`+
+        `<xdr:from><xdr:col>${i}</xdr:col><xdr:colOff>${padX*EMU}</xdr:colOff><xdr:row>${photoRow0}</xdr:row><xdr:rowOff>${padY*EMU}</xdr:rowOff></xdr:from>`+
         `<xdr:ext cx="${cx}" cy="${cy}"/>`+
         `<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${imgCount}" name="${fname}"/><xdr:cNvPicPr/></xdr:nvPicPr>`+
         `<xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>`+
@@ -3519,7 +3520,7 @@ function buildPhotoSheet(recs){
   const sheetXml =
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
-    '<cols><col min="1" max="1" width="14" customWidth="1"/></cols>'+
+    '<cols><col min="1" max="3" width="35" customWidth="1"/></cols>'+
     '<sheetData>'+rowsXml.join('')+'</sheetData>'+
     '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'+
     '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>'+
