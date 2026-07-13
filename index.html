@@ -3464,7 +3464,7 @@ function buildPhotoSheet(recs){
   const EMU = 9525;            // 1px = 9525 EMU
   const boxW = 240, boxH = 210;             // 表示枠(px)
   const padX = 4, padY = 5;                 // セル内マージン(px) ラベルや隣写真とのかぶり防止
-  const photoRowHt = Math.round((boxH + padY*2) * 0.75) + 4;  // 行高さ(pt)
+  const photoRowHt = Math.round((boxH + padY*2) * 0.75) + 12;  // 行高さ(pt) 下余白広め
 
   const withPhotos = recs.filter(r => (r.photoIds||[]).some(id=>photoStore[id]));
   if(!withPhotos.length) return null;
@@ -3485,12 +3485,16 @@ function buildPhotoSheet(recs){
     const loc = [r.ward, r.room, r.bed].filter(Boolean).join(' / ');
     const ng = Object.values(r.casters||{}).includes('要交換');
     const labelTxt = `${ng?'⚠ ':''}${loc}　${r.model||''}${r.year?'　'+r.year+'年式':''}`;
-    rowsXml.push(`<row r="${rowNum}"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">${xmlEsc(labelTxt)}</t></is></c></row>`);
+    // ラベル行: 高さを明示（既定高だと狭く、ビューアによって写真とかぶるため）
+    rowsXml.push(`<row r="${rowNum}" ht="22" customHeight="1"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">${xmlEsc(labelTxt)}</t></is></c></row>`);
     rowNum++;
 
     const photoRow0 = rowNum - 1; // drawingは0始まり行
     rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"></row>`);
-    rowNum += 2; // 写真行＋空行
+    rowNum++;
+    // 記録間の空行も高さを明示（次のラベルとの間隔を確保）
+    rowsXml.push(`<row r="${rowNum}" ht="14" customHeight="1"></row>`);
+    rowNum++;
 
     const ids = (r.photoIds||[]).filter(id=>photoStore[id]);
     ids.forEach((id,i)=>{
@@ -3641,9 +3645,6 @@ function exportReportXLSX(){
   // ═════════════════════════════════════════════
   const sheet5Rows = [];
   const currentYear = new Date().getFullYear();
-  sheet5Rows.push([null, txt(`${hosp} 様 ベッド買い替え提案資料`, 2)]);
-  sheet5Rows.push([null, txt(`訪問日：${visitDate}`, 0)]);
-  sheet5Rows.push([]);
 
   // 買い替え推奨度の判定（経過年数）
   function ageOf(yearStr){
@@ -3692,10 +3693,10 @@ function exportReportXLSX(){
   sheet5Rows.push([txt('🟡 計画的買替検討（15〜19年）', 7), num(cnt15, cnt15>0 ? 7 : 3)]);
   sheet5Rows.push([txt('継続使用可（〜14年）', 3), num(recs.length - cnt15 - cnt20)]);
 
-  // 型番×年式クロス表
-  sheet5Rows.push([]);
-  sheet5Rows.push([txt('【型番 × 年式 クロス表（黄=15年以上、赤=20年以上）】', 1)]);
-  sheet5Rows.push([]);
+  // 型番×年式クロス表（独立シート「型番×年式」）
+  const crossRows = [];
+  crossRows.push([txt(`型番×年式 クロス表（${hosp}様）　※黄=15年以上、赤=20年以上`, 1)]);
+  crossRows.push([]);
 
   const modelSet5 = new Set();
   const yearSet5 = new Set();
@@ -3721,7 +3722,7 @@ function exportReportXLSX(){
     if(age>=15) return {v:label, t:'inlineStr', s:7};
     return head(label);
   });
-  sheet5Rows.push([head('型番＼年式'), ...yearHeaderCells, head('合計')]);
+  crossRows.push([head('型番＼年式'), ...yearHeaderCells, head('合計')]);
 
   const colTotals5 = years5.map(()=>0);
   let grandTotal5 = 0;
@@ -3739,14 +3740,13 @@ function exportReportXLSX(){
       colTotals5[idx] += cnt;
     });
     cells.push(num(rowTotal, 2));
-    sheet5Rows.push(cells);
+    crossRows.push(cells);
     grandTotal5 += rowTotal;
   });
-  sheet5Rows.push([head('合計'), ...colTotals5.map(c=>({v:c, t:'n', s:2})), {v:grandTotal5, t:'n', s:2}]);
+  crossRows.push([head('合計'), ...colTotals5.map(c=>({v:c, t:'n', s:2})), {v:grandTotal5, t:'n', s:2}]);
 
   const widths5 = [22, 8, 9, 18, 8, 11, 16];
-  // 年式列の数だけ拡張（クロス表用）
-  for(let i=widths5.length; i<2+years5.length+1; i++) widths5.push(10);
+  const widthsCross = [18, ...years5.map(()=>10), 8];
 
   // ═════════════════════════════════════════════
   // 追加シート: 部品集計（発注用）／ ベッド明細
@@ -3949,6 +3949,7 @@ function exportReportXLSX(){
   const sheetBedXML   = sheetXML(bedRows,   widthsB, {merges:bedMerges});
   const sheetWardSumXML  = sheetXML(wsRows, widthsWS);
   const sheetWardListXML = sheetXML(wlRows, widthsWL, {merges:wlMerges});
+  const sheetCrossXML = sheetXML(crossRows, widthsCross);
   const photoSheet = buildPhotoSheet(recs);
 
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3962,6 +3963,7 @@ function exportReportXLSX(){
 <Override PartName="/xl/worksheets/sheet6.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet7.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet8.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet9.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ''}
 </Types>`;
@@ -3974,10 +3976,11 @@ ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override Pa
   const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheets>
+<sheet name="病棟サマリー" sheetId="7" r:id="rId8"/>
+<sheet name="型番×年式" sheetId="9" r:id="rId10"/>
 <sheet name="ラウンド結果" sheetId="1" r:id="rId1"/>
 <sheet name="部品集計" sheetId="5" r:id="rId6"/>
 <sheet name="ベッド明細" sheetId="6" r:id="rId7"/>
-<sheet name="病棟サマリー" sheetId="7" r:id="rId8"/>
 <sheet name="病棟別一覧" sheetId="8" r:id="rId9"/>
 <sheet name="買い替え提案" sheetId="3" r:id="rId3"/>
 ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
@@ -3993,6 +3996,7 @@ ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
 <Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet6.xml"/>
 <Relationship Id="rId8" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet7.xml"/>
 <Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet8.xml"/>
+<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet9.xml"/>
 ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/>' : ''}
 </Relationships>`;
 
@@ -4008,6 +4012,7 @@ ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/
     {name:'xl/worksheets/sheet6.xml', bytes:utf8Bytes(sheetBedXML)},
     {name:'xl/worksheets/sheet7.xml', bytes:utf8Bytes(sheetWardSumXML)},
     {name:'xl/worksheets/sheet8.xml', bytes:utf8Bytes(sheetWardListXML)},
+    {name:'xl/worksheets/sheet9.xml', bytes:utf8Bytes(sheetCrossXML)},
     ...(photoSheet ? [
       {name:'xl/worksheets/sheet4.xml', bytes:utf8Bytes(photoSheet.sheetXml)},
       {name:'xl/worksheets/_rels/sheet4.xml.rels', bytes:utf8Bytes(photoSheet.sheetRelsXml)},
