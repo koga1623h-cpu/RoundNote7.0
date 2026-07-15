@@ -1823,6 +1823,22 @@ document.addEventListener('DOMContentLoaded', ()=>{
       el.addEventListener('change', ()=>{scheduleDraftSave();updateSaveButtonState();});
     }
   });
+  // 床番上段→年式の自動反映
+  // 末尾「数字4桁＋英字(A-H,J-M ※Iは不使用)」: 下2桁=年（26以下→20xx／27以上→19xx）
+  {
+    const f1 = document.getElementById('inp-floor1');
+    if(f1) f1.addEventListener('blur', ()=>{
+      const yearEl = document.getElementById('inp-year');
+      if(!yearEl || yearEl.value.trim()) return;   // 年式入力済みなら触らない
+      const m = f1.value.trim().match(/(\d{2})(\d{2})([A-HJ-M])$/i);
+      if(!m) return;
+      const yy = parseInt(m[2], 10);
+      const year = yy <= 26 ? 2000 + yy : 1900 + yy;
+      yearEl.value = String(year);
+      yearEl.dispatchEvent(new Event('input'));    // 下書き保存・ボタン状態を通常経路で更新
+      showToast(`年式 ${year} を自動入力（床番より）`);
+    });
+  }
   // キーボード表示時に保存フッターを隠す
   const hideFooterOnFocus = (e)=>{
     const tag = e.target.tagName;
@@ -3709,19 +3725,23 @@ function exportReportXLSX(){
     if(a==='不明')return 1; if(b==='不明')return -1;
     return String(a).localeCompare(String(b), 'ja', {numeric:true});
   });
+  // 型番ごとの最古年式（古い順に並べるため）
+  const oldestYear5 = {};
+  recs.forEach(r=>{
+    const m = r.model || '不明';
+    const a = ageOf(r.year);
+    const y = a===null ? 9999 : currentYear - a;
+    if(!(m in oldestYear5) || y < oldestYear5[m]) oldestYear5[m] = y;
+  });
   const models5 = [...modelSet5].sort((a,b)=>{
     if(a==='不明')return 1; if(b==='不明')return -1;
-    return a.localeCompare(b, 'ja');
+    return (oldestYear5[a]-oldestYear5[b]) || a.localeCompare(b,'ja');
   });
 
   // ヘッダー: 年式に経過年数を併記＋色付け
   const yearHeaderCells = years5.map(y=>{
     const age = ageOf(y);
-    if(age===null) return head(y);
-    const label = `${y}\n(${age}年)`;
-    if(age>=20) return {v:label, t:'inlineStr', s:8};
-    if(age>=15) return {v:label, t:'inlineStr', s:7};
-    return head(label);
+    return head(age===null ? y : `${y}\n(${age}年)`);
   });
   crossRows.push([head('型番＼年式'), ...yearHeaderCells, head('合計')]);
 
@@ -3877,33 +3897,41 @@ function exportReportXLSX(){
   const wardOf  = r => (r.ward||'').trim()  || '（病棟未記入）';
   const modelOf = r => (r.model||'').trim() || '型番不明';
   const wardNames = [...new Set(recs.map(wardOf))].sort((a,b)=>a.localeCompare(b,'ja',{numeric:true}));
+  // 縦=型番（型番×年式と同じ最古年式順）、横=病棟
+  const oldestYearWS = {};
+  recs.forEach(r=>{
+    const m = modelOf(r);
+    const a = ageOf(r.year);
+    const y = a===null ? 9999 : currentYear - a;
+    if(!(m in oldestYearWS) || y < oldestYearWS[m]) oldestYearWS[m] = y;
+  });
   const modelNames = [...new Set(recs.map(modelOf))].sort((a,b)=>{
     if(a==='型番不明') return 1; if(b==='型番不明') return -1;
-    return a.localeCompare(b,'ja',{numeric:true});
+    return (oldestYearWS[a]-oldestYearWS[b]) || a.localeCompare(b,'ja',{numeric:true});
   });
   const cross = {};
   recs.forEach(r=>{ const k = wardOf(r)+'\u0001'+modelOf(r); cross[k]=(cross[k]||0)+1; });
   const wsRows = [];
-  wsRows.push([ txt(`病棟×型番 台数一覧（${hosp}様）`,1) ]);
+  wsRows.push([ txt(`型番×病棟 台数一覧（${hosp}様）`,1) ]);
   wsRows.push([]);
-  wsRows.push([ txt('病棟＼型番',2), ...modelNames.map(m=>txt(m,2)), txt('合計',2) ]);
-  wardNames.forEach(wd=>{
+  wsRows.push([ txt('型番＼病棟',2), ...wardNames.map(w=>txt(w,2)), txt('合計',2) ]);
+  modelNames.forEach(m=>{
     let sum=0;
-    const cells = modelNames.map(m=>{
+    const cells = wardNames.map(wd=>{
       const n = cross[wd+'\u0001'+m]||0; sum+=n;
       return n ? num(n,3) : txt('',3);  // 0は空欄（罫線のみ）
     });
-    wsRows.push([ txt(wd,11), ...cells, num(sum,10) ]);
+    wsRows.push([ txt(m,11), ...cells, num(sum,10) ]);
   });
   {
     let grand=0;
-    const totCells = modelNames.map(m=>{
-      const n = wardNames.reduce((s,wd)=>s+(cross[wd+'\u0001'+m]||0),0); grand+=n;
-      return n ? num(n,10) : txt('',10);
+    const totCells = wardNames.map(wd=>{
+      const n = modelNames.reduce((s,m)=>s+(cross[wd+'\u0001'+m]||0),0); grand+=n;
+      return num(n,10);
     });
     wsRows.push([ txt('合計',2), ...totCells, num(grand,2) ]);
   }
-  const widthsWS = [14, ...modelNames.map(m=>Math.max(10, Math.min(24, m.length*2+4))), 8];
+  const widthsWS = [16, ...wardNames.map(w=>Math.max(8.5, Math.min(14, w.length*2+4))), 8];
 
   // ── 病棟別一覧（全ベッド・病棟列を縦結合） ──
   const CASTER_SHORT = {HR:'頭右', HL:'頭左', FR:'足右', FL:'足左'};
