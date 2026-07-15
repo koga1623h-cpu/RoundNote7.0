@@ -1450,6 +1450,19 @@ input[type=file]{display:none;}
 </div>
 
 <!-- 履歴ピッカーモーダル -->
+<div class="hist-modal-backdrop" id="addModelModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="hist-modal-card" onclick="event.stopPropagation()">
+    <div class="hosp-modal-header" style="position:static;border-radius:0 var(--radius-lg) 0 0;">
+      <div class="hosp-modal-title">型番を新規登録</div>
+      <button class="modal-close" onclick="cancelAddModel()" style="position:static;width:36px;height:36px">✕</button>
+    </div>
+    <div class="hosp-modal-body">
+      <input type="text" id="add-model-input" class="part-input" placeholder="例: KA-96121A"
+             style="width:100%;box-sizing:border-box;font-size:16px;padding:12px;margin-bottom:12px;">
+      <button class="hist-btn" style="width:100%;padding:14px;font-size:16px;" onclick="confirmAddModel()">登録して選択</button>
+    </div>
+  </div>
+</div>
 <div class="hist-modal-backdrop" id="histModal" onclick="closeHistPicker(event)">
   <div class="hist-modal-card" onclick="event.stopPropagation()">
     <div class="hosp-modal-header" style="position:static;border-radius:0 var(--radius-lg) 0 0;">
@@ -1823,20 +1836,37 @@ document.addEventListener('DOMContentLoaded', ()=>{
       el.addEventListener('change', ()=>{scheduleDraftSave();updateSaveButtonState();});
     }
   });
+  // 型番セレクトの「＋ 新規登録…」
+  {
+    const ms = document.getElementById('inp-model');
+    if(ms) ms.addEventListener('change', handleModelSelectChange);
+  }
   // 床番上段→年式の自動反映
   // 末尾「数字4桁＋英字(A-H,J-M ※Iは不使用)」: 下2桁=年（26以下→20xx／27以上→19xx）
+  // 自動入力した年式は床番の修正に追従する（手入力・履歴選択の年式は触らない）
   {
     const f1 = document.getElementById('inp-floor1');
-    if(f1) f1.addEventListener('blur', ()=>{
-      const yearEl = document.getElementById('inp-year');
-      if(!yearEl || yearEl.value.trim()) return;   // 年式入力済みなら触らない
-      const m = f1.value.trim().match(/(\d{2})(\d{2})([A-HJ-M])$/i);
-      if(!m) return;
-      const yy = parseInt(m[2], 10);
-      const year = yy <= 26 ? 2000 + yy : 1900 + yy;
-      yearEl.value = String(year);
-      yearEl.dispatchEvent(new Event('input'));    // 下書き保存・ボタン状態を通常経路で更新
-      showToast(`年式 ${year} を自動入力（床番より）`);
+    const yearEl = document.getElementById('inp-year');
+    let lastAutoValue = null;   // 直近に自動入力した値（現在値と一致する間だけ追従対象）
+    if(f1 && yearEl) f1.addEventListener('blur', ()=>{
+      const cur = yearEl.value.trim();
+      if(cur && cur !== lastAutoValue) return;   // 手入力・履歴選択の値には触らない
+      // 全角英数字→半角に正規化してから判定（入力欄の値自体は変更しない）
+      const norm = f1.value.trim().replace(/[０-９Ａ-Ｚａ-ｚ]/g,
+        ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+      const m = norm.match(/(\d{2})(\d{2})([A-HJ-M])$/i);
+      let newVal = '';
+      if(m){
+        const yy = parseInt(m[2], 10);
+        newVal = String(yy <= 26 ? 2000 + yy : 1900 + yy);
+      }
+      if(newVal === cur) return;                 // 変化なし
+      yearEl.value = newVal;
+      lastAutoValue = newVal || null;
+      yearEl.dispatchEvent(new Event('input'));  // 下書き保存・ボタン状態を通常経路で更新
+      showToast(newVal
+        ? `年式 ${newVal} を自動入力（床番より）`
+        : '床番の変更に伴い自動入力の年式をクリアしました');
     });
   }
   // キーボード表示時に保存フッターを隠す
@@ -1909,8 +1939,10 @@ function openHistPicker(inputId, key){
 }
 
 function pickHist(inputId, val){
-  document.getElementById(inputId).value = val;
+  const el = document.getElementById(inputId);
+  el.value = val;
   document.getElementById('histModal').classList.remove('show');
+  if(inputId === 'inp-floor1') el.dispatchEvent(new Event('blur'));  // 床番→年式の自動反映を発動
   scheduleDraftSave();
   updateSaveButtonState();
 }
@@ -4272,8 +4304,44 @@ function renderModelOptions(){
   const el=document.getElementById('inp-model'); if(!el)return;
   const val=el.value;
   el.innerHTML='<option value="">選択してください</option>'
-    +st.models.map(m=>`<option value="${m}">${m}</option>`).join('');
+    +st.models.map(m=>`<option value="${m}">${m}</option>`).join('')
+    +'<option value="__add_new__">＋ 新規登録…</option>';
   if(val) el.value=val;
+}
+// 「＋ 新規登録…」選択時：アプリ内モーダルで登録（iOSホーム画面アプリではprompt()が動かないため）
+function handleModelSelectChange(e){
+  const el=e.target;
+  if(el.value!=='__add_new__') return;
+  el.value='';                                   // いったん未選択に戻す
+  const modal=document.getElementById('addModelModal');
+  const inp=document.getElementById('add-model-input');
+  inp.value='';
+  modal.classList.add('show');
+  setTimeout(()=>inp.focus(), 100);
+}
+function cancelAddModel(){
+  document.getElementById('addModelModal').classList.remove('show');
+}
+function confirmAddModel(){
+  const inp=document.getElementById('add-model-input');
+  const sel=document.getElementById('inp-model');
+  const v=(inp.value||'').trim();
+  if(!v){ showToast('⚠️ 型番を入力してください','warn'); return; }
+  if(st.models.includes(v)){
+    sel.value=v;
+    document.getElementById('addModelModal').classList.remove('show');
+    showToast('登録済みの型番を選択しました');
+    sel.dispatchEvent(new Event('input'));
+    return;
+  }
+  st.models.push(v);
+  persistState();
+  renderModelOptions();
+  if(typeof renderModelsEditor==='function') renderModelsEditor();  // 設定タブ側も同期
+  sel.value=v;
+  document.getElementById('addModelModal').classList.remove('show');
+  sel.dispatchEvent(new Event('input'));  // 下書き保存・ボタン状態を通常経路で更新
+  showToast(`型番「${v}」を登録しました`);
 }
 function renderModelsEditor(){
   const c=document.getElementById('modelsEditor');
