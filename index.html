@@ -650,6 +650,114 @@ select{
 .hosp-rate.r-low{color:var(--ok);}
 .hosp-chevron{width:16px;height:16px;color:var(--text2);flex-shrink:0;}
 
+/* ══ その場で見せる報告（全画面オーバーレイ） ══ */
+#reportOverlay{
+  position:fixed;inset:0;z-index:200;background:var(--bg);
+  display:none;flex-direction:column;
+}
+#reportOverlay.show{display:flex;}
+.rp-bar{
+  flex-shrink:0;display:flex;align-items:center;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+  background:var(--text);color:#fff;
+}
+.rp-bar button{
+  background:none;border:1.5px solid rgba(255,255,255,.4);color:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:500;padding:7px 12px;
+  display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:0;
+}
+.rp-bar button:active{background:rgba(255,255,255,.18);}
+.rp-bar .rp-sp{margin-left:auto;}
+.rp-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:40px;}
+.rp-doc{max-width:760px;margin:0 auto;}
+
+.rp-head{background:var(--text);color:#fff;padding:16px 18px;border-bottom:4px solid var(--accent);}
+.rp-kicker{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.16em;color:#9fb0d4;margin-bottom:6px;}
+.rp-title{font-size:23px;font-weight:900;line-height:1.2;}
+.rp-sub{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px 16px;font-size:12.5px;color:#c3cee6;font-family:'DM Mono',monospace;}
+
+.rp-sec{background:var(--surface);margin-top:10px;padding:16px 18px;}
+.rp-sh{display:flex;align-items:baseline;gap:10px;padding-bottom:8px;margin-bottom:14px;border-bottom:2px solid var(--text);}
+.rp-sh h2{font-size:15px;font-weight:700;}
+.rp-note{font-size:11.5px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}
+
+.rp-tally{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-thin);}
+.rp-tc{background:var(--surface);padding:14px 8px;text-align:center;}
+.rp-tc.t-ng{background:var(--ng-bg);}
+.rp-tm{font-size:20px;font-weight:700;line-height:1;}
+.rp-tn{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;line-height:1;margin:8px 0 4px;}
+.rp-tl{font-size:12px;font-weight:500;color:var(--text2);}
+.t-ok .rp-tm,.t-ok .rp-tn{color:var(--ok);}
+.t-wm .rp-tm,.t-wm .rp-tn{color:var(--warn);}
+.t-ng .rp-tm,.t-ng .rp-tn{color:var(--ng);}
+.rp-total{margin-top:10px;padding-top:10px;border-top:1.5px solid var(--line-thin);font-size:13px;color:var(--text2);text-align:center;}
+.rp-total b{font-family:'DM Mono',monospace;font-size:16px;color:var(--text);font-weight:500;}
+
+.rp-ward{margin-bottom:16px;}
+.rp-ward:last-child{margin-bottom:0;}
+.rp-wh{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:13px;font-weight:700;}
+.rp-wn{margin-left:auto;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text2);font-weight:400;}
+.rp-beds{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;}
+.rp-bed{
+  aspect-ratio:1/.72;border:1.5px solid var(--line-thin);background:var(--surface2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  font-family:'DM Mono',monospace;font-size:9.5px;color:var(--text3);overflow:hidden;
+}
+.rp-bed b{font-size:13px;font-weight:500;line-height:1;}
+.rp-bed.k-ok{background:var(--ok-bg);border-color:#b8ddcc;color:var(--ok);}
+.rp-bed.k-wm{background:var(--warn-bg);border-color:#e2c79e;color:var(--warn);}
+.rp-bed.k-ng{background:var(--ng-bg);border-color:var(--ng);color:var(--ng);border-width:2px;}
+.rp-bed.k-ng b{font-weight:700;}
+.rp-lg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1.5px solid var(--line-thin);font-size:11.5px;color:var(--text2);}
+.rp-lg i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;border:1.5px solid;}
+.rp-lg .g-ok i{background:var(--ok-bg);border-color:#b8ddcc;}
+.rp-lg .g-wm i{background:var(--warn-bg);border-color:#e2c79e;}
+.rp-lg .g-ng i{background:var(--ng-bg);border-color:var(--ng);}
+
+.rp-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--line-thin);}
+.rp-row:last-child{border-bottom:none;}
+.rp-no{flex-shrink:0;width:26px;height:26px;background:var(--ng);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;}
+.rp-rb{flex:1;min-width:0;}
+.rp-loc{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;}
+.rp-where{font-size:12px;color:var(--text2);margin-left:8px;font-weight:400;font-family:'DM Sans',sans-serif;}
+.rp-model{font-size:12.5px;color:var(--text2);margin-top:2px;}
+.rp-model .yr{font-family:'DM Mono',monospace;color:var(--warn);font-weight:500;margin-left:6px;}
+.rp-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.rp-chip{background:var(--ng-bg);color:var(--ng);border:1.5px solid var(--ng);padding:2px 8px;font-size:11.5px;font-weight:500;}
+.rp-chip.c-cas{background:var(--surface);border-style:dashed;}
+
+.rp-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.rp-ph{border:1.5px solid var(--line-thin);background:var(--surface2);}
+.rp-ph img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+.rp-cap{padding:6px 8px;border-top:1.5px solid var(--line-thin);background:var(--surface);font-size:11.5px;line-height:1.4;}
+.rp-cap b{font-family:'DM Mono',monospace;font-size:12.5px;font-weight:500;}
+.rp-cap span{color:var(--ng);display:block;}
+
+.rp-parts{display:flex;flex-direction:column;gap:1px;background:var(--line-thin);}
+.rp-pt{background:var(--surface);display:flex;align-items:center;gap:10px;padding:9px 2px;}
+.rp-pnm{font-size:13.5px;font-weight:500;width:92px;flex-shrink:0;}
+.rp-pbar{flex:1;height:14px;background:var(--surface2);}
+.rp-pfill{height:100%;background:var(--ng);}
+.rp-pn{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;width:34px;text-align:right;flex-shrink:0;}
+.rp-psum{margin-top:10px;padding-top:10px;border-top:1.5px solid var(--line-thin);font-size:12.5px;color:var(--text2);}
+.rp-psum b{font-family:'DM Mono',monospace;font-size:15px;color:var(--text);font-weight:500;}
+.rp-foot{padding:16px 18px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.7;}
+.rp-empty{padding:14px 0;font-size:13px;color:var(--text2);}
+
+/* 印刷：報告書だけを出す（共有→プリント→PDF保存） */
+@media print{
+  @page{size:A4;margin:12mm;}
+  body>*{display:none!important;}
+  body>#reportOverlay.show{display:block!important;position:static;background:#fff;}
+  .rp-bar{display:none!important;}
+  .rp-scroll{overflow:visible;padding:0;}
+  .rp-doc{max-width:none;}
+  .rp-head{background:#fff;color:var(--text);padding:0 0 12px;border-bottom:3px solid var(--text);}
+  .rp-kicker{color:var(--text3);} .rp-sub{color:var(--text2);}
+  .rp-sec{margin-top:0;padding:12px 0;border-bottom:1.5px solid var(--line-thin);page-break-inside:avoid;}
+  .rp-row,.rp-ward,.rp-ph{page-break-inside:avoid;}
+}
+
 /* 病棟別集計 */
 .ward-row{
   padding:12px 0;border-bottom:1px solid var(--line-thin);
@@ -688,6 +796,22 @@ select{
 /* ── MASTER EDITOR ── */
 .part-row{display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1.5px solid var(--line-thin);}
 .part-row:last-child{border-bottom:none;}
+/* ── 部品リスト ドラッグ並び替え ── */
+#partsEditor{position:relative;}
+.part-grip{
+  flex-shrink:0;width:32px;align-self:stretch;margin-left:-4px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none;
+}
+.part-grip:active{cursor:grabbing;color:var(--accent);}
+.part-row.dragging{
+  position:relative;z-index:30;background:var(--surface);
+  border-bottom-color:transparent;border-radius:10px;
+  box-shadow:0 8px 20px rgba(0,0,0,.28);
+}
+.part-row.dragging .part-grip{color:var(--accent);}
+.part-row.shifting{transition:transform .16s ease;}
 .part-label{flex:1;font-size:14px;color:var(--text);font-weight:500;}
 .part-input{
   flex:1;background:var(--surface);border:none;border-bottom:2px solid var(--accent);
@@ -1308,6 +1432,21 @@ input[type=file]{display:none;}
 
 <!-- ===== 出力 ===== -->
 <div id="page-export" class="page">
+
+  <!-- その場で見せる報告 -->
+  <div class="card">
+    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>その場で見せる報告</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;">点検の結果を画面に表示します。そのまま相手に見せられます。</p>
+    <div class="form-row" style="margin-bottom:12px">
+      <label>病院を選択 <span class="required">*</span></label>
+      <select id="report-hospital"><option value="">病院を選んでください</option></select>
+    </div>
+    <button class="btn btn-primary" onclick="openReport()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      報告書を表示
+    </button>
+  </div>
+
   <div class="card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>提出用Excel出力</div>
     <div class="form-row" style="margin-bottom:10px">
@@ -1401,38 +1540,6 @@ input[type=file]{display:none;}
     <p>部位を削除しても既存の記録は残ります。<br>Excel出力の列は出力時点の部位リストに基づきます。</p>
   </div>
 
-  <!-- 古い記録削除 -->
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>古い記録の一括削除</div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;">事前にExcel出力しておくことを推奨します。</p>
-    <div class="export-group">
-      <div class="export-group-label">削除する期間</div>
-      <div class="export-group-btns">
-        <button class="export-item-btn" onclick="cleanupOld(30)">
-          <span class="export-item-text">
-            <span class="export-item-name">1ヶ月より前</span>
-            <span class="export-item-desc">1ヶ月以前の記録を削除</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-        </button>
-        <button class="export-item-btn" onclick="cleanupOld(90)">
-          <span class="export-item-text">
-            <span class="export-item-name">3ヶ月より前</span>
-            <span class="export-item-desc">3ヶ月以前の記録を削除</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-        </button>
-        <button class="export-item-btn" onclick="cleanupOld(180)">
-          <span class="export-item-text">
-            <span class="export-item-name">6ヶ月より前</span>
-            <span class="export-item-desc">6ヶ月以前の記録を削除</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- 病院単位で削除 -->
   <div class="card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M10 21v-5h4v5"/></svg>病院単位で削除</div>
@@ -1471,6 +1578,21 @@ input[type=file]{display:none;}
     </div>
     <div class="hosp-modal-body" id="histModalBody"></div>
   </div>
+</div>
+
+<!-- その場で見せる報告 オーバーレイ -->
+<div id="reportOverlay">
+  <div class="rp-bar">
+    <button onclick="closeReport()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      閉じる
+    </button>
+    <button class="rp-sp" onclick="printReport()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      PDF・印刷
+    </button>
+  </div>
+  <div class="rp-scroll"><div class="rp-doc" id="reportDoc"></div></div>
 </div>
 
 <!-- 要交換ベッドリストモーダル -->
@@ -1519,9 +1641,9 @@ const CASTER_DETAIL = {
   '要交換': ['ゴム崩れ','ゴムなし','首振り×'],
 };
 
-const DEFAULT_HOSPITALS = ['那覇市立病院','沖縄赤十字病院','県立中部病院','浦添総合病院'];
-const DEFAULT_MODELS    = ['パラマウント SF-836WC','パラマウント SF-837WC','フランスベッド MA-551','フランスベッド MA-501'];
-const DEFAULT_PARTS     = ['サイドレール','背ボード','足ボード','マットレス','フレーム','電動モーター','リモコン','ナースコール','柵ロック'];
+const DEFAULT_HOSPITALS = [];
+const DEFAULT_MODELS    = [];
+const DEFAULT_PARTS     = ['手元SW','背ACT','HLACT','膝ACT','C.BOX','ケーブル中継','電源コード','サイドバンパー','背ボトム','背湾曲','腰枠','膝枠','膝湾曲','足枠','Hボード','Fボード'];
 const SEVS = ['軽微','中程度','重大'];
 
 const MAX_PHOTOS    = 3;
@@ -4149,37 +4271,6 @@ function deleteByHospital(){
   showToast(`🗑 「${hosp}」${toDelete.length}件 削除しました`);
 }
 
-function cleanupOld(days){
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-
-  const toDelete = st.records.filter(r=>{
-    const d = parseRecordDate(r.date);
-    return d && d < cutoff;
-  });
-  if(!toDelete.length){
-    showToast(`対象なし（${days}日より古い記録はありません）`,'warn');
-    return;
-  }
-  const msg = `${days}日より古い記録を ${toDelete.length} 件 削除します。\n（関連写真もすべて削除されます）\n\n続行しますか？`;
-  if(!confirm(msg)) return;
-
-  // 関連写真を削除
-  toDelete.forEach(r=>{
-    (r.photoIds||[]).forEach(pid=>{ delete photoStore[pid]; });
-  });
-  // 記録から除外
-  const keepIds = new Set(toDelete.map(r=>r.id));
-  st.records = st.records.filter(r=>!keepIds.has(r.id));
-
-  if(!persistState() || !persistPhotos()){
-    showToast('⚠️ 削除処理で問題発生','err');
-    return;
-  }
-  updateBadge(); renderList(); renderSummary(); renderStorageMeter();
-  showToast(`🗑 ${toDelete.length}件 削除しました`);
-}
-
 function parseRecordDate(str){
   // "2026/4/18" 等の日本語日付を Date に変換
   if(!str) return null;
@@ -4193,11 +4284,11 @@ function parseRecordDate(str){
 // HOSPITAL / MODEL / PARTS
 // ═══════════════════════════════════════════════════════
 function renderHospitalOptions(){
-  ['inp-hospital','filter-hospital','export-hospital'].forEach(id=>{
+  ['inp-hospital','filter-hospital','export-hospital','report-hospital'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     const val=el.value;
     const placeholder = id==='filter-hospital' ? 'すべての病院'
-      : id==='export-hospital' ? '病院を選んでください'
+      : (id==='export-hospital'||id==='report-hospital') ? '病院を選んでください'
       : '選択してください';
     el.innerHTML=`<option value="">${placeholder}</option>`
       +st.hospitals.map(h=>`<option value="${h}">${h}</option>`).join('');
@@ -4221,6 +4312,7 @@ function renderPartsEditor(){
   if(!st.parts.length){c.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">登録なし</div>';return;}
   c.innerHTML=st.parts.map((p,i)=>`
     <div class="part-row" id="pp-${i}">
+      <span class="part-grip" onpointerdown="partDragStart(event,${i})" onpointermove="partDragMove(event)" onpointerup="partDragEnd(event)" onpointercancel="partDragEnd(event)" title="ドラッグで並び替え"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;pointer-events:none"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg></span>
       <span class="part-label" id="pl-${i}">${p}</span>
       <button class="icon-btn" onclick="editPart(${i})">✏️</button>
       <button class="icon-btn" onclick="deletePart(${i})" style="border-color:var(--ng);color:var(--ng)">✕</button>
@@ -4256,6 +4348,280 @@ function addPartMgr(){
   st.parts.push(v); persistState();
   document.getElementById('new-part-mgr').value='';
   renderPartsEditor(); renderPartsInputTable(); showToast('追加しました');
+}
+
+// ═══════════════════════════════════════════════════════
+// その場で見せる報告
+//   判定は既存の発注ルールと同じ：
+//     × 要交換 = キャスター「要交換」あり or 部品「重大」あり
+//     △ 要注意 = キャスター「要注意」あり or 部品「軽微/中程度」あり
+//     〇       = それ以外（正常・交換済み）
+// ═══════════════════════════════════════════════════════
+function rpEsc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// 1台の判定と、要交換の内訳を返す
+function rpJudge(r){
+  const cas = r.casters || {}, sev = r.partsSev || {};
+  const ngCas = CASTER_POSITIONS.filter(({id})=>cas[id]==='要交換').map(({label})=>label);
+  const ngPart = st.parts.filter(p=>sev[p]==='重大');
+  if(ngCas.length || ngPart.length) return {mark:'×', cls:'k-ng', ngCas, ngPart};
+  const wmCas  = CASTER_POSITIONS.some(({id})=>cas[id]==='要注意');
+  const wmPart = st.parts.some(p=>sev[p]==='軽微' || sev[p]==='中程度');
+  if(wmCas || wmPart) return {mark:'△', cls:'k-wm', ngCas:[], ngPart:[]};
+  return {mark:'〇', cls:'k-ok', ngCas:[], ngPart:[]};
+}
+
+function buildReportHTML(hosp, recs){
+  const judged = recs.map(r=>({r, j:rpJudge(r)}));
+  const nOk = judged.filter(x=>x.j.mark==='〇').length;
+  const nWm = judged.filter(x=>x.j.mark==='△').length;
+  const ngList = judged.filter(x=>x.j.mark==='×');
+
+  // 点検日（最新／範囲）
+  const dates = [...new Set(recs.map(r=>r.date).filter(Boolean))].sort();
+  const dateTxt = !dates.length ? '—'
+    : dates.length===1 ? dates[0]
+    : dates[0]+' 〜 '+dates[dates.length-1];
+
+  // ── 病棟マップ ──
+  const byWard = new Map();
+  recs.forEach(r=>{
+    const w = r.ward || '（病棟未記入）';
+    if(!byWard.has(w)) byWard.set(w, []);
+    byWard.get(w).push(r);
+  });
+  const wardHTML = [...byWard.entries()].sort((a,b)=>a[0].localeCompare(b[0],'ja')).map(([w,rs])=>{
+    const sorted = [...rs].sort((a,b)=>
+      String(a.room||'').localeCompare(String(b.room||''),'ja',{numeric:true}) ||
+      String(a.bed||'').localeCompare(String(b.bed||''),'ja',{numeric:true}));
+    let ng=0, wm=0;
+    const cells = sorted.map(r=>{
+      const j = rpJudge(r);
+      if(j.mark==='×') ng++; else if(j.mark==='△') wm++;
+      const lbl = [r.room, r.bed].filter(Boolean).join('-') || '—';
+      return `<div class="rp-bed ${j.cls}"><b>${j.mark}</b>${rpEsc(lbl)}</div>`;
+    }).join('');
+    return `<div class="rp-ward">
+      <div class="rp-wh"><span>${rpEsc(w)}</span>
+        <span class="rp-wn">${sorted.length}床 — 要交換 ${ng} / 要注意 ${wm}</span></div>
+      <div class="rp-beds">${cells}</div>
+    </div>`;
+  }).join('');
+
+  // ── 要交換一覧 ──
+  const ngHTML = !ngList.length
+    ? '<div class="rp-empty">交換が必要なベッドはありませんでした。</div>'
+    : ngList.map(({r,j},i)=>{
+        const loc = [r.room, r.bed].filter(Boolean).join('-') || '—';
+        const chips = j.ngCas.map(c=>`<span class="rp-chip c-cas">キャスター ${rpEsc(c)}</span>`)
+          .concat(j.ngPart.map(p=>`<span class="rp-chip">${rpEsc(p)}</span>`)).join('');
+        return `<div class="rp-row">
+          <div class="rp-no">${i+1}</div>
+          <div class="rp-rb">
+            <div class="rp-loc">${rpEsc(loc)}<span class="rp-where">${rpEsc(r.ward||'')}</span></div>
+            ${r.model?`<div class="rp-model">${rpEsc(r.model)}${r.year?`<span class="yr">${rpEsc(r.year)}年式</span>`:''}</div>`:''}
+            <div class="rp-chips">${chips}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+  // ── 写真（要交換のベッドのみ） ──
+  const shots = [];
+  ngList.forEach(({r,j})=>{
+    (r.photoIds||[]).forEach(id=>{
+      if(photoStore[id]) shots.push({src:photoStore[id],
+        loc:[r.room,r.bed].filter(Boolean).join('-')||'—',
+        items:j.ngCas.concat(j.ngPart).join(' / ')});
+    });
+  });
+  const photoHTML = !shots.length
+    ? '<div class="rp-empty">写真はありません。</div>'
+    : `<div class="rp-photos">${shots.map(s=>`
+        <div class="rp-ph"><img src="${s.src}" alt="">
+          <div class="rp-cap"><b>${rpEsc(s.loc)}</b><span>${rpEsc(s.items)}</span></div>
+        </div>`).join('')}</div>`;
+
+  // ── 部品集計（発注対象＝キャスター要交換＋部品重大） ──
+  const cnt = new Map();
+  recs.forEach(r=>{
+    CASTER_POSITIONS.forEach(({id,label})=>{
+      if(r.casters && r.casters[id]==='要交換'){
+        const k='キャスター '+label; cnt.set(k,(cnt.get(k)||0)+1);
+      }
+    });
+    if(r.partsSev) st.parts.forEach(p=>{
+      if(r.partsSev[p]==='重大') cnt.set(p,(cnt.get(p)||0)+1);
+    });
+  });
+  const rows = [...cnt.entries()].sort((a,b)=>b[1]-a[1]);
+  const totalPt = rows.reduce((a,b)=>a+b[1],0);
+  const maxPt = rows.length ? rows[0][1] : 1;
+  const partHTML = !rows.length
+    ? '<div class="rp-empty">交換が必要な部品はありません。</div>'
+    : `<div class="rp-parts">${rows.map(([n,c])=>`
+        <div class="rp-pt"><span class="rp-pnm">${rpEsc(n)}</span>
+          <span class="rp-pbar"><span class="rp-pfill" style="width:${c/maxPt*100}%"></span></span>
+          <span class="rp-pn">${c}</span></div>`).join('')}</div>
+       <div class="rp-psum">合計 <b>${totalPt}</b> 点。正式なお見積りは後日ご提出します。</div>`;
+
+  return `
+    <header class="rp-head">
+      <div class="rp-kicker">ラウンド報告</div>
+      <div class="rp-title">${rpEsc(hosp)}</div>
+      <div class="rp-sub"><span>${rpEsc(dateTxt)}</span><span>点検 ${recs.length}台</span></div>
+    </header>
+
+    <section class="rp-sec">
+      <div class="rp-sh"><h2>点検結果</h2></div>
+      <div class="rp-tally">
+        <div class="rp-tc t-ok"><div class="rp-tm">〇</div><div class="rp-tn">${nOk}</div><div class="rp-tl">問題なし</div></div>
+        <div class="rp-tc t-wm"><div class="rp-tm">△</div><div class="rp-tn">${nWm}</div><div class="rp-tl">経過観察</div></div>
+        <div class="rp-tc t-ng"><div class="rp-tm">×</div><div class="rp-tn">${ngList.length}</div><div class="rp-tl">要交換</div></div>
+      </div>
+      <div class="rp-total">${recs.length}台を点検し、<b>${ngList.length}台</b>に交換が必要な破損を確認しました。</div>
+    </section>
+
+    <section class="rp-sec">
+      <div class="rp-sh"><h2>病棟別の状況</h2><span class="rp-note">${byWard.size}病棟 / ${recs.length}床</span></div>
+      ${wardHTML}
+      <div class="rp-lg">
+        <span class="g-ok"><i></i>問題なし</span>
+        <span class="g-wm"><i></i>経過観察</span>
+        <span class="g-ng"><i></i>要交換</span>
+      </div>
+    </section>
+
+    <section class="rp-sec">
+      <div class="rp-sh"><h2>交換が必要なベッド</h2><span class="rp-note">${ngList.length}台</span></div>
+      ${ngHTML}
+    </section>
+
+    <section class="rp-sec">
+      <div class="rp-sh"><h2>破損箇所の写真</h2><span class="rp-note">要交換分のみ</span></div>
+      ${photoHTML}
+    </section>
+
+    <section class="rp-sec">
+      <div class="rp-sh"><h2>必要な交換部品</h2><span class="rp-note">概算</span></div>
+      ${partHTML}
+    </section>
+
+    <div class="rp-foot">
+      ラウンドノートで作成 — ${new Date().toLocaleString('ja-JP')}<br>
+      本書は点検時点の所見をまとめた概要です。
+    </div>`;
+}
+
+function openReport(){
+  const hosp = document.getElementById('report-hospital').value;
+  if(!hosp){ showToast('⚠️ 病院を選んでください','warn'); return; }
+  const recs = st.records.filter(r=>r.hospital===hosp);
+  if(!recs.length){ showToast('⚠️ この病院の記録がありません','warn'); return; }
+  document.getElementById('reportDoc').innerHTML = buildReportHTML(hosp, recs);
+  const ov = document.getElementById('reportOverlay');
+  ov.classList.add('show');
+  ov.querySelector('.rp-scroll').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReport(){
+  document.getElementById('reportOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function printReport(){
+  if(typeof window.print === 'function'){ window.print(); }
+  else{ showToast('⚠️ この環境では印刷できません','warn'); }
+}
+
+// ═══════════════════════════════════════════════════════
+// 部品リスト ドラッグ並び替え（Pointer Events：指・マウス両対応）
+// ☰グリップを掴んだ時だけ発動 → ページスクロールと競合しない
+// ═══════════════════════════════════════════════════════
+let _pdrag = null;
+
+function partDragStart(e, idx){
+  if(_pdrag) return;
+  // 名前編集中はドラッグ無効
+  if(document.querySelector('#partsEditor .part-input')) return;
+  const c = document.getElementById('partsEditor');
+  const rows = Array.from(c.querySelectorAll('.part-row'));
+  if(rows.length < 2) return;
+  const sy = window.scrollY;
+  const centers = rows.map(r=>{ const b=r.getBoundingClientRect(); return b.top + sy + b.height/2; });
+  const height  = rows[idx].getBoundingClientRect().height;
+  _pdrag = { idx, curIdx:idx, rows, centers, height,
+             startY: e.clientY + sy, lastClientY: e.clientY, raf:0 };
+  rows[idx].classList.add('dragging');
+  rows.forEach((r,j)=>{ if(j!==idx) r.classList.add('shifting'); });
+  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(err){}
+  if(navigator.vibrate) navigator.vibrate(10);
+  e.preventDefault();
+}
+
+function partDragMove(e){
+  if(!_pdrag) return;
+  _pdrag.lastClientY = e.clientY;
+  partDragUpdate();
+  partDragAutoScroll();
+  e.preventDefault();
+}
+
+// 指の位置から「今どこに挿さるか」を計算し、他の行をよける
+function partDragUpdate(){
+  const d = _pdrag; if(!d) return;
+  const dy = (d.lastClientY + window.scrollY) - d.startY;
+  d.rows[d.idx].style.transform = `translateY(${dy}px) scale(1.02)`;
+  const dc = d.centers[d.idx] + dy;   // ドラッグ中の行の中心
+  let ni = d.idx;
+  d.rows.forEach((r,j)=>{
+    if(j === d.idx) return;
+    if(j < d.idx){
+      if(dc <= d.centers[j]){ r.style.transform = `translateY(${d.height}px)`; ni--; }
+      else { r.style.transform = ''; }
+    }else{
+      if(dc >= d.centers[j]){ r.style.transform = `translateY(${-d.height}px)`; ni++; }
+      else { r.style.transform = ''; }
+    }
+  });
+  d.curIdx = ni;
+}
+
+// 画面端まで持っていくと自動スクロール（16項目でも端から端へ運べる）
+function partDragAutoScroll(){
+  const d = _pdrag; if(!d) return;
+  cancelAnimationFrame(d.raf);
+  const step = ()=>{
+    if(!_pdrag) return;
+    const y = _pdrag.lastClientY, vh = window.innerHeight, EDGE = 90, SPD = 14;
+    let v = 0;
+    if(y < EDGE)            v = -SPD * (1 - y/EDGE);
+    else if(y > vh - EDGE)  v =  SPD * (1 - (vh - y)/EDGE);
+    if(v){
+      window.scrollBy(0, v);
+      partDragUpdate();
+      _pdrag.raf = requestAnimationFrame(step);
+    }
+  };
+  d.raf = requestAnimationFrame(step);
+}
+
+function partDragEnd(e){
+  const d = _pdrag; if(!d) return;
+  cancelAnimationFrame(d.raf);
+  _pdrag = null;
+  d.rows.forEach(r=>{ r.classList.remove('dragging','shifting'); r.style.transform=''; });
+  if(d.curIdx !== d.idx){
+    const [moved] = st.parts.splice(d.idx, 1);
+    st.parts.splice(d.curIdx, 0, moved);
+    if(!persistState()){ showToast('⚠️ 保存に失敗','err'); }
+    renderPartsEditor(); renderPartsInputTable();
+    showToast('並び替えました');
+  }
 }
 
 function renderHospitalsEditor(){
