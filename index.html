@@ -858,7 +858,6 @@ table.pt td:first-child{font-size:13px;padding-left:4px;word-break:break-all;col
   font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:all .15s;
   padding:0;min-width:38px;-webkit-appearance:none;appearance:none;font-family:inherit;
 }
-.sev-chip.a-軽微 {border-color:var(--ok);   background:var(--ok);  color:#fff;}
 .sev-chip.a-中程度{border-color:var(--warn); background:var(--warn);color:#fff;}
 .sev-chip.a-重大  {border-color:var(--ng);   background:var(--ng);  color:#fff;}
 
@@ -1190,7 +1189,7 @@ input[type=file]{display:none;}
     </div>
     <div class="row3" style="grid-template-columns:2fr 1fr">
       <div>
-        <label>ベッド型番</label>
+        <label>ベッド型番 <span class="required">*</span></label>
         <select id="inp-model"></select>
       </div>
       <div>
@@ -1330,7 +1329,7 @@ input[type=file]{display:none;}
     <div class="parts-wrap">
       <table class="pt">
         <thead>
-          <tr><th style="min-width:80px">部位</th><th>軽微</th><th>中程度</th><th>重大</th></tr>
+          <tr><th style="min-width:80px">部位</th><th>中程度</th><th>重大</th></tr>
         </thead>
         <tbody id="partsBody"></tbody>
       </table>
@@ -1638,13 +1637,20 @@ const CASTER_STATES = ['未選択','正常','要注意','要交換','交換済�
 // 大分類ごとの詳細選択肢
 const CASTER_DETAIL = {
   '要注意': ['劣化','溝あり'],
-  '要交換': ['ゴム崩れ','ゴムなし','首振り×'],
+  '要交換': ['ゴム崩れ','ゴムなし','首振り×','溝深い'],
 };
 
 const DEFAULT_HOSPITALS = [];
 const DEFAULT_MODELS    = [];
 const DEFAULT_PARTS     = ['手元SW','背ACT','HLACT','膝ACT','C.BOX','ケーブル中継','電源コード','サイドバンパー','背ボトム','背湾曲','腰枠','膝枠','膝湾曲','足枠','Hボード','Fボード'];
-const SEVS = ['軽微','中程度','重大'];
+const SEVS = ['中程度','重大'];
+// 旧データの「軽微」は中程度と同じ△扱い。編集時のみ中程度に寄せて表示する
+const SEV_LEGACY = {'軽微':'中程度'};
+function normSev(obj){
+  const o = {...(obj||{})};
+  Object.keys(o).forEach(k=>{ if(SEV_LEGACY[o[k]]) o[k]=SEV_LEGACY[o[k]]; });
+  return o;
+}
 
 const MAX_PHOTOS    = 3;
 const STORAGE_LIMIT = 4 * 1024 * 1024;  // 4MB (安全マージン)
@@ -1919,7 +1925,7 @@ function loadDraft(){
     document.getElementById('inp-memo').value     = d.memo||'';
     formCasters  = d.casters||{HR:'未選択',HL:'未選択',FR:'未選択',FL:'未選択'};
     formCasterDetail = d.casterDetail||{HR:'',HL:'',FR:'',FL:''};
-    formSev      = d.sev||{};
+    formSev      = normSev(d.sev);
     formPhotoIds = (d.photoIds||[]).filter(id=>photoStore[id]);
     updateCasterUI();
     renderPartsInputTable();
@@ -2241,8 +2247,9 @@ window.addEventListener('scroll', ()=>{
 function handleCasterTap(pos){
   const cur = CASTER_STATES.indexOf(formCasters[pos]);
   formCasters[pos] = CASTER_STATES[(cur+1) % CASTER_STATES.length];
-  // 状態が変わったら詳細リセット
-  if(!CASTER_DETAIL[formCasters[pos]]) formCasterDetail[pos] = '';
+  // 状態が変わったら詳細を見直す（新しい状態にない選択肢だけ消す）
+  const okList = CASTER_DETAIL[formCasters[pos]] || [];
+  if(!okList.includes(formCasterDetail[pos])) formCasterDetail[pos] = '';
   updateOneCasterUI(pos);
   if(bulkPanelOpen) renderBulkContent();
   scheduleDraftSave();
@@ -2549,7 +2556,7 @@ function editRecord(id){
   const _ncCb=document.getElementById('inp-needscheck'); if(_ncCb) _ncCb.checked = !!r.needsCheck;
   formCasters  = {HR:'未選択',HL:'未選択',FR:'未選択',FL:'未選択', ...(r.casters||{})};
   formCasterDetail = {HR:'',HL:'',FR:'',FL:'', ...(r.casterDetail||{})};
-  formSev      = {...(r.partsSev||{})};
+  formSev      = normSev(r.partsSev);
   formPhotoIds = (r.photoIds||[]).filter(pid=>photoStore[pid]);
   bulkPanelOpen = false;
   updateCasterUI();
@@ -2585,6 +2592,7 @@ function saveRecord(){
   if(!ward) missing.push('病棟');
   if(!room) missing.push('部屋');
   if(!bed)  missing.push('ベッドNo');
+  if(!model) missing.push('ベッド型番');
   if(missing.length){ showToast('⚠️ 未入力：'+missing.join('・'),'warn'); return; }
   if(Object.values(formCasters).every(v=>v==='未選択')){ showToast('⚠️ キャスター状態を1つ以上選択','warn'); return; }
 
