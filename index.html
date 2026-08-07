@@ -668,6 +668,10 @@ select{
 }
 .rp-bar button:active{background:rgba(255,255,255,.18);}
 .rp-bar .rp-sp{margin-left:auto;}
+.rp-hint{display:none;flex-shrink:0;padding:7px 12px;background:var(--warn-bg);
+  color:var(--warn);font-size:12px;text-align:center;border-bottom:1px solid var(--line-thin);}
+@media (max-width:640px) and (orientation:portrait){.rp-hint{display:block;}}
+@media print{.rp-hint{display:none!important;}}
 .rp-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:40px;}
 .rp-doc{max-width:760px;margin:0 auto;}
 
@@ -744,18 +748,106 @@ select{
 .rp-foot{padding:16px 18px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.7;}
 .rp-empty{padding:14px 0;font-size:13px;color:var(--text2);}
 
-/* 印刷：報告書だけを出す（共有→プリント→PDF保存） */
+/* ══ 印刷用報告書 5ページ（A4横・表紙/故障内訳/クロス表/判定/写真） ══ */
+#reportDoc{max-width:1060px;margin:0 auto;padding:16px 12px 44px;}
+.rpg-page{
+  background:var(--surface);color:var(--text);
+  width:100%;max-width:1040px;margin:0 auto 16px;box-sizing:border-box;
+  padding:26px 34px;border:1px solid var(--line-thin);
+  display:flex;flex-direction:column;font-size:13px;min-height:520px;
+}
+.rpg-hd{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--line-thin);padding-bottom:8px;
+  font-size:11px;color:var(--text3);letter-spacing:.03em;font-family:'DM Mono',monospace;}
+.rpg-ti{font-size:16px;font-weight:700;margin:14px 0 12px;}
+.rpg-ti em{font-style:normal;font-weight:400;font-size:12px;color:var(--text3);margin-left:10px;}
+.rpg-ft,.rpg-ft2{margin-top:auto;text-align:right;font-size:10.5px;color:var(--text3);
+  font-family:'DM Mono',monospace;border-top:1px solid var(--line-thin);padding-top:8px;}
+.rpg-empty{padding:22px 0;color:var(--text2);font-size:13px;}
+
+/* 表紙 */
+.rpg-cover{justify-content:space-between;}
+.rpg-cv-top{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;
+  font-size:11px;letter-spacing:.14em;color:var(--text3);}
+.rpg-cv-mid{margin:auto 0;}
+.rpg-cv-kick{font-size:13px;color:var(--text2);letter-spacing:.04em;margin-bottom:12px;}
+.rpg-cv-title{font-size:34px;font-weight:900;line-height:1.15;}
+.rpg-cv-rule{width:40px;height:3px;background:var(--accent);margin:18px 0;}
+.rpg-cv-meta{font-size:14px;color:var(--text2);line-height:2;}
+.rpg-cv-foot{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;
+  font-size:11px;color:var(--text3);border-top:1px solid var(--line-thin);padding-top:9px;}
+
+/* 故障内訳 */
+.rpg-fbody{display:flex;flex-direction:column;gap:13px;margin-top:6px;}
+.rpg-frow{display:flex;align-items:center;gap:14px;}
+.rpg-fnm{width:130px;flex-shrink:0;font-size:13px;color:var(--text2);}
+.rpg-fbar{flex:1;height:22px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.rpg-ffill{height:100%;background:var(--ng);display:flex;align-items:center;
+  padding-left:9px;color:#fff;font-size:11px;font-family:'DM Mono',monospace;min-width:2px;}
+.rpg-fn{width:34px;text-align:right;font-size:15px;font-family:'DM Mono',monospace;flex-shrink:0;}
+.rpg-fnote{margin-top:14px;font-size:12px;color:var(--text2);}
+
+/* クロス表 */
+.rpg-cross-wrap{margin-top:4px;overflow-x:auto;}
+.rpg-cross{width:100%;border-collapse:collapse;font-size:11px;text-align:center;
+  table-layout:fixed;font-family:'DM Mono',monospace;}
+.rpg-cross th,.rpg-cross td{border:1px solid var(--line-thin);padding:4px 1px;}
+.rpg-cross thead th{color:var(--text2);font-weight:500;}
+.rpg-ct-m{text-align:left!important;font-family:'DM Sans',sans-serif;width:70px;padding-left:6px!important;}
+.rpg-ct-t{width:30px;font-weight:700;}
+.rpg-cross .y20{background:var(--ng-bg);color:var(--ng);}
+.rpg-cross .y15{background:var(--warn-bg);color:var(--warn);}
+.rpg-cross .y5{background:var(--ok-bg);color:var(--ok);}
+.rpg-ct-foot td{font-weight:700;border-top:2px solid var(--text);}
+.rpg-cross-lg{display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--text2);flex-wrap:wrap;}
+.rpg-cross-lg i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;border:1px solid;}
+.rpg-cross-lg .y20 i{background:var(--ng-bg);border-color:var(--ng);}
+.rpg-cross-lg .y15 i{background:var(--warn-bg);border-color:var(--warn);}
+.rpg-cross-lg .y5 i{background:var(--ok-bg);border-color:var(--ok);}
+.rpg-cnote{margin-top:12px;font-size:12px;color:var(--text2);}
+
+/* 判定 */
+.rpg-jt{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;}
+.rpg-jt th{text-align:left;color:var(--text3);font-weight:400;font-size:11px;
+  border-bottom:1px solid var(--line-thin);padding:6px;}
+.rpg-jt td{padding:7px 6px;border-bottom:1px solid var(--line-thin);vertical-align:top;}
+.rpg-jt .rpg-c{text-align:center;}
+.rpg-more{color:var(--text3)!important;text-align:center!important;}
+.rpg-bd{display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:500;}
+.rpg-bd.b-buy{background:var(--ng-bg);color:var(--ng);}
+.rpg-bd.b-fix{background:var(--warn-bg);color:var(--warn);}
+.rpg-jsum{margin-top:14px;font-size:12.5px;color:var(--text2);}
+.rpg-jsum b{font-family:'DM Mono',monospace;font-weight:500;}
+
+/* 写真 */
+.rpg-pbody{flex:1;margin-top:4px;display:flex;}
+.rpg-photos{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;
+  gap:10px;width:100%;}
+.rpg-ph{margin:0;border:1px solid var(--line-thin);background:var(--surface2);
+  display:flex;flex-direction:column;overflow:hidden;min-height:150px;}
+.rpg-ph img{width:100%;flex:1;object-fit:cover;display:block;min-height:0;}
+.rpg-ph figcaption{padding:5px 8px;font-size:11px;background:var(--surface);
+  border-top:1px solid var(--line-thin);font-family:'DM Mono',monospace;}
+.rpg-ph figcaption span{color:var(--ng);margin-left:6px;font-family:'DM Sans',sans-serif;}
+
+/* 印刷：5ページを A4横で1枚ずつ（共有→プリント→PDF保存） */
 @media print{
-  @page{size:A4;margin:12mm;}
+  @page{size:A4 landscape;margin:0;}
   body>*{display:none!important;}
   body>#reportOverlay.show{display:block!important;position:static;background:#fff;}
   .rp-bar{display:none!important;}
   .rp-scroll{overflow:visible;padding:0;}
-  .rp-doc{max-width:none;}
-  .rp-head{background:#fff;color:var(--text);padding:0 0 12px;border-bottom:3px solid var(--text);}
-  .rp-kicker{color:var(--text3);} .rp-sub{color:var(--text2);}
-  .rp-sec{margin-top:0;padding:12px 0;border-bottom:1.5px solid var(--line-thin);page-break-inside:avoid;}
-  .rp-row,.rp-ward,.rp-ph{page-break-inside:avoid;}
+  #reportDoc{max-width:none;margin:0;padding:0;}
+  .rpg-page{
+    max-width:none;margin:0;border:none;min-height:0;
+    width:297mm;height:210mm;padding:13mm 15mm;
+    page-break-after:always;break-after:page;page-break-inside:avoid;
+  }
+  .rpg-page:last-child{page-break-after:auto;break-after:auto;}
+  .rpg-cross-wrap{overflow:visible;}
+  .rpg-cv-rule,.rpg-ffill,.rpg-bd,.rpg-ph img,
+  .rpg-cross .y20,.rpg-cross .y15,.rpg-cross .y5,
+  .rpg-cross-lg i{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
 
 /* 病棟別集計 */
@@ -1591,6 +1683,7 @@ input[type=file]{display:none;}
       PDF・印刷
     </button>
   </div>
+  <div class="rp-hint">📱 スマホでは横画面（横向き）での表示を推奨します</div>
   <div class="rp-scroll"><div class="rp-doc" id="reportDoc"></div></div>
 </div>
 
@@ -4384,146 +4477,152 @@ function rpJudge(r){
 }
 
 function buildReportHTML(hosp, recs){
-  const judged = recs.map(r=>({r, j:rpJudge(r)}));
-  const nOk = judged.filter(x=>x.j.mark==='〇').length;
-  const nWm = judged.filter(x=>x.j.mark==='△').length;
-  const ngList = judged.filter(x=>x.j.mark==='×');
+  const NY = new Date().getFullYear();
+  const rpAge = (yStr)=>{ const y=parseInt(String(yStr).replace(/\D/g,''),10); return (!y||y<1980)?null:NY-y; };
 
-  // 点検日（最新／範囲）
-  const dates = [...new Set(recs.map(r=>r.date).filter(Boolean))].sort();
-  const dateTxt = !dates.length ? '—'
-    : dates.length===1 ? dates[0]
-    : dates[0]+' 〜 '+dates[dates.length-1];
-
-  // ── 病棟マップ ──
-  const byWard = new Map();
-  recs.forEach(r=>{
-    const w = r.ward || '（病棟未記入）';
-    if(!byWard.has(w)) byWard.set(w, []);
-    byWard.get(w).push(r);
+  // 各台：故障判定(rpJudge) × 経過年数 → 区分（buy/fix/ok）
+  //   買替 = 破損(×/△) かつ 15年以上   修理 = 破損 かつ 15年未満/不明   健全 = 破損なし
+  const judged = recs.map(r=>{
+    const j=rpJudge(r), age=rpAge(r.year), broken=(j.mark!=='〇');
+    const cat = !broken ? 'ok' : (age!==null && age>=15 ? 'buy' : 'fix');
+    return {r,j,age,broken,cat};
   });
-  const wardHTML = [...byWard.entries()].sort((a,b)=>a[0].localeCompare(b[0],'ja')).map(([w,rs])=>{
-    const sorted = [...rs].sort((a,b)=>
-      String(a.room||'').localeCompare(String(b.room||''),'ja',{numeric:true}) ||
-      String(a.bed||'').localeCompare(String(b.bed||''),'ja',{numeric:true}));
-    let ng=0, wm=0;
-    const cells = sorted.map(r=>{
-      const j = rpJudge(r);
-      if(j.mark==='×') ng++; else if(j.mark==='△') wm++;
-      const lbl = [r.room, r.bed].filter(Boolean).join('-') || '—';
-      return `<div class="rp-bed ${j.cls}"><b>${j.mark}</b>${rpEsc(lbl)}</div>`;
-    }).join('');
-    return `<div class="rp-ward">
-      <div class="rp-wh"><span>${rpEsc(w)}</span>
-        <span class="rp-wn">${sorted.length}床 — 要交換 ${ng} / 要注意 ${wm}</span></div>
-      <div class="rp-beds">${cells}</div>
-    </div>`;
-  }).join('');
+  const nBuy=judged.filter(x=>x.cat==='buy').length;
+  const nFix=judged.filter(x=>x.cat==='fix').length;
+  const total=recs.length;
 
-  // ── 要交換一覧 ──
-  const ngHTML = !ngList.length
-    ? '<div class="rp-empty">交換が必要なベッドはありませんでした。</div>'
-    : ngList.map(({r,j},i)=>{
-        const loc = [r.room, r.bed].filter(Boolean).join('-') || '—';
-        const chips = j.ngCas.map(c=>`<span class="rp-chip c-cas">キャスター ${rpEsc(c)}</span>`)
-          .concat(j.ngPart.map(p=>`<span class="rp-chip">${rpEsc(p)}</span>`)).join('');
-        return `<div class="rp-row">
-          <div class="rp-no">${i+1}</div>
-          <div class="rp-rb">
-            <div class="rp-loc">${rpEsc(loc)}<span class="rp-where">${rpEsc(r.ward||'')}</span></div>
-            ${r.model?`<div class="rp-model">${rpEsc(r.model)}${r.year?`<span class="yr">${rpEsc(r.year)}年式</span>`:''}</div>`:''}
-            <div class="rp-chips">${chips}</div>
-          </div>
-        </div>`;
+  const dates=[...new Set(recs.map(r=>r.date).filter(Boolean))].sort();
+  const dateTxt = !dates.length?'—':dates.length===1?dates[0]:dates[0]+' 〜 '+dates[dates.length-1];
+
+  // ── ② 故障内訳（部位別：キャスター要交換＋部品重大） ──
+  const cnt=new Map();
+  recs.forEach(r=>{
+    CASTER_POSITIONS.forEach(({id,label})=>{ if(r.casters&&r.casters[id]==='要交換'){const k='キャスター '+label;cnt.set(k,(cnt.get(k)||0)+1);} });
+    if(r.partsSev) st.parts.forEach(p=>{ if(r.partsSev[p]==='重大') cnt.set(p,(cnt.get(p)||0)+1); });
+  });
+  const prows=[...cnt.entries()].sort((a,b)=>b[1]-a[1]);
+  const ptTotal=prows.reduce((a,b)=>a+b[1],0);
+  const ptMax=prows.length?prows[0][1]:1;
+  const failHTML = !prows.length
+    ? '<div class="rpg-empty">交換が必要な故障はありませんでした。</div>'
+    : prows.map(([n,c])=>{
+        const pct=ptTotal?Math.round(c/ptTotal*100):0;
+        return '<div class="rpg-frow"><span class="rpg-fnm">'+rpEsc(n)+'</span>'
+          +'<span class="rpg-fbar"><span class="rpg-ffill" style="width:'+Math.round(c/ptMax*100)+'%">'+(pct>=12?pct+'%':'')+'</span></span>'
+          +'<span class="rpg-fn">'+c+'</span></div>';
+      }).join('')
+      + (prows.length?'<div class="rpg-fnote">'+rpEsc(prows[0][0])+' が最多。消耗部品はまとめての交換が効率的です。</div>':'');
+
+  // ── ③ 年式×型式 クロス表（年式は連続・空白年も表示） ──
+  const numYears = recs.map(r=>rpAge(r.year)).filter(a=>a!==null).map(a=>NY-a);
+  let crossHTML;
+  if(!numYears.length){
+    crossHTML='<div class="rpg-empty">年式が記録されたベッドがありません。</div>';
+  } else {
+    const minY=Math.min.apply(null,numYears), maxY=Math.max.apply(null,numYears);
+    const years=[]; for(let y=minY;y<=maxY;y++) years.push(y);
+    const hasUnknown = recs.some(r=>rpAge(r.year)===null);
+    const modelSet=new Set(recs.map(r=>r.model||'不明'));
+    const oldest={};
+    recs.forEach(r=>{ const m=r.model||'不明', a=rpAge(r.year), y=a===null?9999:NY-a; if(!(m in oldest)||y<oldest[m])oldest[m]=y; });
+    const models=[...modelSet].sort((a,b)=>(oldest[a]-oldest[b])||a.localeCompare(b,'ja'));
+    const cls=(age)=> age===null?'':age>=20?'y20':age>=15?'y15':age<=5?'y5':'';
+    const yhead = years.map(y=>'<th class="'+cls(NY-y)+'">\''+String(y).slice(2)+'</th>').join('')
+      + (hasUnknown?'<th>不明</th>':'');
+    const colTot=years.map(()=>0); let unkTot=0, grand=0;
+    const body = models.map(m=>{
+      let rt=0;
+      const cells = years.map((y,idx)=>{
+        const c=recs.filter(r=>(r.model||'不明')===m && rpAge(r.year)!==null && (NY-rpAge(r.year))===y).length;
+        rt+=c; colTot[idx]+=c;
+        return '<td class="'+cls(NY-y)+'">'+(c||'')+'</td>';
       }).join('');
+      let unk='';
+      if(hasUnknown){ const c=recs.filter(r=>(r.model||'不明')===m && rpAge(r.year)===null).length; unkTot+=c; rt+=c; unk='<td>'+(c||'')+'</td>'; }
+      grand+=rt;
+      return '<tr><td class="rpg-ct-m">'+rpEsc(m)+'</td>'+cells+unk+'<td class="rpg-ct-t">'+rt+'</td></tr>';
+    }).join('');
+    const foot = years.map((y,idx)=>'<td class="'+cls(NY-y)+'">'+(colTot[idx]||'')+'</td>').join('')
+      + (hasUnknown?'<td>'+(unkTot||'')+'</td>':'');
+    crossHTML = '<table class="rpg-cross"><thead>'
+      +'<tr><th class="rpg-ct-m">型式＼年式</th>'+yhead+'<th class="rpg-ct-t">計</th></tr></thead><tbody>'
+      +body
+      +'<tr class="rpg-ct-foot"><td class="rpg-ct-m">計</td>'+foot+'<td class="rpg-ct-t">'+grand+'</td></tr>'
+      +'</tbody></table>'
+      +'<div class="rpg-cross-lg"><span class="y20"><i></i>20年以上（即買替）</span><span class="y15"><i></i>15年以上（計画買替）</span><span class="y5"><i></i>5年以内</span></div>'
+      +'<div class="rpg-cnote">色の付いた年に古い型式が固まっているほど、型式単位での計画的な更新が妥当です。空白の年は導入がなかった時期を表します。</div>';
+  }
 
-  // ── 写真（要交換のベッドのみ） ──
-  const shots = [];
-  ngList.forEach(({r,j})=>{
-    (r.photoIds||[]).forEach(id=>{
-      if(photoStore[id]) shots.push({src:photoStore[id],
-        loc:[r.room,r.bed].filter(Boolean).join('-')||'—',
-        items:j.ngCas.concat(j.ngPart).join(' / ')});
-    });
+  // ── ④ 買い替え・修理 判定リスト（買替→修理、古い順） ──
+  const actList = judged.filter(x=>x.cat!=='ok').sort((a,b)=>{
+    if(a.cat!==b.cat) return a.cat==='buy'?-1:1;
+    return (b.age==null?-1:b.age)-(a.age==null?-1:a.age);
   });
+  const LIMIT=9;
+  const rowsHTML = actList.slice(0,LIMIT).map(x=>{
+    const r=x.r, loc=[r.room,r.bed].filter(Boolean).join('-')||'—';
+    const issues=x.j.ngCas.map(c=>'キャスター '+c).concat(x.j.ngPart).join(' / ') || (x.j.mark==='△'?'経過観察':'—');
+    const badge = x.cat==='buy'?'<span class="rpg-bd b-buy">買替</span>':'<span class="rpg-bd b-fix">修理</span>';
+    return '<tr><td>'+rpEsc((r.ward?r.ward+' ':'')+loc)+'</td>'
+      +'<td>'+rpEsc(r.model||'—')+'</td>'
+      +'<td class="rpg-c">'+rpEsc(r.year||'—')+'</td>'
+      +'<td class="rpg-c">'+(x.age===null?'—':x.age+'年')+'</td>'
+      +'<td>'+rpEsc(issues)+'</td>'
+      +'<td class="rpg-c">'+badge+'</td></tr>';
+  }).join('');
+  const moreHTML = actList.length>LIMIT ? '<tr><td colspan="6" class="rpg-more">… ほか '+(actList.length-LIMIT)+'件（買替'+nBuy+'・修理'+nFix+'の全件は明細をご参照）</td></tr>' : '';
+  const judgeHTML = !actList.length
+    ? '<div class="rpg-empty">対応が必要なベッドはありませんでした。</div>'
+    : '<table class="rpg-jt"><thead><tr><th>病棟/番号</th><th>型式</th><th>年式</th><th>経過</th><th>主な不具合</th><th>判定</th></tr></thead><tbody>'
+      +rowsHTML+moreHTML+'</tbody></table>'
+      +'<div class="rpg-jsum">要買替 <b>'+nBuy+'台</b>（15年以上＋破損）／ 要修理 <b>'+nFix+'台</b>（15年未満の破損）。ご希望あれば即日お見積りします。</div>';
+
+  // ── ⑤ 写真（要対応ベッド、最大6枚） ──
+  const shots=[];
+  actList.forEach(x=>{ (x.r.photoIds||[]).forEach(id=>{ if(photoStore[id]&&shots.length<6) shots.push({src:photoStore[id],loc:[x.r.room,x.r.bed].filter(Boolean).join('-')||'—',item:(x.j.ngCas.concat(x.j.ngPart)[0]||'')}); }); });
   const photoHTML = !shots.length
-    ? '<div class="rp-empty">写真はありません。</div>'
-    : `<div class="rp-photos">${shots.map(s=>`
-        <div class="rp-ph"><img src="${s.src}" alt="">
-          <div class="rp-cap"><b>${rpEsc(s.loc)}</b><span>${rpEsc(s.items)}</span></div>
-        </div>`).join('')}</div>`;
+    ? '<div class="rpg-empty">写真はありません。</div>'
+    : '<div class="rpg-photos">'+shots.map(s=>'<figure class="rpg-ph"><img src="'+s.src+'" alt=""><figcaption>'+rpEsc(s.loc)+'<span>'+rpEsc(s.item)+'</span></figcaption></figure>').join('')+'</div>';
 
-  // ── 部品集計（発注対象＝キャスター要交換＋部品重大） ──
-  const cnt = new Map();
-  recs.forEach(r=>{
-    CASTER_POSITIONS.forEach(({id,label})=>{
-      if(r.casters && r.casters[id]==='要交換'){
-        const k='キャスター '+label; cnt.set(k,(cnt.get(k)||0)+1);
-      }
-    });
-    if(r.partsSev) st.parts.forEach(p=>{
-      if(r.partsSev[p]==='重大') cnt.set(p,(cnt.get(p)||0)+1);
-    });
-  });
-  const rows = [...cnt.entries()].sort((a,b)=>b[1]-a[1]);
-  const totalPt = rows.reduce((a,b)=>a+b[1],0);
-  const maxPt = rows.length ? rows[0][1] : 1;
-  const partHTML = !rows.length
-    ? '<div class="rp-empty">交換が必要な部品はありません。</div>'
-    : `<div class="rp-parts">${rows.map(([n,c])=>`
-        <div class="rp-pt"><span class="rp-pnm">${rpEsc(n)}</span>
-          <span class="rp-pbar"><span class="rp-pfill" style="width:${c/maxPt*100}%"></span></span>
-          <span class="rp-pn">${c}</span></div>`).join('')}</div>
-       <div class="rp-psum">合計 <b>${totalPt}</b> 点。正式なお見積りは後日ご提出します。</div>`;
+  const nowStr = new Date().toLocaleString('ja-JP');
+  const hd = '<div class="rpg-hd"><span>'+rpEsc(hosp)+'　ベッド点検報告</span><span>'+rpEsc(dateTxt)+' ／ 対象'+total+'台</span></div>';
 
-  return `
-    <header class="rp-head">
-      <div class="rp-kicker">ラウンド報告</div>
-      <div class="rp-title">${rpEsc(hosp)}</div>
-      <div class="rp-sub"><span>${rpEsc(dateTxt)}</span><span>点検 ${recs.length}台</span></div>
-    </header>
+  return ''
+  +'<section class="rpg-page rpg-cover">'
+    +'<div class="rpg-cv-top"><span>BED INSPECTION REPORT</span><span>ラウンドノート</span></div>'
+    +'<div class="rpg-cv-mid">'
+      +'<div class="rpg-cv-kick">ベッド点検報告書</div>'
+      +'<div class="rpg-cv-title">'+rpEsc(hosp)+'</div>'
+      +'<div class="rpg-cv-rule"></div>'
+      +'<div class="rpg-cv-meta">点検日　'+rpEsc(dateTxt)+'　／　対象台数　'+total+' 台</div>'
+    +'</div>'
+    +'<div class="rpg-cv-foot"><span>1 / 5</span><span>'+rpEsc(dates[dates.length-1]||'')+'</span></div>'
+  +'</section>'
 
-    <section class="rp-sec">
-      <div class="rp-sh"><h2>点検結果</h2></div>
-      <div class="rp-tally">
-        <div class="rp-tc t-ok"><div class="rp-tm">〇</div><div class="rp-tn">${nOk}</div><div class="rp-tl">問題なし</div></div>
-        <div class="rp-tc t-wm"><div class="rp-tm">△</div><div class="rp-tn">${nWm}</div><div class="rp-tl">経過観察</div></div>
-        <div class="rp-tc t-ng"><div class="rp-tm">×</div><div class="rp-tn">${ngList.length}</div><div class="rp-tl">要交換</div></div>
-      </div>
-      <div class="rp-total">${recs.length}台を点検し、<b>${ngList.length}台</b>に交換が必要な破損を確認しました。</div>
-    </section>
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">故障内訳<em>部位別・交換対象 '+ptTotal+'点の内訳</em></div>'
+    +'<div class="rpg-fbody">'+failHTML+'</div>'
+    +'<div class="rpg-ft">2 / 5</div>'
+  +'</section>'
 
-    <section class="rp-sec">
-      <div class="rp-sh"><h2>病棟別の状況</h2><span class="rp-note">${byWard.size}病棟 / ${recs.length}床</span></div>
-      ${wardHTML}
-      <div class="rp-lg">
-        <span class="g-ok"><i></i>問題なし</span>
-        <span class="g-wm"><i></i>経過観察</span>
-        <span class="g-ng"><i></i>要交換</span>
-      </div>
-    </section>
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">年式 × 型式 クロス表<em>数字＝台数・1年ごと（空白年も表示）</em></div>'
+    +'<div class="rpg-cross-wrap">'+crossHTML+'</div>'
+    +'<div class="rpg-ft">3 / 5</div>'
+  +'</section>'
 
-    <section class="rp-sec">
-      <div class="rp-sh"><h2>交換が必要なベッド</h2><span class="rp-note">${ngList.length}台</span></div>
-      ${ngHTML}
-    </section>
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">買い替え・修理 判定<em>要対応 '+(nBuy+nFix)+'台（買替'+nBuy+'・修理'+nFix+'）</em></div>'
+    +'<div class="rpg-jbody">'+judgeHTML+'</div>'
+    +'<div class="rpg-ft">4 / 5</div>'
+  +'</section>'
 
-    <section class="rp-sec">
-      <div class="rp-sh"><h2>破損箇所の写真</h2><span class="rp-note">要交換分のみ</span></div>
-      ${photoHTML}
-    </section>
-
-    <section class="rp-sec">
-      <div class="rp-sh"><h2>必要な交換部品</h2><span class="rp-note">概算</span></div>
-      ${partHTML}
-    </section>
-
-    <div class="rp-foot">
-      ラウンドノートで作成 — ${new Date().toLocaleString('ja-JP')}<br>
-      本書は点検時点の所見をまとめた概要です。
-    </div>`;
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">写真<em>要対応ベッドの現況（抜粋・最大6枚）</em></div>'
+    +'<div class="rpg-pbody">'+photoHTML+'</div>'
+    +'<div class="rpg-ft2">ラウンドノートで作成 — '+nowStr+'　｜　5 / 5</div>'
+  +'</section>';
 }
-
 function openReport(){
   const hosp = document.getElementById('report-hospital').value;
   if(!hosp){ showToast('⚠️ 病院を選んでください','warn'); return; }
