@@ -1678,9 +1678,9 @@ input[type=file]{display:none;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       閉じる
     </button>
-    <button class="rp-sp" onclick="printReport()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-      PDF・印刷
+    <button class="rp-sp" onclick="exportReportPPTX()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      PPTX保存
     </button>
   </div>
   <div class="rp-hint">📱 スマホでは横画面（横向き）での表示を推奨します</div>
@@ -4640,10 +4640,441 @@ function closeReport(){
   document.body.style.overflow = '';
 }
 
-function printReport(){
-  if(typeof window.print === 'function'){ window.print(); }
-  else{ showToast('⚠️ この環境では印刷できません','warn'); }
+// 印刷：完成済みHTMLをBlobで開き、その中で自分自身を印刷させる。
+// iOSのPWAはメイン画面からの window.print() を無視するため、別ウィンドウ経由にする。
+// document.write ではなく Blob を使い、中身が完全に読み込まれてから印刷する（白紙防止）。
+function buildPrintDoc(innerHTML, css){
+  return '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1">'
+    +'<title>ベッド点検報告書</title><style>'+css+'</style></head>'
+    +'<body><div id="reportOverlay" class="show">'
+    +'<div class="rp-scroll"><div class="rp-doc" id="reportDoc">'+innerHTML+'</div></div>'
+    +'</div>'
+    +'<script>window.addEventListener("load",function(){setTimeout(function(){try{window.focus();window.print();}catch(e){}},600);});<\/script>'
+    +'</body></html>';
 }
+function printReport(){
+  const doc = document.getElementById('reportDoc');
+  const inner = doc ? doc.innerHTML : '';
+  if(!inner.trim()){ showToast('⚠️ 先に報告書を表示してください','warn'); return; }
+
+  let css=''; document.querySelectorAll('style').forEach(function(s){ css += s.textContent; });
+  const html = buildPrintDoc(inner, css);
+
+  let url=null;
+  try{ url = URL.createObjectURL(new Blob([html], {type:'text/html'})); }catch(e){ url=null; }
+
+  let w=null;
+  try{ w = window.open(url || '', '_blank'); }catch(e){ w=null; }
+
+  if(!w){
+    // ポップアップが塞がれている → 直接印刷を試み、ダメなら案内
+    try{ window.print(); }catch(e){}
+    showToast('印刷できない時は 設定→Safari→ポップアップブロック をオフにしてください','warn');
+    if(url){ setTimeout(function(){ URL.revokeObjectURL(url); }, 60000); }
+    return;
+  }
+  if(url){ setTimeout(function(){ URL.revokeObjectURL(url); }, 60000); }
+}
+
+
+// ==================== PPTX 報告書生成（自作OOXML／外部ライブラリなし） ====================
+(function(){
+const EMU = i => Math.round(i*914400);
+const PT  = p => Math.round(p*12700);
+const SW=13.333, SH=7.5;
+const NS='xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+const FONT='Meiryo', SERIF='Cambria';
+
+// runs: string | [{t,sz,color,bold,italic,font,spc}]
+function runsXML(runs, def){
+  def=def||{};
+  const arr = typeof runs==='string' ? [{t:runs}] : runs;
+  return arr.map(r=>{
+    const sz=Math.round((r.sz||def.sz||14)*100);
+    const b=(r.bold!=null?r.bold:def.bold)?1:0;
+    const it=(r.italic!=null?r.italic:def.italic)?1:0;
+    const col=r.color||def.color||'000000';
+    const fn=r.font||def.font||FONT;
+    const spc=(r.spc!=null?r.spc:def.spc)||0;
+    return `<a:r><a:rPr lang="ja-JP" altLang="en-US" sz="${sz}" b="${b}" i="${it}"${spc?` spc="${Math.round(spc*100)}"`:''}>`
+      +`<a:solidFill><a:srgbClr val="${col}"/></a:solidFill>`
+      +`<a:latin typeface="${fn}"/><a:ea typeface="${fn}"/><a:cs typeface="${fn}"/></a:rPr>`
+      +`<a:t>${xmlEsc(r.t)}</a:t></a:r>`;
+  }).join('');
+}
+function pPr(o){o=o||{};const a=o.align||'l';const sp=o.lineSpacing?`<a:lnSpc><a:spcPct val="${Math.round(o.lineSpacing*100000)}"/></a:lnSpc>`:'';return `<a:pPr${a?` algn="${a}"`:''}>${sp}</a:pPr>`;}
+
+let _id=1; const nid=()=>++_id;
+function txBox(x,y,w,h,runs,o){
+  o=o||{};
+  const anchor=o.valign==='middle'?'ctr':o.valign==='bottom'?'b':'t';
+  const m=o.margin!=null?EMU(o.margin):EMU(0.05);
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${nid()}" name="t"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="${EMU(h)}"/></a:xfrm>`
+   +`<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>`
+   +`<p:txBody><a:bodyPr wrap="square" lIns="${m}" tIns="${EMU(0.02)}" rIns="${m}" bIns="${EMU(0.02)}" anchor="${anchor}"><a:normAutofit/></a:bodyPr><a:lstStyle/>`
+   +`<a:p>${pPr(o)}${runsXML(runs,o)}</a:p></p:txBody></p:sp>`;
+}
+function shape(prst,x,y,w,h,o){
+  o=o||{};
+  const fill=o.fill?`<a:solidFill><a:srgbClr val="${o.fill}"/></a:solidFill>`:'<a:noFill/>';
+  const ln=o.line?`<a:ln w="${PT(o.lineW||0.75)}"><a:solidFill><a:srgbClr val="${o.line}"/></a:solidFill></a:ln>`:(o.noLine?'<a:ln><a:noFill/></a:ln>':'');
+  const adj=(prst==='roundRect')?`<a:avLst><a:gd name="adj" fmla="val ${o.round||6000}"/></a:avLst>`:'<a:avLst/>';
+  let body='';
+  if(o.text){
+    const anchor=o.valign==='middle'?'ctr':o.valign==='bottom'?'b':'t';
+    const m=o.margin!=null?EMU(o.margin):EMU(0.05);
+    body=`<p:txBody><a:bodyPr wrap="square" lIns="${m}" tIns="${EMU(0.02)}" rIns="${m}" bIns="${EMU(0.02)}" anchor="${anchor}"><a:normAutofit/></a:bodyPr><a:lstStyle/><a:p>${pPr(o)}${runsXML(o.text,o)}</a:p></p:txBody>`;
+  } else {
+    body=`<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="ja-JP"/></a:p></p:txBody>`;
+  }
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${nid()}" name="s"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="${EMU(h)}"/></a:xfrm>`
+   +`<a:prstGeom prst="${prst}">${adj}</a:prstGeom>${fill}${ln}</p:spPr>${body}</p:sp>`;
+}
+function lineShape(x,y,w,color,widthPt){
+  return `<p:cxnSp><p:nvCxnSpPr><p:cNvPr id="${nid()}" name="l"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="0"/></a:xfrm>`
+   +`<a:prstGeom prst="line"><a:avLst/></a:prstGeom><a:ln w="${PT(widthPt||0.75)}"><a:solidFill><a:srgbClr val="${color}"/></a:solidFill></a:ln></p:spPr>`
+   +`</p:cxnSp>`;
+}
+function picture(rId,x,y,w,h){
+  return `<p:pic><p:nvPicPr><p:cNvPr id="${nid()}" name="p"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>`
+   +`<p:blipFill><a:blip r:embed="${rId}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="${EMU(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
+}
+// table: rows = [[cell,...]]; cell={t|runs, fill,color,bold,align,valign,font,sz,span,merge,noBorder}
+function table(x,y,colW,rowH,rows,o){
+  o=o||{};
+  const grid=colW.map(w=>`<a:gridCol w="${EMU(w)}"/>`).join('');
+  const bcol=o.border||'C8D0E0'; const bw=PT(o.borderW||0.5);
+  const bd=`<a:lnL w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnL>`
+    +`<a:lnR w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnR>`
+    +`<a:lnT w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnT>`
+    +`<a:lnB w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnB>`;
+  const trs=rows.map((row,ri)=>{
+    const cells=row.map(c=>{
+      if(c.merge) return `<a:tc hMerge="1"><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="ja-JP"/></a:p></a:txBody><a:tcPr/></a:tc>`;
+      const span=c.span?` gridSpan="${c.span}"`:'';
+      const anchor=c.valign==='top'?'t':c.valign==='bottom'?'b':'ctr';
+      const fill=c.fill?`<a:solidFill><a:srgbClr val="${c.fill}"/></a:solidFill>`:'<a:noFill/>';
+      const runs=c.runs||[{t:c.t||'',sz:c.sz||11,color:c.color||'1A2540',bold:c.bold,italic:c.italic,font:c.font||FONT}];
+      const p=`<a:p>${pPr({align:c.align||'l'})}${runsXML(runs,{sz:c.sz||11})}</a:p>`;
+      return `<a:tc${span}><a:txBody><a:bodyPr/><a:lstStyle/>${p}</a:txBody>`
+        +`<a:tcPr marL="${EMU(0.05)}" marR="${EMU(0.05)}" marT="${EMU(0.02)}" marB="${EMU(0.02)}" anchor="${anchor}">${bd}${fill}</a:tcPr></a:tc>`;
+    }).join('');
+    return `<a:tr h="${EMU(rowH[ri]||rowH[0]||0.4)}">${cells}</a:tr>`;
+  }).join('');
+  const totalW=colW.reduce((a,b)=>a+b,0), totalH=rows.reduce((a,_,i)=>a+(rowH[i]||rowH[0]||0.4),0);
+  return `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${nid()}" name="tbl"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>`
+   +`<p:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(totalW)}" cy="${EMU(totalH)}"/></p:xfrm>`
+   +`<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">`
+   +`<a:tbl><a:tblPr firstRow="0" bandRow="0"/><a:tblGrid>${grid}</a:tblGrid>${trs}</a:tbl>`
+   +`</a:graphicData></a:graphic></p:graphicFrame>`;
+}
+function slideXML(shapes){
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+   +`<p:sld ${NS}><p:cSld><p:spTree>`
+   +`<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>`
+   +`<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>`
+   +shapes+`</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
+}
+
+// ---- palette ----
+const C={text:'1A2540',text2:'4A5878',text3:'8A96B0',line:'C8D0E0',line2:'E3E8F2',accent:'3E63B9',panel:'F4F6FB',
+  ok:'2E7D5E',okbg:'E4F1EB',warn:'B06A28',warnbg:'F6EADB',ng:'A03040',ngbg:'F3E2E6',white:'FFFFFF'};
+
+// ============ report data → slides ============
+function buildReportPPTXFiles(hosp, recs){
+  _id=1;
+  const NY=new Date().getFullYear();
+  const rpAge=y=>{const n=parseInt(String(y).replace(/\D/g,''),10);return(!n||n<1980)?null:NY-n;};
+  const judged=recs.map(r=>{const j=rpJudge(r),age=rpAge(r.year),broken=j.mark!=='〇';const cat=!broken?'ok':(age!=null&&age>=15?'buy':'fix');return{r,j,age,broken,cat};});
+  const nBuy=judged.filter(x=>x.cat==='buy').length, nFix=judged.filter(x=>x.cat==='fix').length;
+  const dates=[...new Set(recs.map(r=>r.date).filter(Boolean))].sort();
+  const dateTxt=!dates.length?'—':dates.length===1?dates[0]:dates[0]+' 〜 '+dates[dates.length-1];
+  const total=recs.length;
+
+  const media=[]; // {name, bytes, ct}
+  const slideRels=[[],[],[],[],[]]; // per-slide extra rels (images)
+
+  function header(title,sub,page){
+    let s='';
+    s+=txBox(0.55,0.4,8,0.28,'BED INSPECTION REPORT',{sz:10,color:C.text3,font:SERIF,spc:2,margin:0});
+    s+=txBox(5.3,0.4,7.45,0.28,hosp+'　ベッド点検報告 ／ '+dateTxt,{sz:10,color:C.text3,align:'r',margin:0});
+    s+=lineShape(0.55,0.72,12.23,C.line,0.75);
+    s+=txBox(0.55,0.82,10,0.6,title,{sz:26,bold:true,color:C.text,margin:0});
+    if(sub) s+=txBox(0.57,1.42,11,0.3,sub,{sz:12,color:C.text3,margin:0});
+    s+=txBox(11.7,7.0,1.05,0.3,page+' / 5',{sz:10,color:C.text3,align:'r',font:SERIF,margin:0});
+    return s;
+  }
+
+  // ---- Slide 1: cover ----
+  let s1='';
+  s1+=shape('ellipse',9.7,-1.4,5.4,5.4,{fill:C.panel,noLine:true});
+  s1+=shape('ellipse',11.0,4.6,3.2,3.2,{fill:C.okbg,noLine:true});
+  s1+=txBox(0.8,0.75,9,0.3,'BED INSPECTION REPORT',{sz:12,color:C.text3,font:SERIF,spc:3,margin:0});
+  s1+=txBox(10.9,0.75,1.9,0.3,'ラウンドノート',{sz:11,color:C.text3,align:'r',margin:0});
+  s1+=txBox(0.8,2.7,9,0.4,'ベッド点検報告書',{sz:15,color:C.text2,margin:0});
+  s1+=txBox(0.78,3.15,10,1.1,hosp,{sz:44,bold:true,color:C.text,margin:0});
+  s1+=txBox(0.8,4.6,11,0.4,[{t:'点検日　',color:C.text3},{t:dateTxt,color:C.text2},{t:'　　　対象台数　',color:C.text3},{t:total+' 台',color:C.text2}],{sz:15,margin:0});
+  s1+=lineShape(0.82,6.7,12,C.line,0.75);
+  s1+=txBox(0.8,6.82,3,0.3,'1 / 5',{sz:10,color:C.text3,font:SERIF,margin:0});
+  s1+=txBox(9.8,6.82,3,0.3,dateTxt,{sz:10,color:C.text3,align:'r',font:SERIF,margin:0});
+
+  // ---- Slide 2: 故障内訳 ----
+  const cnt=new Map();
+  const CAS=(typeof CASTER_POSITIONS!=='undefined')?CASTER_POSITIONS:[{id:'fl',label:'左前'},{id:'fr',label:'右前'},{id:'rl',label:'左後'},{id:'rr',label:'右後'}];
+  const PARTS=(typeof st!=='undefined'&&st.parts)?st.parts:['サイドレール','昇降機構','ボード','マットレス'];
+  recs.forEach(r=>{CAS.forEach(({id,label})=>{if(r.casters&&r.casters[id]==='要交換'){const k='キャスター '+label;cnt.set(k,(cnt.get(k)||0)+1);}});if(r.partsSev)PARTS.forEach(p=>{if(r.partsSev[p]==='重大')cnt.set(p,(cnt.get(p)||0)+1);});});
+  const prows=[...cnt.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const ptTotal=prows.reduce((a,b)=>a+b[1],0);
+  const ptMax=prows.length?prows[0][1]:1;
+  let s2=header('故障内訳','部位別・交換対象 '+ptTotal+'点の内訳',2);
+  const bx=0.55, bLabelW=2.0, bBarX=bx+bLabelW+0.15, bBarMax=6.0;
+  const bTop=2.15, bH=0.5, bGap=0.42;
+  if(!prows.length){
+    s2+=txBox(0.55,3,8,0.5,'交換が必要な故障はありませんでした。',{sz:14,color:C.text2,margin:0});
+  } else {
+    prows.forEach(([n,c],i)=>{
+      const y=bTop+i*(bH+bGap);
+      s2+=txBox(bx,y,bLabelW,bH,n,{sz:13,color:C.text2,valign:'middle',align:'r',margin:0.05});
+      const w=Math.max(0.12, c/ptMax*bBarMax);
+      s2+=shape('rect',bBarX,y+0.08,w,bH-0.16,{fill:C.ng,noLine:true});
+      s2+=txBox(bBarX+w+0.12,y,0.6,bH,String(c),{sz:14,color:C.text,font:SERIF,valign:'middle',margin:0});
+    });
+  }
+  // 所見 panel
+  s2+=shape('roundRect',9.35,2.15,3.4,4.5,{fill:C.panel,noLine:true,round:6000});
+  s2+=txBox(9.6,2.4,2.9,0.3,'所見',{sz:12,bold:true,color:C.text,margin:0.05});
+  s2+=txBox(9.6,2.8,2.9,1.8,(prows.length?(prows[0][0]+' が最多。消耗部品はまとめての交換が効率的です。'):'交換対象はありません。'),{sz:12,color:C.text2,lineSpacing:1.3,margin:0.05,valign:'top'});
+  s2+=txBox(9.6,5.2,2.9,0.7,[{t:String(ptTotal),sz:36,bold:true,color:C.ng,font:SERIF},{t:' 点',sz:14,color:C.text2}],{margin:0.05});
+  s2+=txBox(9.6,5.95,2.9,0.3,'要交換の部品総数',{sz:11,color:C.text3,margin:0.05});
+
+  // ---- Slide 3: cross table ----
+  let s3=header('年式 × 型式 クロス表','数字＝台数・1年ごと（空白年も表示）',3);
+  const numYears=recs.map(r=>rpAge(r.year)).filter(a=>a!=null).map(a=>NY-a);
+  if(!numYears.length){
+    s3+=txBox(0.55,3,10,0.5,'年式が記録されたベッドがありません。',{sz:14,color:C.text2,margin:0});
+  } else {
+    const minY=Math.min(...numYears),maxY=Math.max(...numYears);
+    const years=[];for(let y=minY;y<=maxY;y++)years.push(y);
+    const hasUnk=recs.some(r=>rpAge(r.year)==null);
+    const modelSet=new Set(recs.map(r=>r.model||'不明'));
+    const oldest={};recs.forEach(r=>{const m=r.model||'不明',a=rpAge(r.year),y=a==null?9999:NY-a;if(!(m in oldest)||y<oldest[m])oldest[m]=y;});
+    const models=[...modelSet].sort((a,b)=>(oldest[a]-oldest[b])||a.localeCompare(b,'ja'));
+    const cf=y=>{const age=NY-y;return age>=20?C.ngbg:age>=15?C.warnbg:age<=5?C.okbg:C.white;};
+    const ct=y=>{const age=NY-y;return age>=20?C.ng:age>=15?C.warn:age<=5?C.ok:C.text2;};
+    // header
+    const head=[{t:'型式＼年式',fill:C.text,color:C.white,bold:true,sz:9,align:'l'}];
+    years.forEach(y=>head.push({t:"'"+String(y).slice(2),fill:cf(y),color:ct(y),bold:true,sz:9,align:'ctr'}));
+    if(hasUnk)head.push({t:'不明',fill:C.text,color:C.white,bold:true,sz:9,align:'ctr'});
+    head.push({t:'計',fill:C.text,color:C.white,bold:true,sz:9,align:'ctr'});
+    const rows=[head]; const colTot=years.map(()=>0);let unkTot=0,grand=0;
+    models.forEach(m=>{
+      const row=[{t:m,color:C.text,sz:9,align:'l',fill:C.white}];let rt=0;
+      years.forEach((y,i)=>{const v=recs.filter(r=>(r.model||'不明')===m&&rpAge(r.year)!=null&&(NY-rpAge(r.year))===y).length;rt+=v;colTot[i]+=v;row.push({t:v?String(v):'',fill:cf(y),color:ct(y),sz:9,align:'ctr',font:SERIF});});
+      if(hasUnk){const v=recs.filter(r=>(r.model||'不明')===m&&rpAge(r.year)==null).length;unkTot+=v;rt+=v;row.push({t:v?String(v):'',fill:C.white,sz:9,align:'ctr',font:SERIF});}
+      grand+=rt;row.push({t:String(rt),bold:true,color:C.text,sz:9,align:'ctr',fill:C.white,font:SERIF});rows.push(row);
+    });
+    const foot=[{t:'計',bold:true,color:C.text,sz:9,align:'l',fill:C.line2}];
+    years.forEach((y,i)=>foot.push({t:String(colTot[i]),bold:true,color:C.text,sz:9,align:'ctr',fill:C.line2,font:SERIF}));
+    if(hasUnk)foot.push({t:String(unkTot),bold:true,color:C.text,sz:9,align:'ctr',fill:C.line2,font:SERIF});
+    foot.push({t:String(grand),bold:true,color:C.text,sz:9,align:'ctr',fill:C.line2,font:SERIF});
+    rows.push(foot);
+    const ncol=years.length+(hasUnk?1:0)+2;
+    const firstW=1.15,totW=0.5, avail=12.23-firstW-totW, yW=avail/(years.length+(hasUnk?1:0));
+    const colW=[firstW,...years.map(()=>yW),...(hasUnk?[yW]:[]),totW];
+    const rowH=rows.map(()=>0.42);
+    s3+=table(0.55,2.0,colW,rowH,rows,{border:C.line,borderW:0.5});
+    // legend
+    const lgY=2.05+rows.length*0.42+0.15;
+    const lg=[['20年以上（即買替）',C.ngbg,C.ng],['15年以上（計画買替）',C.warnbg,C.warn],['5年以内',C.okbg,C.ok]];
+    let lx=0.55;lg.forEach(([t,f,c])=>{s3+=shape('rect',lx,lgY,0.22,0.22,{fill:f,line:c,lineW:0.75});s3+=txBox(lx+0.3,lgY-0.03,2.6,0.3,t,{sz:10.5,color:C.text2,valign:'middle',margin:0});lx+=2.9;});
+    s3+=txBox(0.55,lgY+0.45,12.2,0.6,'古い型式が特定年に固まっているほど、型式単位での計画的な更新が妥当です。空白の年は導入がなかった時期を表します。',{sz:12,color:C.text2,lineSpacing:1.25,margin:0});
+  }
+
+  // ---- Slide 4: judgment ----
+  let s4=header('買い替え・修理 判定','要対応 '+(nBuy+nFix)+'台（買替'+nBuy+'・修理'+nFix+'）',4);
+  const act=judged.filter(x=>x.cat!=='ok').sort((a,b)=>{if(a.cat!==b.cat)return a.cat==='buy'?-1:1;return(b.age==null?-1:b.age)-(a.age==null?-1:a.age);});
+  const hd=(t,al)=>({t,fill:C.text,color:C.white,bold:true,sz:11.5,align:al||'l'});
+  const td=(t,al)=>({t,color:C.text,sz:11.5,align:al||'l',fill:C.white});
+  const badge=cat=>cat==='buy'?{t:'買替',fill:C.ngbg,color:C.ng,bold:true,sz:11,align:'ctr'}:{t:'修理',fill:C.warnbg,color:C.warn,bold:true,sz:11,align:'ctr'};
+  const jrows=[[hd('病棟/番号'),hd('型式'),hd('年式','ctr'),hd('経過','ctr'),hd('主な不具合'),hd('判定','ctr')]];
+  act.slice(0,6).forEach(x=>{const r=x.r,loc=[r.room,r.bed].filter(Boolean).join('-')||'—';const iss=x.j.ngCas.map(c=>'キャスター '+c).concat(x.j.ngPart).join(' / ')||(x.j.mark==='△'?'経過観察':'—');
+    jrows.push([td((r.ward?r.ward+' ':'')+loc),td(r.model||'—'),td(r.year||'—','ctr'),td(x.age==null?'—':x.age+'年','ctr'),td(iss),badge(x.cat)]);});
+  if(act.length>6)jrows.push([{t:'… ほか '+(act.length-6)+'件（買替'+nBuy+'・修理'+nFix+'）',span:6,italic:true,color:C.text3,sz:11,align:'ctr',fill:C.panel},{merge:1},{merge:1},{merge:1},{merge:1},{merge:1}]);
+  if(act.length===0)jrows.push([{t:'対応が必要なベッドはありませんでした。',span:6,color:C.text2,sz:12,align:'l',fill:C.white},{merge:1},{merge:1},{merge:1},{merge:1},{merge:1}]);
+  const jColW=[2.0,2.0,1.3,1.2,4.23,1.5];
+  const jRowH=jrows.map(()=>0.5);
+  s4+=table(0.55,2.0,jColW,jRowH,jrows,{border:C.line2,borderW:0.5});
+  s4+=shape('roundRect',0.55,5.9,3.0,1.0,{fill:C.ngbg,noLine:true,round:8000,text:[{t:'買い替え　',sz:12,color:C.ng},{t:String(nBuy),sz:26,bold:true,color:C.ng,font:SERIF},{t:' 台',sz:12,color:C.ng}],valign:'middle',margin:0.2});
+  s4+=shape('roundRect',3.75,5.9,3.0,1.0,{fill:C.warnbg,noLine:true,round:8000,text:[{t:'修理　',sz:12,color:C.warn},{t:String(nFix),sz:26,bold:true,color:C.warn,font:SERIF},{t:' 台',sz:12,color:C.warn}],valign:'middle',margin:0.2});
+  s4+=txBox(7.0,6.25,5.75,0.4,'判定基準：15年以上＋破損＝買替 ／ 15年未満の破損＝修理',{sz:11,color:C.text3,align:'r',valign:'middle',margin:0});
+
+  // ---- Slide 5: photos ----
+  let s5=header('写真','要対応ベッドの現況（抜粋・最大6枚）',5);
+  const shots=[];
+  act.forEach(x=>{(x.r.photoIds||[]).forEach(id=>{if(typeof photoStore!=='undefined'&&photoStore[id]&&shots.length<6)shots.push({src:photoStore[id],loc:[x.r.room,x.r.bed].filter(Boolean).join('-')||'—',item:(x.j.ngCas.concat(x.j.ngPart)[0]||'')});});});
+  const gx=0.55,gy=2.0,gw=3.93,gh=2.35,mx=0.2,my=0.25;
+  for(let i=0;i<6;i++){
+    const col=i%3,row=Math.floor(i/3),x=gx+col*(gw+mx),y=gy+row*(gh+my);
+    const sh=shots[i];
+    if(sh){
+      const bytes=dataUrlToBytes(sh.src); const dim=jpegSize(bytes);
+      const idx=media.length+1; const ext=(sh.src.indexOf('image/png')>=0)?'png':'jpeg';
+      const name='image'+idx+'.'+(ext==='jpeg'?'jpg':'png');
+      media.push({name,bytes,ct:ext==='png'?'image/png':'image/jpeg'});
+      const rId='rIdImg'+idx; slideRels[4].push({rId,target:'../media/'+name});
+      // fit into gw x (gh-0.42) preserving aspect
+      const boxW=gw,boxH=gh-0.42,ar=dim.w/dim.h;let iw=boxW,ih=boxW/ar;if(ih>boxH){ih=boxH;iw=boxH*ar;}
+      s5+=shape('rect',x,y,gw,gh-0.42,{fill:C.panel,line:C.line2,lineW:0.75});
+      s5+=picture(rId,x+(boxW-iw)/2,y+(boxH-ih)/2,iw,ih);
+    } else {
+      s5+=shape('rect',x,y,gw,gh-0.42,{fill:C.panel,line:C.line2,lineW:0.75,text:'写真',sz:12,color:C.text3,align:'ctr',valign:'middle'});
+    }
+    const cap=sh?(sh.loc+(sh.item?'　'+sh.item:'')):'—';
+    s5+=shape('rect',x,y+gh-0.42,gw,0.42,{fill:C.white,line:C.line2,lineW:0.75,text:cap,sz:10.5,color:C.text,align:'l',valign:'middle',margin:0.1});
+  }
+
+  const slides=[s1,s2,s3,s4,s5].map(slideXML);
+  return {slides, media, slideRels};
+}
+
+// ============ package assembly ============
+function pptxPackage(hosp, recs){
+  const {slides, media, slideRels}=buildReportPPTXFiles(hosp,recs);
+  const files=[];
+  const put=(name,str)=>files.push({name,bytes:utf8Bytes(str)});
+
+  // content types
+  const overrides=slides.map((_,i)=>`<Override PartName="/ppt/slides/slide${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join('');
+  const hasJpg=media.some(m=>m.ct==='image/jpeg'), hasPng=media.some(m=>m.ct==='image/png');
+  put('[Content_Types].xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+    +`<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
+    +`<Default Extension="xml" ContentType="application/xml"/>`
+    +(hasJpg?`<Default Extension="jpg" ContentType="image/jpeg"/>`:'')
+    +(hasPng?`<Default Extension="png" ContentType="image/png"/>`:'')
+    +`<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>`
+    +`<Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/>`
+    +`<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>`
+    +`<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>`
+    +`<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>`
+    +overrides
+    +`<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>`
+    +`<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>`
+    +`</Types>`);
+
+  // root rels
+  put('_rels/.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    +`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>`
+    +`<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>`
+    +`<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>`
+    +`</Relationships>`);
+
+  // docProps
+  put('docProps/core.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">`
+    +`<dc:title>${xmlEsc(hosp)} ベッド点検報告書</dc:title><dc:creator>ラウンドノート</dc:creator></cp:coreProperties>`);
+  put('docProps/app.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>RoundNote</Application><Slides>${slides.length}</Slides></Properties>`);
+
+  // presentation.xml
+  const sldIds=slides.map((_,i)=>`<p:sldId id="${256+i}" r:id="rIdS${i+1}"/>`).join('');
+  put('ppt/presentation.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<p:presentation ${NS} saveSubsetFonts="1">`
+    +`<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rIdM"/></p:sldMasterIdLst>`
+    +`<p:sldIdLst>${sldIds}</p:sldIdLst>`
+    +`<p:sldSz cx="${EMU(SW)}" cy="${EMU(SH)}" type="screen16x9"/>`
+    +`<p:notesSz cx="${EMU(SH)}" cy="${EMU(SW)}"/>`
+    +`</p:presentation>`);
+
+  // presentation rels
+  const presRels=[`<Relationship Id="rIdM" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>`];
+  slides.forEach((_,i)=>presRels.push(`<Relationship Id="rIdS${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i+1}.xml"/>`));
+  presRels.push(`<Relationship Id="rIdPP" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/presProps" Target="presProps.xml"/>`);
+  presRels.push(`<Relationship Id="rIdTh" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>`);
+  put('ppt/_rels/presentation.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${presRels.join('')}</Relationships>`);
+
+  put('ppt/presProps.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentationPr ${NS}/>`);
+
+  // theme
+  put('ppt/theme/theme1.xml', THEME);
+
+  // slide master
+  put('ppt/slideMasters/slideMaster1.xml', MASTER);
+  put('ppt/slideMasters/_rels/slideMaster1.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    +`<Relationship Id="rIdL" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>`
+    +`<Relationship Id="rIdTh" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme1.xml"/>`
+    +`</Relationships>`);
+
+  // slide layout
+  put('ppt/slideLayouts/slideLayout1.xml', LAYOUT);
+  put('ppt/slideLayouts/_rels/slideLayout1.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    +`<Relationship Id="rIdM" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/>`
+    +`</Relationships>`);
+
+  // slides + rels
+  slides.forEach((xml,i)=>{
+    put('ppt/slides/slide'+(i+1)+'.xml', xml);
+    const rels=[`<Relationship Id="rIdLO" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>`];
+    slideRels[i].forEach(r=>rels.push(`<Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${r.target}"/>`));
+    put('ppt/slides/_rels/slide'+(i+1)+'.xml.rels',
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join('')}</Relationships>`);
+  });
+
+  // media
+  media.forEach(m=>files.push({name:'ppt/media/'+m.name,bytes:m.bytes}));
+
+  return buildZip(files);
+}
+
+// ---- minimal theme / master / layout ----
+const THEME=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="RoundNote"><a:themeElements>
+<a:clrScheme name="RoundNote"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1A2540"/></a:dk2><a:lt2><a:srgbClr val="F4F6FB"/></a:lt2><a:accent1><a:srgbClr val="3E63B9"/></a:accent1><a:accent2><a:srgbClr val="2E7D5E"/></a:accent2><a:accent3><a:srgbClr val="B06A28"/></a:accent3><a:accent4><a:srgbClr val="A03040"/></a:accent4><a:accent5><a:srgbClr val="8A96B0"/></a:accent5><a:accent6><a:srgbClr val="4A5878"/></a:accent6><a:hlink><a:srgbClr val="3E63B9"/></a:hlink><a:folHlink><a:srgbClr val="8A96B0"/></a:folHlink></a:clrScheme>
+<a:fontScheme name="RoundNote"><a:majorFont><a:latin typeface="Meiryo"/><a:ea typeface="Meiryo"/><a:cs typeface="Meiryo"/></a:majorFont><a:minorFont><a:latin typeface="Meiryo"/><a:ea typeface="Meiryo"/><a:cs typeface="Meiryo"/></a:minorFont></a:fontScheme>
+<a:fmtScheme name="RoundNote"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w="6350"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="12700"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="19050"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme>
+</a:themeElements></a:theme>`;
+
+const MASTER=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sldMaster ${NS}><p:cSld><p:bg><p:bgRef idx="1001"><a:schemeClr val="lt1"/></p:bgRef></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rIdL"/></p:sldLayoutIdLst></p:sldMaster>`;
+
+const LAYOUT=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sldLayout ${NS} type="blank" preserve="1"><p:cSld name="Blank"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`;
+
+
+// ---- entry: レポートをPPTXで保存 ----
+function exportReportPPTX(){
+  var hosp = document.getElementById('report-hospital').value;
+  if(!hosp){ showToast('⚠️ 病院を選んでください','warn'); return; }
+  var recs = st.records.filter(function(r){ return r.hospital===hosp; });
+  if(!recs.length){ showToast('⚠️ この病院の記録がありません','warn'); return; }
+  try{
+    var zip = pptxPackage(hosp, recs);
+    var blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = hosp+'様_ベッド点検報告書_'+todayStr()+'.pptx';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('📊 PPTXを保存しました');
+  }catch(e){ console.error(e); showToast('⚠️ PPTX生成に失敗しました','warn'); }
+}
+window.exportReportPPTX = exportReportPPTX;
+
+})();
 
 // ═══════════════════════════════════════════════════════
 // 部品リスト ドラッグ並び替え（Pointer Events：指・マウス両対応）
