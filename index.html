@@ -350,6 +350,12 @@ select{
 }
 .caster-bulk-panel.open{max-height:300px;opacity:1;}
 
+.sr-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px;}
+.sr-slot{display:flex;align-items:center;gap:4px;}
+.sr-slot .sr-no{font-size:12px;color:var(--text2);flex:0 0 16px;text-align:center;font-weight:700;}
+.sr-slot .hist-wrap{flex:1;min-width:0;}
+.sr-summary{margin-top:8px;font-size:12px;font-weight:700;color:var(--accent);min-height:15px;}
+
 .bulk-grid{
   display:grid;grid-template-columns:1fr 1fr;gap:6px;
   padding:10px 0 4px;
@@ -650,6 +656,206 @@ select{
 .hosp-rate.r-low{color:var(--ok);}
 .hosp-chevron{width:16px;height:16px;color:var(--text2);flex-shrink:0;}
 
+/* ══ その場で見せる報告（全画面オーバーレイ） ══ */
+#reportOverlay{
+  position:fixed;inset:0;z-index:200;background:var(--bg);
+  display:none;flex-direction:column;
+}
+#reportOverlay.show{display:flex;}
+.rp-bar{
+  flex-shrink:0;display:flex;align-items:center;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+  background:var(--text);color:#fff;
+}
+.rp-bar button{
+  background:none;border:1.5px solid rgba(255,255,255,.4);color:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:500;padding:7px 12px;
+  display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:0;
+}
+.rp-bar button:active{background:rgba(255,255,255,.18);}
+.rp-bar .rp-sp{margin-left:auto;}
+.rp-hint{display:none;flex-shrink:0;padding:7px 12px;background:var(--warn-bg);
+  color:var(--warn);font-size:12px;text-align:center;border-bottom:1px solid var(--line-thin);}
+@media (max-width:640px) and (orientation:portrait){.rp-hint{display:block;}}
+@media print{.rp-hint{display:none!important;}}
+.rp-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:40px;}
+.rp-doc{max-width:760px;margin:0 auto;}
+
+.rp-head{background:var(--text);color:#fff;padding:16px 18px;border-bottom:4px solid var(--accent);}
+.rp-kicker{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.16em;color:#9fb0d4;margin-bottom:6px;}
+.rp-title{font-size:23px;font-weight:900;line-height:1.2;}
+.rp-sub{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px 16px;font-size:12.5px;color:#c3cee6;font-family:'DM Mono',monospace;}
+
+.rp-sec{background:var(--surface);margin-top:10px;padding:16px 18px;}
+.rp-sh{display:flex;align-items:baseline;gap:10px;padding-bottom:8px;margin-bottom:14px;border-bottom:2px solid var(--text);}
+.rp-sh h2{font-size:15px;font-weight:700;}
+.rp-note{font-size:11.5px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}
+
+.rp-tally{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-thin);}
+.rp-tc{background:var(--surface);padding:14px 8px;text-align:center;}
+.rp-tc.t-ng{background:var(--ng-bg);}
+.rp-tm{font-size:20px;font-weight:700;line-height:1;}
+.rp-tn{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;line-height:1;margin:8px 0 4px;}
+.rp-tl{font-size:12px;font-weight:500;color:var(--text2);}
+.t-ok .rp-tm,.t-ok .rp-tn{color:var(--ok);}
+.t-wm .rp-tm,.t-wm .rp-tn{color:var(--warn);}
+.t-ng .rp-tm,.t-ng .rp-tn{color:var(--ng);}
+.rp-total{margin-top:10px;padding-top:10px;border-top:1.5px solid var(--line-thin);font-size:13px;color:var(--text2);text-align:center;}
+.rp-total b{font-family:'DM Mono',monospace;font-size:16px;color:var(--text);font-weight:500;}
+
+.rp-ward{margin-bottom:16px;}
+.rp-ward:last-child{margin-bottom:0;}
+.rp-wh{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:13px;font-weight:700;}
+.rp-wn{margin-left:auto;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text2);font-weight:400;}
+.rp-beds{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;}
+.rp-bed{
+  aspect-ratio:1/.72;border:1.5px solid var(--line-thin);background:var(--surface2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  font-family:'DM Mono',monospace;font-size:9.5px;color:var(--text3);overflow:hidden;
+}
+.rp-bed b{font-size:13px;font-weight:500;line-height:1;}
+.rp-bed.k-ok{background:var(--ok-bg);border-color:#b8ddcc;color:var(--ok);}
+.rp-bed.k-wm{background:var(--warn-bg);border-color:#e2c79e;color:var(--warn);}
+.rp-bed.k-ng{background:var(--ng-bg);border-color:var(--ng);color:var(--ng);border-width:2px;}
+.rp-bed.k-ng b{font-weight:700;}
+.rp-lg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1.5px solid var(--line-thin);font-size:11.5px;color:var(--text2);}
+.rp-lg i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;border:1.5px solid;}
+.rp-lg .g-ok i{background:var(--ok-bg);border-color:#b8ddcc;}
+.rp-lg .g-wm i{background:var(--warn-bg);border-color:#e2c79e;}
+.rp-lg .g-ng i{background:var(--ng-bg);border-color:var(--ng);}
+
+.rp-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--line-thin);}
+.rp-row:last-child{border-bottom:none;}
+.rp-no{flex-shrink:0;width:26px;height:26px;background:var(--ng);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;}
+.rp-rb{flex:1;min-width:0;}
+.rp-loc{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;}
+.rp-where{font-size:12px;color:var(--text2);margin-left:8px;font-weight:400;font-family:'DM Sans',sans-serif;}
+.rp-model{font-size:12.5px;color:var(--text2);margin-top:2px;}
+.rp-model .yr{font-family:'DM Mono',monospace;color:var(--warn);font-weight:500;margin-left:6px;}
+.rp-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.rp-chip{background:var(--ng-bg);color:var(--ng);border:1.5px solid var(--ng);padding:2px 8px;font-size:11.5px;font-weight:500;}
+.rp-chip.c-cas{background:var(--surface);border-style:dashed;}
+
+.rp-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.rp-ph{border:1.5px solid var(--line-thin);background:var(--surface2);}
+.rp-ph img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+.rp-cap{padding:6px 8px;border-top:1.5px solid var(--line-thin);background:var(--surface);font-size:11.5px;line-height:1.4;}
+.rp-cap b{font-family:'DM Mono',monospace;font-size:12.5px;font-weight:500;}
+.rp-cap span{color:var(--ng);display:block;}
+
+.rp-parts{display:flex;flex-direction:column;gap:1px;background:var(--line-thin);}
+.rp-pt{background:var(--surface);display:flex;align-items:center;gap:10px;padding:9px 2px;}
+.rp-pnm{font-size:13.5px;font-weight:500;width:92px;flex-shrink:0;}
+.rp-pbar{flex:1;height:14px;background:var(--surface2);}
+.rp-pfill{height:100%;background:var(--ng);}
+.rp-pn{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;width:34px;text-align:right;flex-shrink:0;}
+.rp-psum{margin-top:10px;padding-top:10px;border-top:1.5px solid var(--line-thin);font-size:12.5px;color:var(--text2);}
+.rp-psum b{font-family:'DM Mono',monospace;font-size:15px;color:var(--text);font-weight:500;}
+.rp-foot{padding:16px 18px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.7;}
+.rp-empty{padding:14px 0;font-size:13px;color:var(--text2);}
+
+/* ══ 印刷用報告書 5ページ（A4横・表紙/故障内訳/クロス表/判定/写真） ══ */
+#reportDoc{max-width:1060px;margin:0 auto;padding:16px 12px 44px;}
+.rpg-page{
+  background:var(--surface);color:var(--text);
+  width:100%;max-width:1040px;margin:0 auto 16px;box-sizing:border-box;
+  padding:26px 34px;border:1px solid var(--line-thin);
+  display:flex;flex-direction:column;font-size:13px;min-height:520px;
+}
+.rpg-hd{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--line-thin);padding-bottom:8px;
+  font-size:11px;color:var(--text3);letter-spacing:.03em;font-family:'DM Mono',monospace;}
+.rpg-ti{font-size:16px;font-weight:700;margin:14px 0 12px;}
+.rpg-ti em{font-style:normal;font-weight:400;font-size:12px;color:var(--text3);margin-left:10px;}
+.rpg-ft,.rpg-ft2{margin-top:auto;text-align:right;font-size:10.5px;color:var(--text3);
+  font-family:'DM Mono',monospace;border-top:1px solid var(--line-thin);padding-top:8px;}
+.rpg-empty{padding:22px 0;color:var(--text2);font-size:13px;}
+
+/* 表紙 */
+.rpg-cover{justify-content:space-between;}
+.rpg-cv-top{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;
+  font-size:11px;letter-spacing:.14em;color:var(--text3);}
+.rpg-cv-mid{margin:auto 0;}
+.rpg-cv-kick{font-size:13px;color:var(--text2);letter-spacing:.04em;margin-bottom:12px;}
+.rpg-cv-title{font-size:34px;font-weight:900;line-height:1.15;}
+.rpg-cv-rule{width:40px;height:3px;background:var(--accent);margin:18px 0;}
+.rpg-cv-meta{font-size:14px;color:var(--text2);line-height:2;}
+.rpg-cv-foot{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;
+  font-size:11px;color:var(--text3);border-top:1px solid var(--line-thin);padding-top:9px;}
+
+/* 故障内訳 */
+.rpg-fbody{display:flex;flex-direction:column;gap:13px;margin-top:6px;}
+.rpg-frow{display:flex;align-items:center;gap:14px;}
+.rpg-fnm{width:130px;flex-shrink:0;font-size:13px;color:var(--text2);}
+.rpg-fbar{flex:1;height:22px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.rpg-ffill{height:100%;background:var(--ng);display:flex;align-items:center;
+  padding-left:9px;color:#fff;font-size:11px;font-family:'DM Mono',monospace;min-width:2px;}
+.rpg-fn{width:34px;text-align:right;font-size:15px;font-family:'DM Mono',monospace;flex-shrink:0;}
+.rpg-fnote{margin-top:14px;font-size:12px;color:var(--text2);}
+
+/* クロス表 */
+.rpg-cross-wrap{margin-top:4px;overflow-x:auto;}
+.rpg-cross{width:100%;border-collapse:collapse;font-size:11px;text-align:center;
+  table-layout:fixed;font-family:'DM Mono',monospace;}
+.rpg-cross th,.rpg-cross td{border:1px solid var(--line-thin);padding:4px 1px;}
+.rpg-cross thead th{color:var(--text2);font-weight:500;}
+.rpg-ct-m{text-align:left!important;font-family:'DM Sans',sans-serif;width:70px;padding-left:6px!important;}
+.rpg-ct-t{width:30px;font-weight:700;}
+.rpg-cross .y20{background:var(--ng-bg);color:var(--ng);}
+.rpg-cross .y15{background:var(--warn-bg);color:var(--warn);}
+.rpg-cross .y5{background:var(--ok-bg);color:var(--ok);}
+.rpg-ct-foot td{font-weight:700;border-top:2px solid var(--text);}
+.rpg-cross-lg{display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--text2);flex-wrap:wrap;}
+.rpg-cross-lg i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;border:1px solid;}
+.rpg-cross-lg .y20 i{background:var(--ng-bg);border-color:var(--ng);}
+.rpg-cross-lg .y15 i{background:var(--warn-bg);border-color:var(--warn);}
+.rpg-cross-lg .y5 i{background:var(--ok-bg);border-color:var(--ok);}
+.rpg-cnote{margin-top:12px;font-size:12px;color:var(--text2);}
+
+/* 判定 */
+.rpg-jt{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;}
+.rpg-jt th{text-align:left;color:var(--text3);font-weight:400;font-size:11px;
+  border-bottom:1px solid var(--line-thin);padding:6px;}
+.rpg-jt td{padding:7px 6px;border-bottom:1px solid var(--line-thin);vertical-align:top;}
+.rpg-jt .rpg-c{text-align:center;}
+.rpg-more{color:var(--text3)!important;text-align:center!important;}
+.rpg-bd{display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:500;}
+.rpg-bd.b-buy{background:var(--ng-bg);color:var(--ng);}
+.rpg-bd.b-fix{background:var(--warn-bg);color:var(--warn);}
+.rpg-jsum{margin-top:14px;font-size:12.5px;color:var(--text2);}
+.rpg-jsum b{font-family:'DM Mono',monospace;font-weight:500;}
+
+/* 写真 */
+.rpg-pbody{flex:1;margin-top:4px;display:flex;}
+.rpg-photos{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;
+  gap:10px;width:100%;}
+.rpg-ph{margin:0;border:1px solid var(--line-thin);background:var(--surface2);
+  display:flex;flex-direction:column;overflow:hidden;min-height:150px;}
+.rpg-ph img{width:100%;flex:1;object-fit:cover;display:block;min-height:0;}
+.rpg-ph figcaption{padding:5px 8px;font-size:11px;background:var(--surface);
+  border-top:1px solid var(--line-thin);font-family:'DM Mono',monospace;}
+.rpg-ph figcaption span{color:var(--ng);margin-left:6px;font-family:'DM Sans',sans-serif;}
+
+/* 印刷：5ページを A4横で1枚ずつ（共有→プリント→PDF保存） */
+@media print{
+  @page{size:A4 landscape;margin:0;}
+  body>*{display:none!important;}
+  body>#reportOverlay.show{display:block!important;position:static;background:#fff;}
+  .rp-bar{display:none!important;}
+  .rp-scroll{overflow:visible;padding:0;}
+  #reportDoc{max-width:none;margin:0;padding:0;}
+  .rpg-page{
+    max-width:none;margin:0;border:none;min-height:0;
+    width:297mm;height:210mm;padding:13mm 15mm;
+    page-break-after:always;break-after:page;page-break-inside:avoid;
+  }
+  .rpg-page:last-child{page-break-after:auto;break-after:auto;}
+  .rpg-cross-wrap{overflow:visible;}
+  .rpg-cv-rule,.rpg-ffill,.rpg-bd,.rpg-ph img,
+  .rpg-cross .y20,.rpg-cross .y15,.rpg-cross .y5,
+  .rpg-cross-lg i{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+
 /* 病棟別集計 */
 .ward-row{
   padding:12px 0;border-bottom:1px solid var(--line-thin);
@@ -688,6 +894,22 @@ select{
 /* ── MASTER EDITOR ── */
 .part-row{display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1.5px solid var(--line-thin);}
 .part-row:last-child{border-bottom:none;}
+/* ── 部品リスト ドラッグ並び替え ── */
+#partsEditor{position:relative;}
+.part-grip{
+  flex-shrink:0;width:32px;align-self:stretch;margin-left:-4px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none;
+}
+.part-grip:active{cursor:grabbing;color:var(--accent);}
+.part-row.dragging{
+  position:relative;z-index:30;background:var(--surface);
+  border-bottom-color:transparent;border-radius:10px;
+  box-shadow:0 8px 20px rgba(0,0,0,.28);
+}
+.part-row.dragging .part-grip{color:var(--accent);}
+.part-row.shifting{transition:transform .16s ease;}
 .part-label{flex:1;font-size:14px;color:var(--text);font-weight:500;}
 .part-input{
   flex:1;background:var(--surface);border:none;border-bottom:2px solid var(--accent);
@@ -734,9 +956,15 @@ table.pt td:first-child{font-size:13px;padding-left:4px;word-break:break-all;col
   font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:all .15s;
   padding:0;min-width:38px;-webkit-appearance:none;appearance:none;font-family:inherit;
 }
-.sev-chip.a-軽微 {border-color:var(--ok);   background:var(--ok);  color:#fff;}
 .sev-chip.a-中程度{border-color:var(--warn); background:var(--warn);color:#fff;}
 .sev-chip.a-重大  {border-color:var(--ng);   background:var(--ng);  color:#fff;}
+.qty-inp{
+  width:100%;min-height:38px;box-sizing:border-box;text-align:center;
+  border:1px solid var(--line);background:var(--surface);color:var(--text);
+  font-size:15px;font-weight:600;font-family:inherit;border-radius:0;
+  padding:0 4px;-webkit-appearance:none;appearance:none;
+}
+.qty-inp:focus{outline:none;border-color:var(--accent);}
 
 textarea{
   width:100%;background:var(--surface);border:1px solid var(--line);
@@ -1066,7 +1294,7 @@ input[type=file]{display:none;}
     </div>
     <div class="row3" style="grid-template-columns:2fr 1fr">
       <div>
-        <label>ベッド型番</label>
+        <label>ベッド型番 <span class="required">*</span></label>
         <select id="inp-model"></select>
       </div>
       <div>
@@ -1098,18 +1326,37 @@ input[type=file]{display:none;}
         <button class="hist-btn" onclick="openHistPicker('inp-mattress','mattress')" type="button">▾</button>
       </div>
     </div>
-    <div class="form-row">
-      <label>見守り機器</label>
-      <div class="hist-wrap">
-        <input type="text" id="inp-monitor" class="hist-input">
-        <button class="hist-btn" onclick="openHistPicker('inp-monitor','monitor')" type="button">▾</button>
+    <!-- サイドレール：最大4本・スロット式（折りたたみ／値があれば自動展開） -->
+    <button class="caster-bulk-toggle" id="siderailToggle" onclick="toggleSiderailPanel()" type="button">
+      <span class="bulk-arrow">▾</span>
+      <span id="siderailToggleLabel">サイドレール を入力</span>
+    </button>
+    <div class="caster-bulk-panel" id="siderailPanel">
+      <div class="form-row" style="padding-top:10px">
+        <label>サイドレール（最大4本）</label>
+        <div class="sr-grid" id="siderailGrid"></div>
+        <div class="sr-summary" id="siderailSummary"></div>
       </div>
     </div>
-    <div class="form-row">
-      <label>TV</label>
-      <div class="hist-wrap">
-        <input type="text" id="inp-tv" class="hist-input">
-        <button class="hist-btn" onclick="openHistPicker('inp-tv','tv')" type="button">▾</button>
+    <!-- 見守り機器・TV：折りたたみ（値があれば自動展開） -->
+    <button class="caster-bulk-toggle" id="equipToggle" onclick="toggleEquipPanel()" type="button">
+      <span class="bulk-arrow">▾</span>
+      <span id="equipToggleLabel">見守り機器・TV を入力</span>
+    </button>
+    <div class="caster-bulk-panel" id="equipPanel">
+      <div class="form-row" style="padding-top:10px">
+        <label>見守り機器</label>
+        <div class="hist-wrap">
+          <input type="text" id="inp-monitor" class="hist-input">
+          <button class="hist-btn" onclick="openHistPicker('inp-monitor','monitor')" type="button">▾</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>TV</label>
+        <div class="hist-wrap">
+          <input type="text" id="inp-tv" class="hist-input">
+          <button class="hist-btn" onclick="openHistPicker('inp-tv','tv')" type="button">▾</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1206,7 +1453,7 @@ input[type=file]{display:none;}
     <div class="parts-wrap">
       <table class="pt">
         <thead>
-          <tr><th style="min-width:80px">部位</th><th>軽微</th><th>中程度</th><th>重大</th></tr>
+          <tr><th style="min-width:80px">部位</th><th>中程度</th><th>重大</th><th style="width:64px">数量</th></tr>
         </thead>
         <tbody id="partsBody"></tbody>
       </table>
@@ -1308,6 +1555,21 @@ input[type=file]{display:none;}
 
 <!-- ===== 出力 ===== -->
 <div id="page-export" class="page">
+
+  <!-- その場で見せる報告 -->
+  <div class="card">
+    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>その場で見せる報告</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;">点検の結果を画面に表示します。そのまま相手に見せられます。</p>
+    <div class="form-row" style="margin-bottom:12px">
+      <label>病院を選択 <span class="required">*</span></label>
+      <select id="report-hospital"><option value="">病院を選んでください</option></select>
+    </div>
+    <button class="btn btn-primary" onclick="openReport()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      報告書を表示
+    </button>
+  </div>
+
   <div class="card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>提出用Excel出力</div>
     <div class="form-row" style="margin-bottom:10px">
@@ -1398,39 +1660,7 @@ input[type=file]{display:none;}
   </div>
   <div class="card info-card">
     <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>注意</div>
-    <p>部位を削除しても既存の記録は残ります。<br>記録に残っている部位はリストから削除してもExcelに出力されます。</p>
-  </div>
-
-  <!-- 古い記録削除 -->
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>古い記録の一括削除</div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;">事前にExcel出力しておくことを推奨します。</p>
-    <div class="export-group">
-      <div class="export-group-label">削除する期間</div>
-      <div class="export-group-btns">
-        <button class="export-item-btn" onclick="cleanupOld(30)">
-          <span class="export-item-text">
-            <span class="export-item-name">1ヶ月より前</span>
-            <span class="export-item-desc">1ヶ月以前の記録を削除</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-        </button>
-        <button class="export-item-btn" onclick="cleanupOld(90)">
-          <span class="export-item-text">
-            <span class="export-item-name">3ヶ月より前</span>
-            <span class="export-item-desc">3ヶ月以前の記録を削除</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-        </button>
-        <button class="export-item-btn" onclick="cleanupOld(180)">
-          <span class="export-item-text">
-            <span class="export-item-name">6ヶ月より前</span>
-            <span class="export-item-desc">6ヶ月以前の記録を削除</span>
-          </span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;color:var(--ng)"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-        </button>
-      </div>
-    </div>
+    <p>部位を削除しても既存の記録は残ります。<br>Excel出力の列は出力時点の部位リストに基づきます。</p>
   </div>
 
   <!-- 病院単位で削除 -->
@@ -1450,6 +1680,19 @@ input[type=file]{display:none;}
 </div>
 
 <!-- 履歴ピッカーモーダル -->
+<div class="hist-modal-backdrop" id="addModelModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="hist-modal-card" onclick="event.stopPropagation()">
+    <div class="hosp-modal-header" style="position:static;border-radius:0 var(--radius-lg) 0 0;">
+      <div class="hosp-modal-title">型番を新規登録</div>
+      <button class="modal-close" onclick="cancelAddModel()" style="position:static;width:36px;height:36px">✕</button>
+    </div>
+    <div class="hosp-modal-body">
+      <input type="text" id="add-model-input" class="part-input" placeholder="例: KA-96121A"
+             style="width:100%;box-sizing:border-box;font-size:16px;padding:12px;margin-bottom:12px;">
+      <button class="hist-btn" style="width:100%;padding:14px;font-size:16px;" onclick="confirmAddModel()">登録して選択</button>
+    </div>
+  </div>
+</div>
 <div class="hist-modal-backdrop" id="histModal" onclick="closeHistPicker(event)">
   <div class="hist-modal-card" onclick="event.stopPropagation()">
     <div class="hosp-modal-header" style="position:static;border-radius:0 var(--radius-lg) 0 0;">
@@ -1458,6 +1701,22 @@ input[type=file]{display:none;}
     </div>
     <div class="hosp-modal-body" id="histModalBody"></div>
   </div>
+</div>
+
+<!-- その場で見せる報告 オーバーレイ -->
+<div id="reportOverlay">
+  <div class="rp-bar">
+    <button onclick="closeReport()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      閉じる
+    </button>
+    <button class="rp-sp" onclick="exportReportPPTX()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      PPTX保存
+    </button>
+  </div>
+  <div class="rp-hint">📱 スマホでは横画面（横向き）での表示を推奨します</div>
+  <div class="rp-scroll"><div class="rp-doc" id="reportDoc"></div></div>
 </div>
 
 <!-- 要交換ベッドリストモーダル -->
@@ -1503,13 +1762,20 @@ const CASTER_STATES = ['未選択','正常','要注意','要交換','交換済�
 // 大分類ごとの詳細選択肢
 const CASTER_DETAIL = {
   '要注意': ['劣化','溝あり'],
-  '要交換': ['ゴム崩れ','ゴムなし','首振り×'],
+  '要交換': ['ゴム崩れ','ゴムなし','首振り×','溝深い'],
 };
 
-const DEFAULT_HOSPITALS = ['那覇市立病院','沖縄赤十字病院','県立中部病院','浦添総合病院'];
-const DEFAULT_MODELS    = ['パラマウント SF-836WC','パラマウント SF-837WC','フランスベッド MA-551','フランスベッド MA-501'];
-const DEFAULT_PARTS     = ['サイドレール','背ボード','足ボード','マットレス','フレーム','電動モーター','リモコン','ナースコール','柵ロック'];
-const SEVS = ['軽微','中程度','重大'];
+const DEFAULT_HOSPITALS = [];
+const DEFAULT_MODELS    = [];
+const DEFAULT_PARTS     = ['手元SW','背ACT','HLACT','膝ACT','C.BOX','ケーブル中継','電源コード','サイドバンパー','背ボトム','背湾曲','腰枠','膝枠','膝湾曲','足枠','Hボード','Fボード'];
+const SEVS = ['中程度','重大'];
+// 旧データの「軽微」は中程度と同じ△扱い。編集時のみ中程度に寄せて表示する
+const SEV_LEGACY = {'軽微':'中程度'};
+function normSev(obj){
+  const o = {...(obj||{})};
+  Object.keys(o).forEach(k=>{ if(SEV_LEGACY[o[k]]) o[k]=SEV_LEGACY[o[k]]; });
+  return o;
+}
 
 const MAX_PHOTOS    = 3;
 const STORAGE_LIMIT = 4 * 1024 * 1024;  // 4MB (安全マージン)
@@ -1518,13 +1784,44 @@ const PHOTO_QUALITY = 0.6;
 
 // データ構造（写真は別管理）
 let st = loadState();
-let photoStore = loadPhotos(); // {photoId: base64}
+let photoStore = {}; // {photoId: base64} 起動時にIndexedDBから非同期読込(initPhotos)
 
 // 現在の入力状態
 let formCasters = {HR:'未選択', HL:'未選択', FR:'未選択', FL:'未選択'};
 let formCasterDetail = {HR:'', HL:'', FR:'', FL:''}; // 詳細状態
 let formSev = {};
+let formQty = {};      // 破損部位ごとの数量（部位名 -> 数値文字列）
+let formSideRails = ['','','',''];  // サイドレール最大4本（スロット式）
+const SR_NO = ['①','②','③','④'];
 let formPhotoIds = []; // 現在フォームに追加中の写真ID
+
+// 記録から破損部位の数量を取り出す（未入力/0以下は0）
+function partQty(r, p){
+  const v = (r && r.partsQty) ? r.partsQty[p] : '';
+  const n = parseInt(v, 10);
+  return (isFinite(n) && n > 0) ? n : 0;
+}
+// 表示用サフィックス（2以上のときだけ「×N」）
+function qtySuffix(n){ return n >= 2 ? '×' + n : ''; }
+
+// ── サイドレール共通ヘルパー ──
+// 記録／配列からサイドレール種類の配列（空を除く）を得る。旧形式(sideRail文字列)も吸収。
+function srList(r){
+  if(r && Array.isArray(r.sideRails)) return r.sideRails.map(s=>(s||'').trim()).filter(Boolean);
+  if(r && r.sideRail) return [String(r.sideRail).trim()].filter(Boolean);
+  return [];
+}
+// 種類ごとに集計して ["固定式×2","跳上げ"] を返す
+function srGroupParts(list){
+  const m=new Map();
+  list.forEach(t=>m.set(t,(m.get(t)||0)+1));
+  return [...m.entries()].map(([t,c])=>c>1?`${t}×${c}`:t);
+}
+// 「3本（固定式×2 / 跳上げ）」形式の要約（空なら''）
+function srSummaryText(list){
+  if(!list.length) return '';
+  return `${list.length}本（${srGroupParts(list).join(' / ')}）`;
+}
 
 // 一覧タブの状態
 let expandedRecs = new Set();
@@ -1560,6 +1857,84 @@ function loadPhotos(){
 }
 
 // ═══════════════════════════════════════════════════════
+// 写真ストレージ v2: IndexedDB（大容量・localStorage 4MB制限の回避）
+// 記録本体(casterInspect)は従来どおりlocalStorage。写真のみIndexedDBへ。
+// ═══════════════════════════════════════════════════════
+const IDB_NAME = 'roundNoteDB', IDB_STORE = 'photos';
+let idb = null;
+let idbFallback = false;           // IndexedDB不可の環境では従来のlocalStorage方式
+let idbWrittenKeys = new Set();    // 差分書き込み用：DBに書き込み済みのキー
+
+function openPhotoDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+function idbReadAll(){
+  return new Promise((resolve, reject)=>{
+    const out = {};
+    const tx = idb.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).openCursor();
+    req.onsuccess = ()=>{
+      const c = req.result;
+      if(c){ out[c.key] = c.value; c.continue(); }
+      else resolve(out);
+    };
+    req.onerror = ()=>reject(req.error);
+  });
+}
+// snapshotとDBの差分だけ書き込み（写真IDは一意・内容不変のため追加/削除のみ）
+function idbApplyDiff(snapshot){
+  return new Promise((resolve, reject)=>{
+    const tx = idb.transaction(IDB_STORE, 'readwrite');
+    const store = tx.objectStore(IDB_STORE);
+    const keys = new Set(Object.keys(snapshot));
+    keys.forEach(k=>{ if(!idbWrittenKeys.has(k)) store.put(snapshot[k], k); });
+    idbWrittenKeys.forEach(k=>{ if(!keys.has(k)) store.delete(k); });
+    tx.oncomplete = ()=>{ idbWrittenKeys = keys; resolve(); };
+    tx.onerror = ()=>reject(tx.error);
+    tx.onabort = ()=>reject(tx.error);
+  });
+}
+
+async function initPhotos(){
+  try{
+    if(!window.indexedDB) throw new Error('no-indexeddb');
+    idb = await openPhotoDB();
+    photoStore = await idbReadAll();
+    idbWrittenKeys = new Set(Object.keys(photoStore));
+    // 旧localStorage写真の自動移行（書き込み成功を確認してから旧データ削除）
+    const legacy = localStorage.getItem('casterPhotos');
+    if(legacy !== null){
+      const old = JSON.parse(legacy) || {};
+      Object.keys(old).forEach(k=>{ if(!(k in photoStore)) photoStore[k] = old[k]; });
+      await idbApplyDiff({...photoStore});
+      const check = await idbReadAll();
+      if(Object.keys(old).every(k=> k in check)){
+        localStorage.removeItem('casterPhotos');
+      }
+    }
+  }catch(e){
+    console.error('IndexedDB利用不可のためlocalStorage方式で継続', e);
+    idbFallback = true;
+    photoStore = loadPhotos();
+  }
+  // 写真読込完了後に再描画
+  renderList(); renderSummary(); renderStorageMeter();
+  // 下書きの写真ID再復元（起動直後は写真未読込のためフィルタで落ちている可能性がある）
+  try{
+    const d = JSON.parse(localStorage.getItem('roundNoteDraft')||'null');
+    if(d && (d.photoIds||[]).length && formPhotoIds.length === 0){
+      formPhotoIds = d.photoIds.filter(id=>photoStore[id]);
+    }
+  }catch(e){}
+  renderPhotoField();
+}
+
+// ═══════════════════════════════════════════════════════
 // SAFE SAVE - 試し書き＋自動バックアップ
 // ═══════════════════════════════════════════════════════
 function persistState(){
@@ -1576,19 +1951,33 @@ function persistState(){
     return false;
   }
 }
+let photoWriteChain = Promise.resolve(); // 書き込みの直列化（順序保証）
 function persistPhotos(){
-  try{
-    // 写真はバックアップしない（容量が重いため）。古い写真バックアップが残っていれば削除
-    localStorage.removeItem('casterPhotos_backup');
-    localStorage.setItem('casterPhotos', JSON.stringify(photoStore));
-    return true;
-  }catch(e){
-    return false;
+  if(idbFallback){
+    // 従来方式（IndexedDB不可の環境のみ）
+    try{
+      localStorage.removeItem('casterPhotos_backup');
+      localStorage.setItem('casterPhotos', JSON.stringify(photoStore));
+      return true;
+    }catch(e){
+      return false;
+    }
   }
+  // IndexedDBへ差分書き込み（非同期）。呼び出し側の互換のため即trueを返す
+  const snapshot = {...photoStore};
+  photoWriteChain = photoWriteChain.then(async ()=>{
+    if(!idb) idb = await openPhotoDB();
+    await idbApplyDiff(snapshot);
+  }).catch(e=>{
+    console.error(e);
+    showToast('⚠️ 写真の保存に失敗','err');
+  });
+  return true;
 }
 
 // 試し書き：写真追加前に容量チェック
 function canAddPhoto(base64){
+  if(!idbFallback) return true; // IndexedDBは大容量のため実質制限なし
   const test = {...photoStore, ['__test_'+Date.now()]: base64};
   try{
     const json = JSON.stringify(test);
@@ -1613,6 +2002,7 @@ try{ localStorage.removeItem('casterPhotos_backup'); }catch(e){}  // 旧版の�
 renderHospitalOptions();
 renderModelOptions();
 renderPartsInputTable();
+renderSideRailSlots();
 renderList();
 renderSummary();
 renderHospitalsEditor();
@@ -1627,6 +2017,7 @@ renderStorageMeter();
 renderCleanupHospitalOptions();
 renderExportRoundOptions();
 document.getElementById('saveFooter').classList.add('show');
+initPhotos(); // 写真をIndexedDBから非同期読込（完了後に一覧・写真欄を再描画）
 
 function updateBadge(){
   // バッジ非表示のため処理なし
@@ -1655,12 +2046,14 @@ function saveDraft(){
     floor1:   document.getElementById('inp-floor1').value,
     floor2:   document.getElementById('inp-floor2').value,
     mattress: document.getElementById('inp-mattress').value,
+    sideRails:[...formSideRails],
     monitor:  document.getElementById('inp-monitor').value,
     tv:       document.getElementById('inp-tv').value,
     memo:     document.getElementById('inp-memo').value,
     casters:  {...formCasters},
     casterDetail:{...formCasterDetail},
     sev:      {...formSev},
+    qty:      {...formQty},
     photoIds: [...formPhotoIds]
   };
   try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); }catch(e){}
@@ -1686,12 +2079,17 @@ function loadDraft(){
     document.getElementById('inp-floor1').value   = d.floor1||'';
     document.getElementById('inp-floor2').value   = d.floor2||'';
     document.getElementById('inp-mattress').value = d.mattress||'';
+    formSideRails = Array.isArray(d.sideRails) ? [0,1,2,3].map(i=>d.sideRails[i]||'') : (d.sideRail?[d.sideRail,'','','']:['','','','']);
+    renderSideRailSlots();
+    setSiderailOpen(formSideRails.some(s=>(s||'').trim()));
     document.getElementById('inp-monitor').value  = d.monitor||'';
     document.getElementById('inp-tv').value       = d.tv||'';
     document.getElementById('inp-memo').value     = d.memo||'';
+    setEquipOpen(!!((d.monitor||'').trim()||(d.tv||'').trim()));
     formCasters  = d.casters||{HR:'未選択',HL:'未選択',FR:'未選択',FL:'未選択'};
     formCasterDetail = d.casterDetail||{HR:'',HL:'',FR:'',FL:''};
-    formSev      = d.sev||{};
+    formSev      = normSev(d.sev);
+    formQty      = {...(d.qty||{})};
     formPhotoIds = (d.photoIds||[]).filter(id=>photoStore[id]);
     updateCasterUI();
     renderPartsInputTable();
@@ -1730,6 +2128,45 @@ document.addEventListener('DOMContentLoaded', ()=>{
       el.addEventListener('change', ()=>{scheduleDraftSave();updateSaveButtonState();});
     }
   });
+  ['inp-monitor','inp-tv'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input', updateEquipToggleLabel);
+  });
+  renderSideRailSlots();
+  updateEquipToggleLabel();
+  // 型番セレクトの「＋ 新規登録…」
+  {
+    const ms = document.getElementById('inp-model');
+    if(ms) ms.addEventListener('change', handleModelSelectChange);
+  }
+  // 床番上段→年式の自動反映
+  // 末尾「数字4桁＋英字(A-H,J-M ※Iは不使用)」: 下2桁=年（26以下→20xx／27以上→19xx）
+  // 自動入力した年式は床番の修正に追従する（手入力・履歴選択の年式は触らない）
+  {
+    const f1 = document.getElementById('inp-floor1');
+    const yearEl = document.getElementById('inp-year');
+    let lastAutoValue = null;   // 直近に自動入力した値（現在値と一致する間だけ追従対象）
+    if(f1 && yearEl) f1.addEventListener('blur', ()=>{
+      const cur = yearEl.value.trim();
+      if(cur && cur !== lastAutoValue) return;   // 手入力・履歴選択の値には触らない
+      // 全角英数字→半角に正規化してから判定（入力欄の値自体は変更しない）
+      const norm = f1.value.trim().replace(/[０-９Ａ-Ｚａ-ｚ]/g,
+        ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+      const m = norm.match(/(\d{2})(\d{2})([A-HJ-M])$/i);
+      let newVal = '';
+      if(m){
+        const yy = parseInt(m[2], 10);
+        newVal = String(yy <= 26 ? 2000 + yy : 1900 + yy);
+      }
+      if(newVal === cur) return;                 // 変化なし
+      yearEl.value = newVal;
+      lastAutoValue = newVal || null;
+      yearEl.dispatchEvent(new Event('input'));  // 下書き保存・ボタン状態を通常経路で更新
+      showToast(newVal
+        ? `年式 ${newVal} を自動入力（床番より）`
+        : '床番の変更に伴い自動入力の年式をクリアしました');
+    });
+  }
   // キーボード表示時に保存フッターを隠す
   const hideFooterOnFocus = (e)=>{
     const tag = e.target.tagName;
@@ -1763,7 +2200,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 // ═══════════════════════════════════════════════════════
 const HIST_LABELS = {
   year:'年式', floor1:'床番上段', floor2:'床番下段',
-  mattress:'マットレス', monitor:'見守り機器', tv:'TV'
+  mattress:'マットレス', sideRail:'サイドレール種類', monitor:'見守り機器', tv:'TV'
 };
 
 function updateHospitalSuggestions(){
@@ -1782,7 +2219,14 @@ function openHistPicker(inputId, key){
   }
 
   const recs = st.records.filter(r=>r.hospital===hosp);
-  const vals = [...new Set(recs.map(r=>r[key]||'').filter(Boolean))].sort();
+  let vals;
+  if(key==='sideRail'){
+    const set=new Set();
+    recs.forEach(r=>srList(r).forEach(t=>set.add(t)));
+    vals=[...set].sort();
+  } else {
+    vals=[...new Set(recs.map(r=>r[key]||'').filter(Boolean))].sort();
+  }
 
   title.textContent = `${HIST_LABELS[key]} — 履歴から選択`;
 
@@ -1800,8 +2244,12 @@ function openHistPicker(inputId, key){
 }
 
 function pickHist(inputId, val){
-  document.getElementById(inputId).value = val;
+  const el = document.getElementById(inputId);
+  el.value = val;
   document.getElementById('histModal').classList.remove('show');
+  if(inputId === 'inp-floor1') el.dispatchEvent(new Event('blur'));  // 床番→年式の自動反映を発動
+  const m = inputId.match(/^inp-siderail-(\d+)$/);
+  if(m){ formSideRails[+m[1]] = val; updateSideRailSummary(); }
   scheduleDraftSave();
   updateSaveButtonState();
 }
@@ -1978,8 +2426,9 @@ window.addEventListener('scroll', ()=>{
 function handleCasterTap(pos){
   const cur = CASTER_STATES.indexOf(formCasters[pos]);
   formCasters[pos] = CASTER_STATES[(cur+1) % CASTER_STATES.length];
-  // 状態が変わったら詳細リセット
-  if(!CASTER_DETAIL[formCasters[pos]]) formCasterDetail[pos] = '';
+  // 状態が変わったら詳細を見直す（新しい状態にない選択肢だけ消す）
+  const okList = CASTER_DETAIL[formCasters[pos]] || [];
+  if(!okList.includes(formCasterDetail[pos])) formCasterDetail[pos] = '';
   updateOneCasterUI(pos);
   if(bulkPanelOpen) renderBulkContent();
   scheduleDraftSave();
@@ -2280,13 +2729,18 @@ function editRecord(id){
   document.getElementById('inp-floor1').value   = r.floor1||'';
   document.getElementById('inp-floor2').value   = r.floor2||'';
   document.getElementById('inp-mattress').value = r.mattress||'';
+  formSideRails = (function(){ const l=srList(r); return [0,1,2,3].map(i=>l[i]||''); })();
+  renderSideRailSlots();
+  setSiderailOpen(srList(r).length>0);
   document.getElementById('inp-monitor').value  = r.monitor||'';
   document.getElementById('inp-tv').value       = r.tv||'';
   document.getElementById('inp-memo').value     = r.memo||'';
+  setEquipOpen(!!((r.monitor||'').trim()||(r.tv||'').trim()));
   const _ncCb=document.getElementById('inp-needscheck'); if(_ncCb) _ncCb.checked = !!r.needsCheck;
   formCasters  = {HR:'未選択',HL:'未選択',FR:'未選択',FL:'未選択', ...(r.casters||{})};
   formCasterDetail = {HR:'',HL:'',FR:'',FL:'', ...(r.casterDetail||{})};
-  formSev      = {...(r.partsSev||{})};
+  formSev      = normSev(r.partsSev);
+  formQty      = {...(r.partsQty||{})};
   formPhotoIds = (r.photoIds||[]).filter(pid=>photoStore[pid]);
   bulkPanelOpen = false;
   updateCasterUI();
@@ -2312,6 +2766,7 @@ function saveRecord(){
   const floor1   = document.getElementById('inp-floor1').value.trim();
   const floor2   = document.getElementById('inp-floor2').value.trim();
   const mattress = document.getElementById('inp-mattress').value.trim();
+  const sideRails = formSideRails.map(s=>(s||'').trim()).filter(Boolean);
   const monitor  = document.getElementById('inp-monitor').value.trim();
   const tv       = document.getElementById('inp-tv').value.trim();
   const memo     = document.getElementById('inp-memo').value.trim();
@@ -2322,6 +2777,7 @@ function saveRecord(){
   if(!ward) missing.push('病棟');
   if(!room) missing.push('部屋');
   if(!bed)  missing.push('ベッドNo');
+  if(!model) missing.push('ベッド型番');
   if(missing.length){ showToast('⚠️ 未入力：'+missing.join('・'),'warn'); return; }
   if(Object.values(formCasters).every(v=>v==='未選択')){ showToast('⚠️ キャスター状態を1つ以上選択','warn'); return; }
 
@@ -2349,12 +2805,14 @@ function saveRecord(){
     });
     st.records[idx] = {
       ...old,
-      hospital, ward, room, bed, model, year, floor1, floor2, mattress, monitor, tv, memo,
+      hospital, ward, room, bed, model, year, floor1, floor2, mattress,
+      sideRails, monitor, tv, memo,
       needsCheck,
       worst,
       casters: {...formCasters},
       casterDetail: {...formCasterDetail},
       partsSev: {...formSev},
+      partsQty: {...formQty},
       photoIds: [...formPhotoIds],
       updatedAt: new Date().toLocaleString('ja-JP')
     };
@@ -2377,12 +2835,14 @@ function saveRecord(){
     id: Date.now(),
     date: new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-'),
     time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),
-    hospital, ward, room, bed, model, year, floor1, floor2, mattress, monitor, tv, memo,
+    hospital, ward, room, bed, model, year, floor1, floor2, mattress,
+    sideRails, monitor, tv, memo,
     needsCheck,
     worst,
     casters: {...formCasters},
     casterDetail: {...formCasterDetail},
     partsSev: {...formSev},
+    partsQty: {...formQty},
     photoIds: [...formPhotoIds]
   });
 
@@ -2417,13 +2877,18 @@ function clearForm(fullClear){
   document.getElementById('inp-floor1').value='';
   document.getElementById('inp-floor2').value='';
   document.getElementById('inp-mattress').value='';
+  formSideRails=['','','',''];
+  renderSideRailSlots();
+  setSiderailOpen(false);
   document.getElementById('inp-monitor').value='';
   document.getElementById('inp-tv').value='';
   document.getElementById('inp-memo').value='';
+  setEquipOpen(false);
   const _ncCb=document.getElementById('inp-needscheck'); if(_ncCb) _ncCb.checked=false;
   formCasters={HR:'未選択',HL:'未選択',FR:'未選択',FL:'未選択'};
   formCasterDetail={HR:'',HL:'',FR:'',FL:''};
   formSev={};
+  formQty={};
   formPhotoIds=[];
   bulkPanelOpen=false;
   updateCasterUI();
@@ -2623,10 +3088,10 @@ function renderList(){
         ${r.model?`<div class="rec-meta-line"><span class="rml-lbl">型番</span><span class="rml-val">${r.model}</span></div>`:''}
         ${r.year?`<div class="rec-meta-line"><span class="rml-lbl">年式</span><span class="rml-val">${r.year}</span></div>`:''}
         ${(r.floor1||r.floor2)?`<div class="rec-meta-line"><span class="rml-lbl">床番</span><span class="rml-val">${[r.floor1,r.floor2].filter(Boolean).join(' / ')}</span></div>`:''}
-        ${(r.mattress||r.monitor||r.tv)?`<div class="rec-meta-line"><span class="rml-lbl">備品</span><span class="rml-val">${[r.mattress?`マ:${r.mattress}`:'',r.monitor?`見:${r.monitor}`:'',r.tv?`TV:${r.tv}`:''].filter(Boolean).join(' / ')}</span></div>`:''}
+        ${(function(){const srl=srList(r);const sr=srl.length?`柵:${srGroupParts(srl).join('/')}`:'';return (r.mattress||sr||r.monitor||r.tv)?`<div class="rec-meta-line"><span class="rml-lbl">備品</span><span class="rml-val">${[r.mattress?`マ:${r.mattress}`:'',sr,r.monitor?`見:${r.monitor}`:'',r.tv?`TV:${r.tv}`:''].filter(Boolean).join(' / ')}</span></div>`:''})()}
         <div class="rec-casters">${castHtml}</div>
         ${Object.entries(r.partsSev||{}).filter(([,v])=>v).length ? `
-        <div class="rec-parts">${Object.entries(r.partsSev||{}).filter(([,v])=>v).map(([k,v])=>`<span class="rec-part-chip">${k} <b>${v}</b></span>`).join('')}</div>` : ''}
+        <div class="rec-parts">${Object.entries(r.partsSev||{}).filter(([,v])=>v).map(([k,v])=>`<span class="rec-part-chip">${k} <b>${v}${qtySuffix(partQty(r,k))}</b></span>`).join('')}</div>` : ''}
         ${photoHtml?`<div class="rec-photos">${photoHtml}</div>`:''}
         ${r.memo?`<div class="rec-memo">📝 ${r.memo}</div>`:''}
         <div class="rec-foot">
@@ -2988,22 +3453,28 @@ function closeNgModal(e){
 function renderStorageMeter(){
   const stSize = new Blob([JSON.stringify(st)]).size;
   const phSize = new Blob([JSON.stringify(photoStore)]).size;
-  const total  = stSize + phSize;
-  const pct    = Math.min(100, Math.round(total / STORAGE_LIMIT * 100));
+  const phCount = Object.keys(photoStore).length;
   const text   = document.getElementById('storageText');
   const bar    = document.getElementById('storageBar');
   const note   = document.getElementById('storageNote');
-  text.textContent = `${(total/1024/1024).toFixed(2)} MB / ${(STORAGE_LIMIT/1024/1024).toFixed(1)} MB`;
+  // IndexedDB利用時：4MB制限は記録(localStorage)のみに適用。写真は容量表示だけ。
+  const gauge = idbFallback ? (stSize + phSize) : stSize;
+  const pct   = Math.min(100, Math.round(gauge / STORAGE_LIMIT * 100));
+  if(idbFallback){
+    text.textContent = `${(gauge/1024/1024).toFixed(2)} MB / ${(STORAGE_LIMIT/1024/1024).toFixed(1)} MB`;
+  }else{
+    text.textContent = `記録 ${(stSize/1024/1024).toFixed(2)} MB / ${(STORAGE_LIMIT/1024/1024).toFixed(1)} MB ・ 写真 ${(phSize/1024/1024).toFixed(1)} MB`;
+  }
   bar.style.width = pct + '%';
   bar.className = pct >= 90 ? 'full' : (pct >= 70 ? 'warn' : '');
   if(pct >= 90){
-    note.textContent = '⚠️ 容量がほぼ満杯です。古い記録や写真の削除、またはバックアップ＆削除を推奨します。';
+    note.textContent = '⚠️ 記録の容量がほぼ満杯です。古い記録の削除、またはバックアップ＆削除を推奨します。';
     note.style.color = 'var(--ng)';
   }else if(pct >= 70){
-    note.textContent = '写真：' + Object.keys(photoStore).length + '枚 / 記録：' + st.records.length + '件 / 残量注意';
+    note.textContent = '写真：' + phCount + '枚 / 記録：' + st.records.length + '件 / 残量注意';
     note.style.color = 'var(--warn)';
   }else{
-    note.textContent = '写真：' + Object.keys(photoStore).length + '枚 / 記録：' + st.records.length + '台';
+    note.textContent = '写真：' + phCount + '枚 / 記録：' + st.records.length + '台';
     note.style.color = 'var(--text2)';
   }
 }
@@ -3364,8 +3835,9 @@ function jpegSize(bytes){
 // 写真シートを組み立て（写真ありの記録のみ）。写真ゼロなら null を返す
 function buildPhotoSheet(recs){
   const EMU = 9525;            // 1px = 9525 EMU
-  const boxW = 240, boxH = 210, gapX = 14;  // 表示枠(px)
-  const photoRowHt = Math.round(boxH * 0.75) + 8;  // 行高さ(pt)
+  const boxW = 240, boxH = 210;             // 表示枠(px)
+  const padX = 4, padY = 5;                 // セル内マージン(px) ラベルや隣写真とのかぶり防止
+  const photoRowHt = Math.round((boxH + padY*2) * 0.75) + 12;  // 行高さ(pt) 下余白広め
 
   const withPhotos = recs.filter(r => (r.photoIds||[]).some(id=>photoStore[id]));
   if(!withPhotos.length) return null;
@@ -3386,12 +3858,17 @@ function buildPhotoSheet(recs){
     const loc = [r.ward, r.room, r.bed].filter(Boolean).join(' / ');
     const ng = Object.values(r.casters||{}).includes('要交換');
     const labelTxt = `${ng?'⚠ ':''}${loc}　${r.model||''}${r.year?'　'+r.year+'年式':''}`;
-    rowsXml.push(`<row r="${rowNum}"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">${xmlEsc(labelTxt)}</t></is></c></row>`);
+    // ラベル行: 高さを明示（既定高だと狭く、ビューアによって写真とかぶるため）
+    rowsXml.push(`<row r="${rowNum}" ht="22" customHeight="1"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">${xmlEsc(labelTxt)}</t></is></c></row>`);
     rowNum++;
 
     const photoRow0 = rowNum - 1; // drawingは0始まり行
-    rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"></row>`);
-    rowNum += 2; // 写真行＋空行
+    // 空セルを1つ入れる: セルのない行は一部ビューアで高さ指定が無視され、写真が下のラベルにかぶるため
+    rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"><c r="A${rowNum}"/></row>`);
+    rowNum++;
+    // 記録間の空行も高さを明示（次のラベルとの間隔を確保）
+    rowsXml.push(`<row r="${rowNum}" ht="14" customHeight="1"><c r="A${rowNum}"/></row>`);
+    rowNum++;
 
     const ids = (r.photoIds||[]).filter(id=>photoStore[id]);
     ids.forEach((id,i)=>{
@@ -3405,10 +3882,10 @@ function buildPhotoSheet(recs){
       media.push({name:`xl/media/${fname}`, bytes});
       const rid = `rId${imgCount}`;
       drawRels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${fname}"/>`);
-      const colOff = (i*(boxW+gapX))*EMU;
+      // 写真1枚=1列(A/B/C)。列内オフセットに頼らないため、どのビューアでも重ならない
       anchors.push(
         `<xdr:oneCellAnchor>`+
-        `<xdr:from><xdr:col>0</xdr:col><xdr:colOff>${colOff}</xdr:colOff><xdr:row>${photoRow0}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>`+
+        `<xdr:from><xdr:col>${i}</xdr:col><xdr:colOff>${padX*EMU}</xdr:colOff><xdr:row>${photoRow0}</xdr:row><xdr:rowOff>${padY*EMU}</xdr:rowOff></xdr:from>`+
         `<xdr:ext cx="${cx}" cy="${cy}"/>`+
         `<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${imgCount}" name="${fname}"/><xdr:cNvPicPr/></xdr:nvPicPr>`+
         `<xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>`+
@@ -3421,7 +3898,7 @@ function buildPhotoSheet(recs){
   const sheetXml =
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
-    '<cols><col min="1" max="1" width="14" customWidth="1"/></cols>'+
+    '<cols><col min="1" max="3" width="35" customWidth="1"/></cols>'+
     '<sheetData>'+rowsXml.join('')+'</sheetData>'+
     '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'+
     '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>'+
@@ -3456,6 +3933,9 @@ function exportReportXLSX(){
 
   const recs = st.records.filter(r=>r.hospital===hosp);
   if(!recs.length){ showToast('⚠️ この病院のデータがありません','warn'); return; }
+  // 出力対象の部位 = 現在の部位リスト ＋ 記録に残っている部位（リストから削除・改名済みでも出す）
+  const exportParts = [...st.parts];
+  recs.forEach(r=>Object.keys(r.partsSev||{}).forEach(p=>{ if(r.partsSev[p] && !exportParts.includes(p)) exportParts.push(p); }));
 
   const visitDateStr = document.getElementById('export-visit-date').value;
   const visitDate = visitDateStr ? formatVisitDate(visitDateStr) : formatVisitDate(new Date().toISOString().slice(0,10));
@@ -3473,6 +3953,8 @@ function exportReportXLSX(){
     {key:'floor1', label:'床番上段',   get:r=>r.floor1||''},
     {key:'floor2', label:'床番下段',   get:r=>r.floor2||''},
     {key:'mattress',label:'マットレス',get:r=>r.mattress||''},
+    {key:'siderail',label:'サイドレール',get:r=>{const l=srList(r);return l.length?srGroupParts(l).join(' / '):'';}},
+    {key:'siderailN',label:'サイドレール本数',get:r=>{const n=srList(r).length;return n?String(n):'';}},
     {key:'monitor',label:'見守り機器',get:r=>r.monitor||''},
     {key:'tv',     label:'TV',       get:r=>r.tv||''},
     {key:'needscheck', label:'要確認', get:r=>r.needsCheck?'要確認':''},
@@ -3486,14 +3968,12 @@ function exportReportXLSX(){
     cols.push({key:'cast_'+id, label, get:r=>casterCell(r,id), isCaster:true, pos:id});
   });
 
-  // 出力対象の部位：現在の部位リスト＋記録に残っているがリストに無い部位（削除・改名済み・取り込み由来）
-  const exportParts = [...st.parts];
-  recs.forEach(r=>Object.keys(r.partsSev||{}).forEach(p=>{
-    if(r.partsSev[p] && !exportParts.includes(p)) exportParts.push(p);
-  }));
   exportParts.forEach(p=>{
     if(recs.some(r=>r.partsSev && r.partsSev[p])){
-      cols.push({key:'part_'+p, label:p, get:r=>(r.partsSev&&r.partsSev[p])||''});
+      cols.push({key:'part_'+p, label:p, get:r=>{
+        const s=(r.partsSev&&r.partsSev[p])||'';
+        return s ? s+qtySuffix(partQty(r,p)) : '';
+      }});
     }
   });
 
@@ -3526,7 +4006,7 @@ function exportReportXLSX(){
       }
       if(c.num) return num(v||0);
       if(c.key.startsWith('part_') && v){
-        return txt(v, v==='重大' ? 5 : v==='中程度' ? 4 : 3);
+        return txt(v, v.indexOf('重大')===0 ? 5 : v.indexOf('中程度')===0 ? 4 : 3);
       }
       return txt(v, c.key==='memo' ? 6 : 3);
     });
@@ -3547,9 +4027,6 @@ function exportReportXLSX(){
   // ═════════════════════════════════════════════
   const sheet5Rows = [];
   const currentYear = new Date().getFullYear();
-  sheet5Rows.push([null, txt(`${hosp} 様 ベッド買い替え提案資料`, 2)]);
-  sheet5Rows.push([null, txt(`訪問日：${visitDate}`, 0)]);
-  sheet5Rows.push([]);
 
   // 買い替え推奨度の判定（経過年数）
   function ageOf(yearStr){
@@ -3598,10 +4075,10 @@ function exportReportXLSX(){
   sheet5Rows.push([txt('🟡 計画的買替検討（15〜19年）', 7), num(cnt15, cnt15>0 ? 7 : 3)]);
   sheet5Rows.push([txt('継続使用可（〜14年）', 3), num(recs.length - cnt15 - cnt20)]);
 
-  // 型番×年式クロス表
-  sheet5Rows.push([]);
-  sheet5Rows.push([txt('【型番 × 年式 クロス表（黄=15年以上、赤=20年以上）】', 1)]);
-  sheet5Rows.push([]);
+  // 型番×年式クロス表（独立シート「型番×年式」）
+  const crossRows = [];
+  crossRows.push([txt(`型番×年式 クロス表（${hosp}様）　※黄=15年以上、赤=20年以上`, 1)]);
+  crossRows.push([]);
 
   const modelSet5 = new Set();
   const yearSet5 = new Set();
@@ -3613,21 +4090,25 @@ function exportReportXLSX(){
     if(a==='不明')return 1; if(b==='不明')return -1;
     return String(a).localeCompare(String(b), 'ja', {numeric:true});
   });
+  // 型番ごとの最古年式（古い順に並べるため）
+  const oldestYear5 = {};
+  recs.forEach(r=>{
+    const m = r.model || '不明';
+    const a = ageOf(r.year);
+    const y = a===null ? 9999 : currentYear - a;
+    if(!(m in oldestYear5) || y < oldestYear5[m]) oldestYear5[m] = y;
+  });
   const models5 = [...modelSet5].sort((a,b)=>{
     if(a==='不明')return 1; if(b==='不明')return -1;
-    return a.localeCompare(b, 'ja');
+    return (oldestYear5[a]-oldestYear5[b]) || a.localeCompare(b,'ja');
   });
 
   // ヘッダー: 年式に経過年数を併記＋色付け
   const yearHeaderCells = years5.map(y=>{
     const age = ageOf(y);
-    if(age===null) return head(y);
-    const label = `${y}\n(${age}年)`;
-    if(age>=20) return {v:label, t:'inlineStr', s:8};
-    if(age>=15) return {v:label, t:'inlineStr', s:7};
-    return head(label);
+    return head(age===null ? y : `${y}\n(${age}年)`);
   });
-  sheet5Rows.push([head('型番＼年式'), ...yearHeaderCells, head('合計')]);
+  crossRows.push([head('型番＼年式'), ...yearHeaderCells, head('合計')]);
 
   const colTotals5 = years5.map(()=>0);
   let grandTotal5 = 0;
@@ -3645,14 +4126,13 @@ function exportReportXLSX(){
       colTotals5[idx] += cnt;
     });
     cells.push(num(rowTotal, 2));
-    sheet5Rows.push(cells);
+    crossRows.push(cells);
     grandTotal5 += rowTotal;
   });
-  sheet5Rows.push([head('合計'), ...colTotals5.map(c=>({v:c, t:'n', s:2})), {v:grandTotal5, t:'n', s:2}]);
+  crossRows.push([head('合計'), ...colTotals5.map(c=>({v:c, t:'n', s:2})), {v:grandTotal5, t:'n', s:2}]);
 
   const widths5 = [22, 8, 9, 18, 8, 11, 16];
-  // 年式列の数だけ拡張（クロス表用）
-  for(let i=widths5.length; i<2+years5.length+1; i++) widths5.push(10);
+  const widthsCross = [18, ...years5.map(()=>10), 8];
 
   // ═════════════════════════════════════════════
   // 追加シート: 部品集計（発注用）／ ベッド明細
@@ -3765,18 +4245,96 @@ function exportReportXLSX(){
     return (a.room||'').localeCompare(b.room||'','ja',{numeric:true});
   }).forEach(r=>{
     const items = [];
-    CASTER_POSITIONS.forEach(({id,label})=>{ if(r.casters&&r.casters[id]==='要交換') items.push(label.replace('頭側・','頭').replace('足側・','足')); });
-    if(r.partsSev) exportParts.forEach(p=>{ if(r.partsSev[p]==='重大') items.push(p); });
+    let pieces = 0;
+    CASTER_POSITIONS.forEach(({id,label})=>{ if(r.casters&&r.casters[id]==='要交換'){ items.push(label.replace('頭側・','頭').replace('足側・','足')); pieces++; } });
+    if(r.partsSev) exportParts.forEach(p=>{ if(r.partsSev[p]==='重大'){ const q=partQty(r,p); items.push(p+qtySuffix(q)); pieces += (q>0?q:1); } });
     if(!items.length) return;
-    totBed += items.length;
+    totBed += pieces;
     bedRows.push([ num(bno,3), txt(r.model||'',9), txt(r.ward||'',3), txt(r.room||'',3),
-                   txt(r.bed||'',3), txt(items.join(' / '),9), num(items.length,3), txt(r.memo||'',9) ]);
+                   txt(r.bed||'',3), txt(items.join(' / '),9), num(pieces,3), txt(r.memo||'',9) ]);
     bno++;
   });
   const bedTot = bedRows.length + 1;
   bedRows.push([ txt('合計',11), null, null, null, null, null, num(totBed,11), txt('',11) ]);
   const bedMerges = [`A${bedTot}:F${bedTot}`];
   const widthsB = [5,26,7,8,9,22,7,18];
+
+  // ── 病棟サマリー（病棟×型番 クロス表・台数のみ） ──
+  const wardOf  = r => (r.ward||'').trim()  || '（病棟未記入）';
+  const modelOf = r => (r.model||'').trim() || '型番不明';
+  const wardNames = [...new Set(recs.map(wardOf))].sort((a,b)=>a.localeCompare(b,'ja',{numeric:true}));
+  // 縦=型番（型番×年式と同じ最古年式順）、横=病棟
+  const oldestYearWS = {};
+  recs.forEach(r=>{
+    const m = modelOf(r);
+    const a = ageOf(r.year);
+    const y = a===null ? 9999 : currentYear - a;
+    if(!(m in oldestYearWS) || y < oldestYearWS[m]) oldestYearWS[m] = y;
+  });
+  const modelNames = [...new Set(recs.map(modelOf))].sort((a,b)=>{
+    if(a==='型番不明') return 1; if(b==='型番不明') return -1;
+    return (oldestYearWS[a]-oldestYearWS[b]) || a.localeCompare(b,'ja',{numeric:true});
+  });
+  const cross = {};
+  recs.forEach(r=>{ const k = wardOf(r)+'\u0001'+modelOf(r); cross[k]=(cross[k]||0)+1; });
+  const wsRows = [];
+  // 縦=病棟、横=型番（型番は最古年式順）。0は空欄、右端と最下段に合計
+  wsRows.push([ txt(`病棟×型番 台数一覧（${hosp}様）`,1) ]);
+  wsRows.push([]);
+  wsRows.push([ txt('病棟＼型番',2), ...modelNames.map(m=>txt(m,2)), txt('合計',2) ]);
+  wardNames.forEach(wd=>{
+    let sum=0;
+    const cells = modelNames.map(m=>{
+      const n = cross[wd+'\u0001'+m]||0; sum+=n;
+      return n ? num(n,3) : txt('',3);
+    });
+    wsRows.push([ txt(wd,11), ...cells, num(sum,10) ]);
+  });
+  {
+    let grand=0;
+    const totCells = modelNames.map(m=>{
+      const n = wardNames.reduce((s,wd)=>s+(cross[wd+'\u0001'+m]||0),0); grand+=n;
+      return num(n,10);
+    });
+    wsRows.push([ txt('合計',2), ...totCells, num(grand,2) ]);
+  }
+  const widthsWS = [14, ...modelNames.map(m=>Math.max(10, Math.min(24, m.length*2+4))), 8];
+
+  // ── 病棟別一覧（全ベッド・病棟列を縦結合） ──
+  const CASTER_SHORT = {HR:'頭右', HL:'頭左', FR:'足右', FL:'足左'};
+  const sortedBeds = [...recs].sort((a,b)=>
+    wardOf(a).localeCompare(wardOf(b),'ja',{numeric:true}) ||
+    (a.room||'').localeCompare(b.room||'','ja',{numeric:true}) ||
+    (a.bed||'').localeCompare(b.bed||'','ja',{numeric:true})
+  );
+  const wlRows = [];
+  wlRows.push([ txt(`病棟別ベッド一覧（${hosp}様）`,1) ]);
+  wlRows.push([]);
+  wlRows.push([ '病棟','部屋','ベッド','型番','年式','キャスター','部品（重大）','要確認','メモ' ].map(h=>txt(h,2)));
+  const wlMerges = [];
+  let wlMergeStart = -1, wlMergeWard = null;
+  const wlFlushMerge = (endRow)=>{
+    if(wlMergeWard!==null && endRow>wlMergeStart) wlMerges.push(`A${wlMergeStart}:A${endRow}`);
+  };
+  sortedBeds.forEach(r=>{
+    const rowNo = wlRows.length+1;
+    const wd = wardOf(r);
+    if(wd!==wlMergeWard){ wlFlushMerge(rowNo-1); wlMergeStart = rowNo; wlMergeWard = wd; }
+    const cast = CASTER_POSITIONS.map(({id})=>{
+      const v = r.casters ? r.casters[id] : '';
+      if(v==='要交換')  return CASTER_SHORT[id]+'×';
+      if(v==='要注意')  return CASTER_SHORT[id]+'△';
+      if(v==='交換済み') return CASTER_SHORT[id]+'済';
+      return null;
+    }).filter(Boolean).join(' ');
+    const partsBad = r.partsSev ? exportParts.filter(p=>r.partsSev[p]==='重大').map(p=>p+qtySuffix(partQty(r,p))).join(' / ') : '';
+    wlRows.push([
+      txt(wd,11), txt(r.room||'',3), txt(r.bed||'',3), txt(r.model||'',3), txt(r.year||'',3),
+      txt(cast,6), txt(partsBad,6), txt(r.needsCheck?'要確認':'',3), txt(r.memo||'',6)
+    ]);
+  });
+  wlFlushMerge(wlRows.length);
+  const widthsWL = [12,8,9,16,7,22,22,8,20];
 
   // XLSX組み立て
   // sheet1=ラウンド結果, sheet3=買い替え提案
@@ -3785,6 +4343,9 @@ function exportReportXLSX(){
   const sheet3XML = sheetXML(sheet5Rows, widths5);
   const sheetPartsXML = sheetXML(partsRows, widthsP, {merges:partsMerges, portrait:true, condFmt:partsCondFmt});
   const sheetBedXML   = sheetXML(bedRows,   widthsB, {merges:bedMerges});
+  const sheetWardSumXML  = sheetXML(wsRows, widthsWS);
+  const sheetWardListXML = sheetXML(wlRows, widthsWL, {merges:wlMerges});
+  const sheetCrossXML = sheetXML(crossRows, widthsCross);
   const photoSheet = buildPhotoSheet(recs);
 
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3796,6 +4357,9 @@ function exportReportXLSX(){
 <Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet5.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet6.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet7.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet8.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/worksheets/sheet9.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ''}
 </Types>`;
@@ -3808,9 +4372,12 @@ ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override Pa
   const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheets>
+<sheet name="病棟サマリー" sheetId="7" r:id="rId8"/>
+<sheet name="型番×年式" sheetId="9" r:id="rId10"/>
 <sheet name="ラウンド結果" sheetId="1" r:id="rId1"/>
 <sheet name="部品集計" sheetId="5" r:id="rId6"/>
 <sheet name="ベッド明細" sheetId="6" r:id="rId7"/>
+<sheet name="病棟別一覧" sheetId="8" r:id="rId9"/>
 <sheet name="買い替え提案" sheetId="3" r:id="rId3"/>
 ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
 </sheets>
@@ -3823,6 +4390,9 @@ ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
 <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 <Relationship Id="rId6" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet5.xml"/>
 <Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet6.xml"/>
+<Relationship Id="rId8" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet7.xml"/>
+<Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet8.xml"/>
+<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet9.xml"/>
 ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/>' : ''}
 </Relationships>`;
 
@@ -3836,6 +4406,9 @@ ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/
     {name:'xl/worksheets/sheet3.xml', bytes:utf8Bytes(sheet3XML)},
     {name:'xl/worksheets/sheet5.xml', bytes:utf8Bytes(sheetPartsXML)},
     {name:'xl/worksheets/sheet6.xml', bytes:utf8Bytes(sheetBedXML)},
+    {name:'xl/worksheets/sheet7.xml', bytes:utf8Bytes(sheetWardSumXML)},
+    {name:'xl/worksheets/sheet8.xml', bytes:utf8Bytes(sheetWardListXML)},
+    {name:'xl/worksheets/sheet9.xml', bytes:utf8Bytes(sheetCrossXML)},
     ...(photoSheet ? [
       {name:'xl/worksheets/sheet4.xml', bytes:utf8Bytes(photoSheet.sheetXml)},
       {name:'xl/worksheets/_rels/sheet4.xml.rels', bytes:utf8Bytes(photoSheet.sheetRelsXml)},
@@ -3911,37 +4484,6 @@ function deleteByHospital(){
   showToast(`🗑 「${hosp}」${toDelete.length}件 削除しました`);
 }
 
-function cleanupOld(days){
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-
-  const toDelete = st.records.filter(r=>{
-    const d = parseRecordDate(r.date);
-    return d && d < cutoff;
-  });
-  if(!toDelete.length){
-    showToast(`対象なし（${days}日より古い記録はありません）`,'warn');
-    return;
-  }
-  const msg = `${days}日より古い記録を ${toDelete.length} 件 削除します。\n（関連写真もすべて削除されます）\n\n続行しますか？`;
-  if(!confirm(msg)) return;
-
-  // 関連写真を削除
-  toDelete.forEach(r=>{
-    (r.photoIds||[]).forEach(pid=>{ delete photoStore[pid]; });
-  });
-  // 記録から除外
-  const keepIds = new Set(toDelete.map(r=>r.id));
-  st.records = st.records.filter(r=>!keepIds.has(r.id));
-
-  if(!persistState() || !persistPhotos()){
-    showToast('⚠️ 削除処理で問題発生','err');
-    return;
-  }
-  updateBadge(); renderList(); renderSummary(); renderStorageMeter();
-  showToast(`🗑 ${toDelete.length}件 削除しました`);
-}
-
 function parseRecordDate(str){
   // "2026/4/18" 等の日本語日付を Date に変換
   if(!str) return null;
@@ -3955,11 +4497,11 @@ function parseRecordDate(str){
 // HOSPITAL / MODEL / PARTS
 // ═══════════════════════════════════════════════════════
 function renderHospitalOptions(){
-  ['inp-hospital','filter-hospital','export-hospital'].forEach(id=>{
+  ['inp-hospital','filter-hospital','export-hospital','report-hospital'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     const val=el.value;
     const placeholder = id==='filter-hospital' ? 'すべての病院'
-      : id==='export-hospital' ? '病院を選んでください'
+      : (id==='export-hospital'||id==='report-hospital') ? '病院を選んでください'
       : '選択してください';
     el.innerHTML=`<option value="">${placeholder}</option>`
       +st.hospitals.map(h=>`<option value="${h}">${h}</option>`).join('');
@@ -3967,22 +4509,96 @@ function renderHospitalOptions(){
   });
 }
 function renderPartsInputTable(){
-  document.getElementById('partsBody').innerHTML=st.parts.map(p=>`
+  document.getElementById('partsBody').innerHTML=st.parts.map(p=>{
+    const pj = p.replace(/'/g,"\\'");
+    return `
     <tr>
       <td>${p}</td>
-      ${SEVS.map(s=>`<td><button class="sev-chip ${formSev[p]===s?'a-'+s:''}" onclick="toggleSev('${p}','${s}')">${formSev[p]===s?'✓':'－'}</button></td>`).join('')}
-    </tr>`).join('');
+      ${SEVS.map(s=>`<td><button class="sev-chip ${formSev[p]===s?'a-'+s:''}" onclick="toggleSev('${pj}','${s}')">${formSev[p]===s?'✓':'－'}</button></td>`).join('')}
+      <td><input type="text" inputmode="numeric" class="qty-inp" value="${formQty[p]||''}" placeholder="－" oninput="setQty('${pj}',this.value)"></td>
+    </tr>`;
+  }).join('');
 }
 function toggleSev(part,sev){
   formSev[part]=(formSev[part]===sev)?'':sev;
   renderPartsInputTable();
   scheduleDraftSave();
 }
+function setQty(part,val){
+  const v=(val||'').replace(/[^0-9]/g,'');
+  if(v==='') delete formQty[part]; else formQty[part]=v;
+  scheduleDraftSave();
+}
+
+// ── サイドレール4スロット ──
+function renderSideRailSlots(){
+  const g=document.getElementById('siderailGrid'); if(!g) return;
+  g.innerHTML = formSideRails.map((v,i)=>`
+    <div class="sr-slot">
+      <span class="sr-no">${SR_NO[i]}</span>
+      <div class="hist-wrap">
+        <input type="text" id="inp-siderail-${i}" class="hist-input" placeholder="なし" value="${(v||'').replace(/"/g,'&quot;')}" oninput="onSideRailInput(${i},this.value)">
+        <button class="hist-btn" onclick="openHistPicker('inp-siderail-${i}','sideRail')" type="button">▾</button>
+      </div>
+    </div>`).join('');
+  updateSideRailSummary();
+}
+function onSideRailInput(i,val){ formSideRails[i]=val; updateSideRailSummary(); scheduleDraftSave(); }
+function updateSideRailSummary(){
+  const el=document.getElementById('siderailSummary');
+  const list=formSideRails.map(s=>(s||'').trim()).filter(Boolean);
+  if(el) el.textContent = srSummaryText(list);
+  updateSiderailToggleLabel();
+}
+function toggleSiderailPanel(){
+  const p=document.getElementById('siderailPanel');
+  setSiderailOpen(!p.classList.contains('open'));
+}
+function setSiderailOpen(open){
+  const t=document.getElementById('siderailToggle'), p=document.getElementById('siderailPanel');
+  if(!t||!p) return;
+  p.classList.toggle('open',open); t.classList.toggle('open',open);
+  updateSiderailToggleLabel();
+}
+function updateSiderailToggleLabel(){
+  const t=document.getElementById('siderailToggle'), lbl=document.getElementById('siderailToggleLabel'), p=document.getElementById('siderailPanel');
+  if(!t||!lbl||!p) return;
+  const list=formSideRails.map(s=>(s||'').trim()).filter(Boolean);
+  const has=list.length>0;
+  t.classList.toggle('has-data',has);
+  if(p.classList.contains('open')) lbl.textContent='サイドレール';
+  else if(has) lbl.textContent='サイドレール：'+srSummaryText(list);
+  else lbl.textContent='サイドレール を入力';
+}
+
+// ── 見守り機器・TV 折りたたみ ──
+function toggleEquipPanel(){
+  const p=document.getElementById('equipPanel');
+  setEquipOpen(!p.classList.contains('open'));
+}
+function setEquipOpen(open){
+  const t=document.getElementById('equipToggle'), p=document.getElementById('equipPanel');
+  if(!t||!p) return;
+  p.classList.toggle('open',open); t.classList.toggle('open',open);
+  updateEquipToggleLabel();
+}
+function updateEquipToggleLabel(){
+  const t=document.getElementById('equipToggle'), lbl=document.getElementById('equipToggleLabel'), p=document.getElementById('equipPanel');
+  if(!t||!lbl||!p) return;
+  const mon=(document.getElementById('inp-monitor').value||'').trim();
+  const tv =(document.getElementById('inp-tv').value||'').trim();
+  const has=!!(mon||tv);
+  t.classList.toggle('has-data',has);
+  if(p.classList.contains('open')) lbl.textContent='見守り機器・TV';
+  else if(has) lbl.textContent='見守り機器・TV：'+[mon?`見:${mon}`:'',tv?`TV:${tv}`:''].filter(Boolean).join(' / ');
+  else lbl.textContent='見守り機器・TV を入力';
+}
 function renderPartsEditor(){
   const c=document.getElementById('partsEditor');
   if(!st.parts.length){c.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">登録なし</div>';return;}
   c.innerHTML=st.parts.map((p,i)=>`
     <div class="part-row" id="pp-${i}">
+      <span class="part-grip" onpointerdown="partDragStart(event,${i})" onpointermove="partDragMove(event)" onpointerup="partDragEnd(event)" onpointercancel="partDragEnd(event)" title="ドラッグで並び替え"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;pointer-events:none"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg></span>
       <span class="part-label" id="pl-${i}">${p}</span>
       <button class="icon-btn" onclick="editPart(${i})">✏️</button>
       <button class="icon-btn" onclick="deletePart(${i})" style="border-color:var(--ng);color:var(--ng)">✕</button>
@@ -4018,6 +4634,717 @@ function addPartMgr(){
   st.parts.push(v); persistState();
   document.getElementById('new-part-mgr').value='';
   renderPartsEditor(); renderPartsInputTable(); showToast('追加しました');
+}
+
+// ═══════════════════════════════════════════════════════
+// その場で見せる報告
+//   判定は既存の発注ルールと同じ：
+//     × 要交換 = キャスター「要交換」あり or 部品「重大」あり
+//     △ 要注意 = キャスター「要注意」あり or 部品「軽微/中程度」あり
+//     〇       = それ以外（正常・交換済み）
+// ═══════════════════════════════════════════════════════
+function rpEsc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// 1台の判定と、要交換の内訳を返す
+function rpJudge(r){
+  const cas = r.casters || {}, sev = r.partsSev || {};
+  const ngCas = CASTER_POSITIONS.filter(({id})=>cas[id]==='要交換').map(({label})=>label);
+  const ngPart = st.parts.filter(p=>sev[p]==='重大');
+  if(ngCas.length || ngPart.length) return {mark:'×', cls:'k-ng', ngCas, ngPart};
+  const wmCas  = CASTER_POSITIONS.some(({id})=>cas[id]==='要注意');
+  const wmPart = st.parts.some(p=>sev[p]==='軽微' || sev[p]==='中程度');
+  if(wmCas || wmPart) return {mark:'△', cls:'k-wm', ngCas:[], ngPart:[]};
+  return {mark:'〇', cls:'k-ok', ngCas:[], ngPart:[]};
+}
+
+function buildReportHTML(hosp, recs){
+  const NY = new Date().getFullYear();
+  const rpAge = (yStr)=>{ const y=parseInt(String(yStr).replace(/\D/g,''),10); return (!y||y<1980)?null:NY-y; };
+
+  // 各台：故障判定(rpJudge) × 経過年数 → 区分（buy/fix/ok）
+  //   買替 = 破損(×/△) かつ 15年以上   修理 = 破損 かつ 15年未満/不明   健全 = 破損なし
+  const judged = recs.map(r=>{
+    const j=rpJudge(r), age=rpAge(r.year), broken=(j.mark!=='〇');
+    const cat = !broken ? 'ok' : (age!==null && age>=15 ? 'buy' : 'fix');
+    return {r,j,age,broken,cat};
+  });
+  const nBuy=judged.filter(x=>x.cat==='buy').length;
+  const nFix=judged.filter(x=>x.cat==='fix').length;
+  const total=recs.length;
+
+  const dates=[...new Set(recs.map(r=>r.date).filter(Boolean))].sort();
+  const dateTxt = !dates.length?'—':dates.length===1?dates[0]:dates[0]+' 〜 '+dates[dates.length-1];
+
+  // ── ② 故障内訳（部位別：キャスター要交換＋部品重大） ──
+  const cnt=new Map();
+  recs.forEach(r=>{
+    CASTER_POSITIONS.forEach(({id,label})=>{ if(r.casters&&r.casters[id]==='要交換'){const k='キャスター '+label;cnt.set(k,(cnt.get(k)||0)+1);} });
+    if(r.partsSev) st.parts.forEach(p=>{ if(r.partsSev[p]==='重大'){ const q=partQty(r,p); cnt.set(p,(cnt.get(p)||0)+(q>0?q:1)); } });
+  });
+  const prows=[...cnt.entries()].sort((a,b)=>b[1]-a[1]);
+  const ptTotal=prows.reduce((a,b)=>a+b[1],0);
+  const ptMax=prows.length?prows[0][1]:1;
+  const failHTML = !prows.length
+    ? '<div class="rpg-empty">交換が必要な故障はありませんでした。</div>'
+    : prows.map(([n,c])=>{
+        const pct=ptTotal?Math.round(c/ptTotal*100):0;
+        return '<div class="rpg-frow"><span class="rpg-fnm">'+rpEsc(n)+'</span>'
+          +'<span class="rpg-fbar"><span class="rpg-ffill" style="width:'+Math.round(c/ptMax*100)+'%">'+(pct>=12?pct+'%':'')+'</span></span>'
+          +'<span class="rpg-fn">'+c+'</span></div>';
+      }).join('')
+      + (prows.length?'<div class="rpg-fnote">'+rpEsc(prows[0][0])+' が最多。消耗部品はまとめての交換が効率的です。</div>':'');
+
+  // ── ③ 年式×型式 クロス表（年式は連続・空白年も表示） ──
+  const numYears = recs.map(r=>rpAge(r.year)).filter(a=>a!==null).map(a=>NY-a);
+  let crossHTML;
+  if(!numYears.length){
+    crossHTML='<div class="rpg-empty">年式が記録されたベッドがありません。</div>';
+  } else {
+    const minY=Math.min.apply(null,numYears), maxY=Math.max.apply(null,numYears);
+    const years=[]; for(let y=minY;y<=maxY;y++) years.push(y);
+    const hasUnknown = recs.some(r=>rpAge(r.year)===null);
+    const modelSet=new Set(recs.map(r=>r.model||'不明'));
+    const oldest={};
+    recs.forEach(r=>{ const m=r.model||'不明', a=rpAge(r.year), y=a===null?9999:NY-a; if(!(m in oldest)||y<oldest[m])oldest[m]=y; });
+    const models=[...modelSet].sort((a,b)=>(oldest[a]-oldest[b])||a.localeCompare(b,'ja'));
+    const cls=(age)=> age===null?'':age>=20?'y20':age>=15?'y15':age<=5?'y5':'';
+    const yhead = years.map(y=>'<th class="'+cls(NY-y)+'">\''+String(y).slice(2)+'</th>').join('')
+      + (hasUnknown?'<th>不明</th>':'');
+    const colTot=years.map(()=>0); let unkTot=0, grand=0;
+    const body = models.map(m=>{
+      let rt=0;
+      const cells = years.map((y,idx)=>{
+        const c=recs.filter(r=>(r.model||'不明')===m && rpAge(r.year)!==null && (NY-rpAge(r.year))===y).length;
+        rt+=c; colTot[idx]+=c;
+        return '<td class="'+cls(NY-y)+'">'+(c||'')+'</td>';
+      }).join('');
+      let unk='';
+      if(hasUnknown){ const c=recs.filter(r=>(r.model||'不明')===m && rpAge(r.year)===null).length; unkTot+=c; rt+=c; unk='<td>'+(c||'')+'</td>'; }
+      grand+=rt;
+      return '<tr><td class="rpg-ct-m">'+rpEsc(m)+'</td>'+cells+unk+'<td class="rpg-ct-t">'+rt+'</td></tr>';
+    }).join('');
+    const foot = years.map((y,idx)=>'<td class="'+cls(NY-y)+'">'+(colTot[idx]||'')+'</td>').join('')
+      + (hasUnknown?'<td>'+(unkTot||'')+'</td>':'');
+    crossHTML = '<table class="rpg-cross"><thead>'
+      +'<tr><th class="rpg-ct-m">型式＼年式</th>'+yhead+'<th class="rpg-ct-t">計</th></tr></thead><tbody>'
+      +body
+      +'<tr class="rpg-ct-foot"><td class="rpg-ct-m">計</td>'+foot+'<td class="rpg-ct-t">'+grand+'</td></tr>'
+      +'</tbody></table>'
+      +'<div class="rpg-cross-lg"><span class="y20"><i></i>20年以上（即買替）</span><span class="y15"><i></i>15年以上（計画買替）</span><span class="y5"><i></i>5年以内</span></div>'
+      +'<div class="rpg-cnote">色の付いた年に古い型式が固まっているほど、型式単位での計画的な更新が妥当です。空白の年は導入がなかった時期を表します。</div>';
+  }
+
+  // ── ④ 買い替え・修理 判定リスト（買替→修理、古い順） ──
+  const actList = judged.filter(x=>x.cat!=='ok').sort((a,b)=>{
+    if(a.cat!==b.cat) return a.cat==='buy'?-1:1;
+    return (b.age==null?-1:b.age)-(a.age==null?-1:a.age);
+  });
+  const LIMIT=9;
+  const rowsHTML = actList.slice(0,LIMIT).map(x=>{
+    const r=x.r, loc=[r.room,r.bed].filter(Boolean).join('-')||'—';
+    const issues=x.j.ngCas.map(c=>'キャスター '+c).concat(x.j.ngPart).join(' / ') || (x.j.mark==='△'?'経過観察':'—');
+    const badge = x.cat==='buy'?'<span class="rpg-bd b-buy">買替</span>':'<span class="rpg-bd b-fix">修理</span>';
+    return '<tr><td>'+rpEsc((r.ward?r.ward+' ':'')+loc)+'</td>'
+      +'<td>'+rpEsc(r.model||'—')+'</td>'
+      +'<td class="rpg-c">'+rpEsc(r.year||'—')+'</td>'
+      +'<td class="rpg-c">'+(x.age===null?'—':x.age+'年')+'</td>'
+      +'<td>'+rpEsc(issues)+'</td>'
+      +'<td class="rpg-c">'+badge+'</td></tr>';
+  }).join('');
+  const moreHTML = actList.length>LIMIT ? '<tr><td colspan="6" class="rpg-more">… ほか '+(actList.length-LIMIT)+'件（買替'+nBuy+'・修理'+nFix+'の全件は明細をご参照）</td></tr>' : '';
+  const judgeHTML = !actList.length
+    ? '<div class="rpg-empty">対応が必要なベッドはありませんでした。</div>'
+    : '<table class="rpg-jt"><thead><tr><th>病棟/番号</th><th>型式</th><th>年式</th><th>経過</th><th>主な不具合</th><th>判定</th></tr></thead><tbody>'
+      +rowsHTML+moreHTML+'</tbody></table>'
+      +'<div class="rpg-jsum">要買替 <b>'+nBuy+'台</b>（15年以上＋破損）／ 要修理 <b>'+nFix+'台</b>（15年未満の破損）。ご希望あれば即日お見積りします。</div>';
+
+  // ── ⑤ 写真（要対応ベッド、最大6枚） ──
+  const shots=[];
+  actList.forEach(x=>{ (x.r.photoIds||[]).forEach(id=>{ if(photoStore[id]&&shots.length<6) shots.push({src:photoStore[id],loc:[x.r.room,x.r.bed].filter(Boolean).join('-')||'—',item:(x.j.ngCas.concat(x.j.ngPart)[0]||'')}); }); });
+  const photoHTML = !shots.length
+    ? '<div class="rpg-empty">写真はありません。</div>'
+    : '<div class="rpg-photos">'+shots.map(s=>'<figure class="rpg-ph"><img src="'+s.src+'" alt=""><figcaption>'+rpEsc(s.loc)+'<span>'+rpEsc(s.item)+'</span></figcaption></figure>').join('')+'</div>';
+
+  const nowStr = new Date().toLocaleString('ja-JP');
+  const hd = '<div class="rpg-hd"><span>'+rpEsc(hosp)+'　ベッド点検報告</span><span>'+rpEsc(dateTxt)+' ／ 対象'+total+'台</span></div>';
+
+  return ''
+  +'<section class="rpg-page rpg-cover">'
+    +'<div class="rpg-cv-top"><span>BED INSPECTION REPORT</span><span>ラウンドノート</span></div>'
+    +'<div class="rpg-cv-mid">'
+      +'<div class="rpg-cv-kick">ベッド点検報告書</div>'
+      +'<div class="rpg-cv-title">'+rpEsc(hosp)+'</div>'
+      +'<div class="rpg-cv-rule"></div>'
+      +'<div class="rpg-cv-meta">点検日　'+rpEsc(dateTxt)+'　／　対象台数　'+total+' 台</div>'
+    +'</div>'
+    +'<div class="rpg-cv-foot"><span>1 / 5</span><span>'+rpEsc(dates[dates.length-1]||'')+'</span></div>'
+  +'</section>'
+
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">故障内訳<em>部位別・交換対象 '+ptTotal+'点の内訳</em></div>'
+    +'<div class="rpg-fbody">'+failHTML+'</div>'
+    +'<div class="rpg-ft">2 / 5</div>'
+  +'</section>'
+
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">年式 × 型式 クロス表<em>数字＝台数・1年ごと（空白年も表示）</em></div>'
+    +'<div class="rpg-cross-wrap">'+crossHTML+'</div>'
+    +'<div class="rpg-ft">3 / 5</div>'
+  +'</section>'
+
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">買い替え・修理 判定<em>要対応 '+(nBuy+nFix)+'台（買替'+nBuy+'・修理'+nFix+'）</em></div>'
+    +'<div class="rpg-jbody">'+judgeHTML+'</div>'
+    +'<div class="rpg-ft">4 / 5</div>'
+  +'</section>'
+
+  +'<section class="rpg-page">'+hd
+    +'<div class="rpg-ti">写真<em>要対応ベッドの現況（抜粋・最大6枚）</em></div>'
+    +'<div class="rpg-pbody">'+photoHTML+'</div>'
+    +'<div class="rpg-ft2">ラウンドノートで作成 — '+nowStr+'　｜　5 / 5</div>'
+  +'</section>';
+}
+function openReport(){
+  const hosp = document.getElementById('report-hospital').value;
+  if(!hosp){ showToast('⚠️ 病院を選んでください','warn'); return; }
+  const recs = st.records.filter(r=>r.hospital===hosp);
+  if(!recs.length){ showToast('⚠️ この病院の記録がありません','warn'); return; }
+  document.getElementById('reportDoc').innerHTML = buildReportHTML(hosp, recs);
+  const ov = document.getElementById('reportOverlay');
+  ov.classList.add('show');
+  ov.querySelector('.rp-scroll').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReport(){
+  document.getElementById('reportOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// 印刷：完成済みHTMLをBlobで開き、その中で自分自身を印刷させる。
+// iOSのPWAはメイン画面からの window.print() を無視するため、別ウィンドウ経由にする。
+// document.write ではなく Blob を使い、中身が完全に読み込まれてから印刷する（白紙防止）。
+function buildPrintDoc(innerHTML, css){
+  return '<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1">'
+    +'<title>ベッド点検報告書</title><style>'+css+'</style></head>'
+    +'<body><div id="reportOverlay" class="show">'
+    +'<div class="rp-scroll"><div class="rp-doc" id="reportDoc">'+innerHTML+'</div></div>'
+    +'</div>'
+    +'<script>window.addEventListener("load",function(){setTimeout(function(){try{window.focus();window.print();}catch(e){}},600);});<\/script>'
+    +'</body></html>';
+}
+function printReport(){
+  const doc = document.getElementById('reportDoc');
+  const inner = doc ? doc.innerHTML : '';
+  if(!inner.trim()){ showToast('⚠️ 先に報告書を表示してください','warn'); return; }
+
+  let css=''; document.querySelectorAll('style').forEach(function(s){ css += s.textContent; });
+  const html = buildPrintDoc(inner, css);
+
+  let url=null;
+  try{ url = URL.createObjectURL(new Blob([html], {type:'text/html'})); }catch(e){ url=null; }
+
+  let w=null;
+  try{ w = window.open(url || '', '_blank'); }catch(e){ w=null; }
+
+  if(!w){
+    // ポップアップが塞がれている → 直接印刷を試み、ダメなら案内
+    try{ window.print(); }catch(e){}
+    showToast('印刷できない時は 設定→Safari→ポップアップブロック をオフにしてください','warn');
+    if(url){ setTimeout(function(){ URL.revokeObjectURL(url); }, 60000); }
+    return;
+  }
+  if(url){ setTimeout(function(){ URL.revokeObjectURL(url); }, 60000); }
+}
+
+
+// ==================== PPTX 報告書生成（自作OOXML／外部ライブラリなし） ====================
+(function(){
+const EMU = i => Math.round(i*914400);
+const PT  = p => Math.round(p*12700);
+const SW=13.333, SH=7.5;
+const NS='xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+const FONT='Meiryo', SERIF='Cambria';
+
+// runs: string | [{t,sz,color,bold,italic,font,spc}]
+function runsXML(runs, def){
+  def=def||{};
+  const arr = typeof runs==='string' ? [{t:runs}] : runs;
+  return arr.map(r=>{
+    const sz=Math.round((r.sz||def.sz||14)*100);
+    const b=(r.bold!=null?r.bold:def.bold)?1:0;
+    const it=(r.italic!=null?r.italic:def.italic)?1:0;
+    const col=r.color||def.color||'000000';
+    const fn=r.font||def.font||FONT;
+    const spc=(r.spc!=null?r.spc:def.spc)||0;
+    return `<a:r><a:rPr lang="ja-JP" altLang="en-US" sz="${sz}" b="${b}" i="${it}"${spc?` spc="${Math.round(spc*100)}"`:''}>`
+      +`<a:solidFill><a:srgbClr val="${col}"/></a:solidFill>`
+      +`<a:latin typeface="${fn}"/><a:ea typeface="${fn}"/><a:cs typeface="${fn}"/></a:rPr>`
+      +`<a:t>${xmlEsc(r.t)}</a:t></a:r>`;
+  }).join('');
+}
+function pPr(o){o=o||{};const a=o.align||'l';const sp=o.lineSpacing?`<a:lnSpc><a:spcPct val="${Math.round(o.lineSpacing*100000)}"/></a:lnSpc>`:'';return `<a:pPr${a?` algn="${a}"`:''}>${sp}</a:pPr>`;}
+
+let _id=1; const nid=()=>++_id;
+function txBox(x,y,w,h,runs,o){
+  o=o||{};
+  const anchor=o.valign==='middle'?'ctr':o.valign==='bottom'?'b':'t';
+  const m=o.margin!=null?EMU(o.margin):EMU(0.05);
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${nid()}" name="t"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="${EMU(h)}"/></a:xfrm>`
+   +`<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>`
+   +`<p:txBody><a:bodyPr wrap="square" lIns="${m}" tIns="${EMU(0.02)}" rIns="${m}" bIns="${EMU(0.02)}" anchor="${anchor}"><a:normAutofit/></a:bodyPr><a:lstStyle/>`
+   +`<a:p>${pPr(o)}${runsXML(runs,o)}</a:p></p:txBody></p:sp>`;
+}
+function shape(prst,x,y,w,h,o){
+  o=o||{};
+  const fill=o.fill?`<a:solidFill><a:srgbClr val="${o.fill}"/></a:solidFill>`:'<a:noFill/>';
+  const ln=o.line?`<a:ln w="${PT(o.lineW||0.75)}"><a:solidFill><a:srgbClr val="${o.line}"/></a:solidFill></a:ln>`:(o.noLine?'<a:ln><a:noFill/></a:ln>':'');
+  const adj=(prst==='roundRect')?`<a:avLst><a:gd name="adj" fmla="val ${o.round||6000}"/></a:avLst>`:'<a:avLst/>';
+  let body='';
+  if(o.text){
+    const anchor=o.valign==='middle'?'ctr':o.valign==='bottom'?'b':'t';
+    const m=o.margin!=null?EMU(o.margin):EMU(0.05);
+    body=`<p:txBody><a:bodyPr wrap="square" lIns="${m}" tIns="${EMU(0.02)}" rIns="${m}" bIns="${EMU(0.02)}" anchor="${anchor}"><a:normAutofit/></a:bodyPr><a:lstStyle/><a:p>${pPr(o)}${runsXML(o.text,o)}</a:p></p:txBody>`;
+  } else {
+    body=`<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="ja-JP"/></a:p></p:txBody>`;
+  }
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${nid()}" name="s"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="${EMU(h)}"/></a:xfrm>`
+   +`<a:prstGeom prst="${prst}">${adj}</a:prstGeom>${fill}${ln}</p:spPr>${body}</p:sp>`;
+}
+function lineShape(x,y,w,color,widthPt){
+  return `<p:cxnSp><p:nvCxnSpPr><p:cNvPr id="${nid()}" name="l"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="0"/></a:xfrm>`
+   +`<a:prstGeom prst="line"><a:avLst/></a:prstGeom><a:ln w="${PT(widthPt||0.75)}"><a:solidFill><a:srgbClr val="${color}"/></a:solidFill></a:ln></p:spPr>`
+   +`</p:cxnSp>`;
+}
+function picture(rId,x,y,w,h){
+  return `<p:pic><p:nvPicPr><p:cNvPr id="${nid()}" name="p"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>`
+   +`<p:blipFill><a:blip r:embed="${rId}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>`
+   +`<p:spPr><a:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(w)}" cy="${EMU(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
+}
+// table: rows = [[cell,...]]; cell={t|runs, fill,color,bold,align,valign,font,sz,span,merge,noBorder}
+function table(x,y,colW,rowH,rows,o){
+  o=o||{};
+  const grid=colW.map(w=>`<a:gridCol w="${EMU(w)}"/>`).join('');
+  const bcol=o.border||'C8D0E0'; const bw=PT(o.borderW||0.5);
+  const bd=`<a:lnL w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnL>`
+    +`<a:lnR w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnR>`
+    +`<a:lnT w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnT>`
+    +`<a:lnB w="${bw}" cap="flat"><a:solidFill><a:srgbClr val="${bcol}"/></a:solidFill></a:lnB>`;
+  const trs=rows.map((row,ri)=>{
+    const cells=row.map(c=>{
+      if(c.merge) return `<a:tc hMerge="1"><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="ja-JP"/></a:p></a:txBody><a:tcPr/></a:tc>`;
+      const span=c.span?` gridSpan="${c.span}"`:'';
+      const anchor=c.valign==='top'?'t':c.valign==='bottom'?'b':'ctr';
+      const fill=c.fill?`<a:solidFill><a:srgbClr val="${c.fill}"/></a:solidFill>`:'<a:noFill/>';
+      const runs=c.runs||[{t:c.t||'',sz:c.sz||11,color:c.color||'1A2540',bold:c.bold,italic:c.italic,font:c.font||FONT}];
+      const p=`<a:p>${pPr({align:c.align||'l'})}${runsXML(runs,{sz:c.sz||11})}</a:p>`;
+      return `<a:tc${span}><a:txBody><a:bodyPr/><a:lstStyle/>${p}</a:txBody>`
+        +`<a:tcPr marL="${EMU(0.05)}" marR="${EMU(0.05)}" marT="${EMU(0.02)}" marB="${EMU(0.02)}" anchor="${anchor}">${bd}${fill}</a:tcPr></a:tc>`;
+    }).join('');
+    return `<a:tr h="${EMU(rowH[ri]||rowH[0]||0.4)}">${cells}</a:tr>`;
+  }).join('');
+  const totalW=colW.reduce((a,b)=>a+b,0), totalH=rows.reduce((a,_,i)=>a+(rowH[i]||rowH[0]||0.4),0);
+  return `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${nid()}" name="tbl"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>`
+   +`<p:xfrm><a:off x="${EMU(x)}" y="${EMU(y)}"/><a:ext cx="${EMU(totalW)}" cy="${EMU(totalH)}"/></p:xfrm>`
+   +`<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">`
+   +`<a:tbl><a:tblPr firstRow="0" bandRow="0"/><a:tblGrid>${grid}</a:tblGrid>${trs}</a:tbl>`
+   +`</a:graphicData></a:graphic></p:graphicFrame>`;
+}
+function slideXML(shapes){
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+   +`<p:sld ${NS}><p:cSld><p:spTree>`
+   +`<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>`
+   +`<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>`
+   +shapes+`</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
+}
+
+// ---- palette ----
+const C={text:'1A2540',text2:'4A5878',text3:'8A96B0',line:'C8D0E0',line2:'E3E8F2',accent:'3E63B9',panel:'F4F6FB',
+  ok:'2E7D5E',okbg:'E4F1EB',warn:'B06A28',warnbg:'F6EADB',ng:'A03040',ngbg:'F3E2E6',white:'FFFFFF'};
+
+// ============ report data → slides ============
+function buildReportPPTXFiles(hosp, recs){
+  _id=1;
+  const NY=new Date().getFullYear();
+  const rpAge=y=>{const n=parseInt(String(y).replace(/\D/g,''),10);return(!n||n<1980)?null:NY-n;};
+  const judged=recs.map(r=>{const j=rpJudge(r),age=rpAge(r.year),broken=j.mark!=='〇';const cat=!broken?'ok':(age!=null&&age>=15?'buy':'fix');return{r,j,age,broken,cat};});
+  const nBuy=judged.filter(x=>x.cat==='buy').length, nFix=judged.filter(x=>x.cat==='fix').length;
+  const dates=[...new Set(recs.map(r=>r.date).filter(Boolean))].sort();
+  const dateTxt=!dates.length?'—':dates.length===1?dates[0]:dates[0]+' 〜 '+dates[dates.length-1];
+  const total=recs.length;
+
+  const media=[]; // {name, bytes, ct}
+  const slideRels=[[],[],[],[],[]]; // per-slide extra rels (images)
+
+  function header(title,sub,page){
+    let s='';
+    s+=txBox(0.55,0.4,8,0.28,'BED INSPECTION REPORT',{sz:10,color:C.text3,font:SERIF,spc:2,margin:0});
+    s+=txBox(5.3,0.4,7.45,0.28,hosp+'　ベッド点検報告 ／ '+dateTxt,{sz:10,color:C.text3,align:'r',margin:0});
+    s+=lineShape(0.55,0.72,12.23,C.line,0.75);
+    s+=txBox(0.55,0.82,10,0.6,title,{sz:26,bold:true,color:C.text,margin:0});
+    if(sub) s+=txBox(0.57,1.42,11,0.3,sub,{sz:12,color:C.text3,margin:0});
+    s+=txBox(11.7,7.0,1.05,0.3,page+' / 5',{sz:10,color:C.text3,align:'r',font:SERIF,margin:0});
+    return s;
+  }
+
+  // ---- Slide 1: cover ----
+  let s1='';
+  s1+=shape('ellipse',9.7,-1.4,5.4,5.4,{fill:C.panel,noLine:true});
+  s1+=shape('ellipse',11.0,4.6,3.2,3.2,{fill:C.okbg,noLine:true});
+  s1+=txBox(0.8,0.75,9,0.3,'BED INSPECTION REPORT',{sz:12,color:C.text3,font:SERIF,spc:3,margin:0});
+  s1+=txBox(10.9,0.75,1.9,0.3,'ラウンドノート',{sz:11,color:C.text3,align:'r',margin:0});
+  s1+=txBox(0.8,2.7,9,0.4,'ベッド点検報告書',{sz:15,color:C.text2,margin:0});
+  s1+=txBox(0.78,3.15,10,1.1,hosp,{sz:44,bold:true,color:C.text,margin:0});
+  s1+=txBox(0.8,4.6,11,0.4,[{t:'点検日　',color:C.text3},{t:dateTxt,color:C.text2},{t:'　　　対象台数　',color:C.text3},{t:total+' 台',color:C.text2}],{sz:15,margin:0});
+  s1+=lineShape(0.82,6.7,12,C.line,0.75);
+  s1+=txBox(0.8,6.82,3,0.3,'1 / 5',{sz:10,color:C.text3,font:SERIF,margin:0});
+  s1+=txBox(9.8,6.82,3,0.3,dateTxt,{sz:10,color:C.text3,align:'r',font:SERIF,margin:0});
+
+  // ---- Slide 2: 故障内訳 ----
+  const cnt=new Map();
+  const CAS=(typeof CASTER_POSITIONS!=='undefined')?CASTER_POSITIONS:[{id:'fl',label:'左前'},{id:'fr',label:'右前'},{id:'rl',label:'左後'},{id:'rr',label:'右後'}];
+  const PARTS=(typeof st!=='undefined'&&st.parts)?st.parts:['サイドレール','昇降機構','ボード','マットレス'];
+  recs.forEach(r=>{CAS.forEach(({id,label})=>{if(r.casters&&r.casters[id]==='要交換'){const k='キャスター '+label;cnt.set(k,(cnt.get(k)||0)+1);}});if(r.partsSev)PARTS.forEach(p=>{if(r.partsSev[p]==='重大'){const q=partQty(r,p);cnt.set(p,(cnt.get(p)||0)+(q>0?q:1));}});});
+  const prows=[...cnt.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const ptTotal=prows.reduce((a,b)=>a+b[1],0);
+  const ptMax=prows.length?prows[0][1]:1;
+  let s2=header('故障内訳','部位別・交換対象 '+ptTotal+'点の内訳',2);
+  const bx=0.55, bLabelW=2.0, bBarX=bx+bLabelW+0.15, bBarMax=6.0;
+  const bTop=2.15, bH=0.5, bGap=0.42;
+  if(!prows.length){
+    s2+=txBox(0.55,3,8,0.5,'交換が必要な故障はありませんでした。',{sz:14,color:C.text2,margin:0});
+  } else {
+    prows.forEach(([n,c],i)=>{
+      const y=bTop+i*(bH+bGap);
+      s2+=txBox(bx,y,bLabelW,bH,n,{sz:13,color:C.text2,valign:'middle',align:'r',margin:0.05});
+      const w=Math.max(0.12, c/ptMax*bBarMax);
+      s2+=shape('rect',bBarX,y+0.08,w,bH-0.16,{fill:C.ng,noLine:true});
+      s2+=txBox(bBarX+w+0.12,y,0.6,bH,String(c),{sz:14,color:C.text,font:SERIF,valign:'middle',margin:0});
+    });
+  }
+  // 所見 panel
+  s2+=shape('roundRect',9.35,2.15,3.4,4.5,{fill:C.panel,noLine:true,round:6000});
+  s2+=txBox(9.6,2.4,2.9,0.3,'所見',{sz:12,bold:true,color:C.text,margin:0.05});
+  s2+=txBox(9.6,2.8,2.9,1.8,(prows.length?(prows[0][0]+' が最多。消耗部品はまとめての交換が効率的です。'):'交換対象はありません。'),{sz:12,color:C.text2,lineSpacing:1.3,margin:0.05,valign:'top'});
+  s2+=txBox(9.6,5.2,2.9,0.7,[{t:String(ptTotal),sz:36,bold:true,color:C.ng,font:SERIF},{t:' 点',sz:14,color:C.text2}],{margin:0.05});
+  s2+=txBox(9.6,5.95,2.9,0.3,'要交換の部品総数',{sz:11,color:C.text3,margin:0.05});
+
+  // ---- Slide 3: cross table ----
+  let s3=header('年式 × 型式 クロス表','数字＝台数・1年ごと（空白年も表示）',3);
+  const numYears=recs.map(r=>rpAge(r.year)).filter(a=>a!=null).map(a=>NY-a);
+  if(!numYears.length){
+    s3+=txBox(0.55,3,10,0.5,'年式が記録されたベッドがありません。',{sz:14,color:C.text2,margin:0});
+  } else {
+    const minY=Math.min(...numYears),maxY=Math.max(...numYears);
+    const years=[];for(let y=minY;y<=maxY;y++)years.push(y);
+    const hasUnk=recs.some(r=>rpAge(r.year)==null);
+    const modelSet=new Set(recs.map(r=>r.model||'不明'));
+    const oldest={};recs.forEach(r=>{const m=r.model||'不明',a=rpAge(r.year),y=a==null?9999:NY-a;if(!(m in oldest)||y<oldest[m])oldest[m]=y;});
+    const models=[...modelSet].sort((a,b)=>(oldest[a]-oldest[b])||a.localeCompare(b,'ja'));
+    const cf=y=>{const age=NY-y;return age>=20?C.ngbg:age>=15?C.warnbg:age<=5?C.okbg:C.white;};
+    const ct=y=>{const age=NY-y;return age>=20?C.ng:age>=15?C.warn:age<=5?C.ok:C.text2;};
+    // header
+    const head=[{t:'型式＼年式',fill:C.text,color:C.white,bold:true,sz:9,align:'l'}];
+    years.forEach(y=>head.push({t:"'"+String(y).slice(2),fill:cf(y),color:ct(y),bold:true,sz:9,align:'ctr'}));
+    if(hasUnk)head.push({t:'不明',fill:C.text,color:C.white,bold:true,sz:9,align:'ctr'});
+    head.push({t:'計',fill:C.text,color:C.white,bold:true,sz:9,align:'ctr'});
+    const rows=[head]; const colTot=years.map(()=>0);let unkTot=0,grand=0;
+    models.forEach(m=>{
+      const row=[{t:m,color:C.text,sz:9,align:'l',fill:C.white}];let rt=0;
+      years.forEach((y,i)=>{const v=recs.filter(r=>(r.model||'不明')===m&&rpAge(r.year)!=null&&(NY-rpAge(r.year))===y).length;rt+=v;colTot[i]+=v;row.push({t:v?String(v):'',fill:cf(y),color:ct(y),sz:9,align:'ctr',font:SERIF});});
+      if(hasUnk){const v=recs.filter(r=>(r.model||'不明')===m&&rpAge(r.year)==null).length;unkTot+=v;rt+=v;row.push({t:v?String(v):'',fill:C.white,sz:9,align:'ctr',font:SERIF});}
+      grand+=rt;row.push({t:String(rt),bold:true,color:C.text,sz:9,align:'ctr',fill:C.white,font:SERIF});rows.push(row);
+    });
+    const foot=[{t:'計',bold:true,color:C.text,sz:9,align:'l',fill:C.line2}];
+    years.forEach((y,i)=>foot.push({t:String(colTot[i]),bold:true,color:C.text,sz:9,align:'ctr',fill:C.line2,font:SERIF}));
+    if(hasUnk)foot.push({t:String(unkTot),bold:true,color:C.text,sz:9,align:'ctr',fill:C.line2,font:SERIF});
+    foot.push({t:String(grand),bold:true,color:C.text,sz:9,align:'ctr',fill:C.line2,font:SERIF});
+    rows.push(foot);
+    const ncol=years.length+(hasUnk?1:0)+2;
+    const firstW=1.15,totW=0.5, avail=12.23-firstW-totW, yW=avail/(years.length+(hasUnk?1:0));
+    const colW=[firstW,...years.map(()=>yW),...(hasUnk?[yW]:[]),totW];
+    const rowH=rows.map(()=>0.42);
+    s3+=table(0.55,2.0,colW,rowH,rows,{border:C.line,borderW:0.5});
+    // legend
+    const lgY=2.05+rows.length*0.42+0.15;
+    const lg=[['20年以上（即買替）',C.ngbg,C.ng],['15年以上（計画買替）',C.warnbg,C.warn],['5年以内',C.okbg,C.ok]];
+    let lx=0.55;lg.forEach(([t,f,c])=>{s3+=shape('rect',lx,lgY,0.22,0.22,{fill:f,line:c,lineW:0.75});s3+=txBox(lx+0.3,lgY-0.03,2.6,0.3,t,{sz:10.5,color:C.text2,valign:'middle',margin:0});lx+=2.9;});
+    s3+=txBox(0.55,lgY+0.45,12.2,0.6,'古い型式が特定年に固まっているほど、型式単位での計画的な更新が妥当です。空白の年は導入がなかった時期を表します。',{sz:12,color:C.text2,lineSpacing:1.25,margin:0});
+  }
+
+  // ---- Slide 4: judgment ----
+  let s4=header('買い替え・修理 判定','要対応 '+(nBuy+nFix)+'台（買替'+nBuy+'・修理'+nFix+'）',4);
+  const act=judged.filter(x=>x.cat!=='ok').sort((a,b)=>{if(a.cat!==b.cat)return a.cat==='buy'?-1:1;return(b.age==null?-1:b.age)-(a.age==null?-1:a.age);});
+  const hd=(t,al)=>({t,fill:C.text,color:C.white,bold:true,sz:11.5,align:al||'l'});
+  const td=(t,al)=>({t,color:C.text,sz:11.5,align:al||'l',fill:C.white});
+  const badge=cat=>cat==='buy'?{t:'買替',fill:C.ngbg,color:C.ng,bold:true,sz:11,align:'ctr'}:{t:'修理',fill:C.warnbg,color:C.warn,bold:true,sz:11,align:'ctr'};
+  const jrows=[[hd('病棟/番号'),hd('型式'),hd('年式','ctr'),hd('経過','ctr'),hd('主な不具合'),hd('判定','ctr')]];
+  act.slice(0,6).forEach(x=>{const r=x.r,loc=[r.room,r.bed].filter(Boolean).join('-')||'—';const iss=x.j.ngCas.map(c=>'キャスター '+c).concat(x.j.ngPart).join(' / ')||(x.j.mark==='△'?'経過観察':'—');
+    jrows.push([td((r.ward?r.ward+' ':'')+loc),td(r.model||'—'),td(r.year||'—','ctr'),td(x.age==null?'—':x.age+'年','ctr'),td(iss),badge(x.cat)]);});
+  if(act.length>6)jrows.push([{t:'… ほか '+(act.length-6)+'件（買替'+nBuy+'・修理'+nFix+'）',span:6,italic:true,color:C.text3,sz:11,align:'ctr',fill:C.panel},{merge:1},{merge:1},{merge:1},{merge:1},{merge:1}]);
+  if(act.length===0)jrows.push([{t:'対応が必要なベッドはありませんでした。',span:6,color:C.text2,sz:12,align:'l',fill:C.white},{merge:1},{merge:1},{merge:1},{merge:1},{merge:1}]);
+  const jColW=[2.0,2.0,1.3,1.2,4.23,1.5];
+  const jRowH=jrows.map(()=>0.5);
+  s4+=table(0.55,2.0,jColW,jRowH,jrows,{border:C.line2,borderW:0.5});
+  s4+=shape('roundRect',0.55,5.9,3.0,1.0,{fill:C.ngbg,noLine:true,round:8000,text:[{t:'買い替え　',sz:12,color:C.ng},{t:String(nBuy),sz:26,bold:true,color:C.ng,font:SERIF},{t:' 台',sz:12,color:C.ng}],valign:'middle',margin:0.2});
+  s4+=shape('roundRect',3.75,5.9,3.0,1.0,{fill:C.warnbg,noLine:true,round:8000,text:[{t:'修理　',sz:12,color:C.warn},{t:String(nFix),sz:26,bold:true,color:C.warn,font:SERIF},{t:' 台',sz:12,color:C.warn}],valign:'middle',margin:0.2});
+  s4+=txBox(7.0,6.25,5.75,0.4,'判定基準：15年以上＋破損＝買替 ／ 15年未満の破損＝修理',{sz:11,color:C.text3,align:'r',valign:'middle',margin:0});
+
+  // ---- Slide 5: photos ----
+  let s5=header('写真','要対応ベッドの現況（抜粋・最大6枚）',5);
+  const shots=[];
+  act.forEach(x=>{(x.r.photoIds||[]).forEach(id=>{if(typeof photoStore!=='undefined'&&photoStore[id]&&shots.length<6)shots.push({src:photoStore[id],loc:[x.r.room,x.r.bed].filter(Boolean).join('-')||'—',item:(x.j.ngCas.concat(x.j.ngPart)[0]||'')});});});
+  const gx=0.55,gy=2.0,gw=3.93,gh=2.35,mx=0.2,my=0.25;
+  for(let i=0;i<6;i++){
+    const col=i%3,row=Math.floor(i/3),x=gx+col*(gw+mx),y=gy+row*(gh+my);
+    const sh=shots[i];
+    if(sh){
+      const bytes=dataUrlToBytes(sh.src); const dim=jpegSize(bytes);
+      const idx=media.length+1; const ext=(sh.src.indexOf('image/png')>=0)?'png':'jpeg';
+      const name='image'+idx+'.'+(ext==='jpeg'?'jpg':'png');
+      media.push({name,bytes,ct:ext==='png'?'image/png':'image/jpeg'});
+      const rId='rIdImg'+idx; slideRels[4].push({rId,target:'../media/'+name});
+      // fit into gw x (gh-0.42) preserving aspect
+      const boxW=gw,boxH=gh-0.42,ar=dim.w/dim.h;let iw=boxW,ih=boxW/ar;if(ih>boxH){ih=boxH;iw=boxH*ar;}
+      s5+=shape('rect',x,y,gw,gh-0.42,{fill:C.panel,line:C.line2,lineW:0.75});
+      s5+=picture(rId,x+(boxW-iw)/2,y+(boxH-ih)/2,iw,ih);
+    } else {
+      s5+=shape('rect',x,y,gw,gh-0.42,{fill:C.panel,line:C.line2,lineW:0.75,text:'写真',sz:12,color:C.text3,align:'ctr',valign:'middle'});
+    }
+    const cap=sh?(sh.loc+(sh.item?'　'+sh.item:'')):'—';
+    s5+=shape('rect',x,y+gh-0.42,gw,0.42,{fill:C.white,line:C.line2,lineW:0.75,text:cap,sz:10.5,color:C.text,align:'l',valign:'middle',margin:0.1});
+  }
+
+  const slides=[s1,s2,s3,s4,s5].map(slideXML);
+  return {slides, media, slideRels};
+}
+
+// ============ package assembly ============
+function pptxPackage(hosp, recs){
+  const {slides, media, slideRels}=buildReportPPTXFiles(hosp,recs);
+  const files=[];
+  const put=(name,str)=>files.push({name,bytes:utf8Bytes(str)});
+
+  // content types
+  const overrides=slides.map((_,i)=>`<Override PartName="/ppt/slides/slide${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join('');
+  const hasJpg=media.some(m=>m.ct==='image/jpeg'), hasPng=media.some(m=>m.ct==='image/png');
+  put('[Content_Types].xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+    +`<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
+    +`<Default Extension="xml" ContentType="application/xml"/>`
+    +(hasJpg?`<Default Extension="jpg" ContentType="image/jpeg"/>`:'')
+    +(hasPng?`<Default Extension="png" ContentType="image/png"/>`:'')
+    +`<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>`
+    +`<Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/>`
+    +`<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>`
+    +`<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>`
+    +`<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>`
+    +overrides
+    +`<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>`
+    +`<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>`
+    +`</Types>`);
+
+  // root rels
+  put('_rels/.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    +`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>`
+    +`<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>`
+    +`<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>`
+    +`</Relationships>`);
+
+  // docProps
+  put('docProps/core.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">`
+    +`<dc:title>${xmlEsc(hosp)} ベッド点検報告書</dc:title><dc:creator>ラウンドノート</dc:creator></cp:coreProperties>`);
+  put('docProps/app.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>RoundNote</Application><Slides>${slides.length}</Slides></Properties>`);
+
+  // presentation.xml
+  const sldIds=slides.map((_,i)=>`<p:sldId id="${256+i}" r:id="rIdS${i+1}"/>`).join('');
+  put('ppt/presentation.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    +`<p:presentation ${NS} saveSubsetFonts="1">`
+    +`<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rIdM"/></p:sldMasterIdLst>`
+    +`<p:sldIdLst>${sldIds}</p:sldIdLst>`
+    +`<p:sldSz cx="${EMU(SW)}" cy="${EMU(SH)}" type="screen16x9"/>`
+    +`<p:notesSz cx="${EMU(SH)}" cy="${EMU(SW)}"/>`
+    +`</p:presentation>`);
+
+  // presentation rels
+  const presRels=[`<Relationship Id="rIdM" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>`];
+  slides.forEach((_,i)=>presRels.push(`<Relationship Id="rIdS${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i+1}.xml"/>`));
+  presRels.push(`<Relationship Id="rIdPP" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/presProps" Target="presProps.xml"/>`);
+  presRels.push(`<Relationship Id="rIdTh" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>`);
+  put('ppt/_rels/presentation.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${presRels.join('')}</Relationships>`);
+
+  put('ppt/presProps.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentationPr ${NS}/>`);
+
+  // theme
+  put('ppt/theme/theme1.xml', THEME);
+
+  // slide master
+  put('ppt/slideMasters/slideMaster1.xml', MASTER);
+  put('ppt/slideMasters/_rels/slideMaster1.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    +`<Relationship Id="rIdL" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>`
+    +`<Relationship Id="rIdTh" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme1.xml"/>`
+    +`</Relationships>`);
+
+  // slide layout
+  put('ppt/slideLayouts/slideLayout1.xml', LAYOUT);
+  put('ppt/slideLayouts/_rels/slideLayout1.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    +`<Relationship Id="rIdM" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/>`
+    +`</Relationships>`);
+
+  // slides + rels
+  slides.forEach((xml,i)=>{
+    put('ppt/slides/slide'+(i+1)+'.xml', xml);
+    const rels=[`<Relationship Id="rIdLO" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>`];
+    slideRels[i].forEach(r=>rels.push(`<Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${r.target}"/>`));
+    put('ppt/slides/_rels/slide'+(i+1)+'.xml.rels',
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join('')}</Relationships>`);
+  });
+
+  // media
+  media.forEach(m=>files.push({name:'ppt/media/'+m.name,bytes:m.bytes}));
+
+  return buildZip(files);
+}
+
+// ---- minimal theme / master / layout ----
+const THEME=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="RoundNote"><a:themeElements>
+<a:clrScheme name="RoundNote"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1A2540"/></a:dk2><a:lt2><a:srgbClr val="F4F6FB"/></a:lt2><a:accent1><a:srgbClr val="3E63B9"/></a:accent1><a:accent2><a:srgbClr val="2E7D5E"/></a:accent2><a:accent3><a:srgbClr val="B06A28"/></a:accent3><a:accent4><a:srgbClr val="A03040"/></a:accent4><a:accent5><a:srgbClr val="8A96B0"/></a:accent5><a:accent6><a:srgbClr val="4A5878"/></a:accent6><a:hlink><a:srgbClr val="3E63B9"/></a:hlink><a:folHlink><a:srgbClr val="8A96B0"/></a:folHlink></a:clrScheme>
+<a:fontScheme name="RoundNote"><a:majorFont><a:latin typeface="Meiryo"/><a:ea typeface="Meiryo"/><a:cs typeface="Meiryo"/></a:majorFont><a:minorFont><a:latin typeface="Meiryo"/><a:ea typeface="Meiryo"/><a:cs typeface="Meiryo"/></a:minorFont></a:fontScheme>
+<a:fmtScheme name="RoundNote"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w="6350"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="12700"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="19050"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme>
+</a:themeElements></a:theme>`;
+
+const MASTER=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sldMaster ${NS}><p:cSld><p:bg><p:bgRef idx="1001"><a:schemeClr val="lt1"/></p:bgRef></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rIdL"/></p:sldLayoutIdLst></p:sldMaster>`;
+
+const LAYOUT=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sldLayout ${NS} type="blank" preserve="1"><p:cSld name="Blank"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`;
+
+
+// ---- entry: レポートをPPTXで保存 ----
+function exportReportPPTX(){
+  var hosp = document.getElementById('report-hospital').value;
+  if(!hosp){ showToast('⚠️ 病院を選んでください','warn'); return; }
+  var recs = st.records.filter(function(r){ return r.hospital===hosp; });
+  if(!recs.length){ showToast('⚠️ この病院の記録がありません','warn'); return; }
+  try{
+    var zip = pptxPackage(hosp, recs);
+    var blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = hosp+'様_ベッド点検報告書_'+todayStr()+'.pptx';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('📊 PPTXを保存しました');
+  }catch(e){ console.error(e); showToast('⚠️ PPTX生成に失敗しました','warn'); }
+}
+window.exportReportPPTX = exportReportPPTX;
+
+})();
+
+// ═══════════════════════════════════════════════════════
+// 部品リスト ドラッグ並び替え（Pointer Events：指・マウス両対応）
+// ☰グリップを掴んだ時だけ発動 → ページスクロールと競合しない
+// ═══════════════════════════════════════════════════════
+let _pdrag = null;
+
+function partDragStart(e, idx){
+  if(_pdrag) return;
+  // 名前編集中はドラッグ無効
+  if(document.querySelector('#partsEditor .part-input')) return;
+  const c = document.getElementById('partsEditor');
+  const rows = Array.from(c.querySelectorAll('.part-row'));
+  if(rows.length < 2) return;
+  const sy = window.scrollY;
+  const centers = rows.map(r=>{ const b=r.getBoundingClientRect(); return b.top + sy + b.height/2; });
+  const height  = rows[idx].getBoundingClientRect().height;
+  _pdrag = { idx, curIdx:idx, rows, centers, height,
+             startY: e.clientY + sy, lastClientY: e.clientY, raf:0 };
+  rows[idx].classList.add('dragging');
+  rows.forEach((r,j)=>{ if(j!==idx) r.classList.add('shifting'); });
+  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(err){}
+  if(navigator.vibrate) navigator.vibrate(10);
+  e.preventDefault();
+}
+
+function partDragMove(e){
+  if(!_pdrag) return;
+  _pdrag.lastClientY = e.clientY;
+  partDragUpdate();
+  partDragAutoScroll();
+  e.preventDefault();
+}
+
+// 指の位置から「今どこに挿さるか」を計算し、他の行をよける
+function partDragUpdate(){
+  const d = _pdrag; if(!d) return;
+  const dy = (d.lastClientY + window.scrollY) - d.startY;
+  d.rows[d.idx].style.transform = `translateY(${dy}px) scale(1.02)`;
+  const dc = d.centers[d.idx] + dy;   // ドラッグ中の行の中心
+  let ni = d.idx;
+  d.rows.forEach((r,j)=>{
+    if(j === d.idx) return;
+    if(j < d.idx){
+      if(dc <= d.centers[j]){ r.style.transform = `translateY(${d.height}px)`; ni--; }
+      else { r.style.transform = ''; }
+    }else{
+      if(dc >= d.centers[j]){ r.style.transform = `translateY(${-d.height}px)`; ni++; }
+      else { r.style.transform = ''; }
+    }
+  });
+  d.curIdx = ni;
+}
+
+// 画面端まで持っていくと自動スクロール（16項目でも端から端へ運べる）
+function partDragAutoScroll(){
+  const d = _pdrag; if(!d) return;
+  cancelAnimationFrame(d.raf);
+  const step = ()=>{
+    if(!_pdrag) return;
+    const y = _pdrag.lastClientY, vh = window.innerHeight, EDGE = 90, SPD = 14;
+    let v = 0;
+    if(y < EDGE)            v = -SPD * (1 - y/EDGE);
+    else if(y > vh - EDGE)  v =  SPD * (1 - (vh - y)/EDGE);
+    if(v){
+      window.scrollBy(0, v);
+      partDragUpdate();
+      _pdrag.raf = requestAnimationFrame(step);
+    }
+  };
+  d.raf = requestAnimationFrame(step);
+}
+
+function partDragEnd(e){
+  const d = _pdrag; if(!d) return;
+  cancelAnimationFrame(d.raf);
+  _pdrag = null;
+  d.rows.forEach(r=>{ r.classList.remove('dragging','shifting'); r.style.transform=''; });
+  if(d.curIdx !== d.idx){
+    const [moved] = st.parts.splice(d.idx, 1);
+    st.parts.splice(d.curIdx, 0, moved);
+    if(!persistState()){ showToast('⚠️ 保存に失敗','err'); }
+    renderPartsEditor(); renderPartsInputTable();
+    showToast('並び替えました');
+  }
 }
 
 function renderHospitalsEditor(){
@@ -4066,8 +5393,44 @@ function renderModelOptions(){
   const el=document.getElementById('inp-model'); if(!el)return;
   const val=el.value;
   el.innerHTML='<option value="">選択してください</option>'
-    +st.models.map(m=>`<option value="${m}">${m}</option>`).join('');
+    +st.models.map(m=>`<option value="${m}">${m}</option>`).join('')
+    +'<option value="__add_new__">＋ 新規登録…</option>';
   if(val) el.value=val;
+}
+// 「＋ 新規登録…」選択時：アプリ内モーダルで登録（iOSホーム画面アプリではprompt()が動かないため）
+function handleModelSelectChange(e){
+  const el=e.target;
+  if(el.value!=='__add_new__') return;
+  el.value='';                                   // いったん未選択に戻す
+  const modal=document.getElementById('addModelModal');
+  const inp=document.getElementById('add-model-input');
+  inp.value='';
+  modal.classList.add('show');
+  setTimeout(()=>inp.focus(), 100);
+}
+function cancelAddModel(){
+  document.getElementById('addModelModal').classList.remove('show');
+}
+function confirmAddModel(){
+  const inp=document.getElementById('add-model-input');
+  const sel=document.getElementById('inp-model');
+  const v=(inp.value||'').trim();
+  if(!v){ showToast('⚠️ 型番を入力してください','warn'); return; }
+  if(st.models.includes(v)){
+    sel.value=v;
+    document.getElementById('addModelModal').classList.remove('show');
+    showToast('登録済みの型番を選択しました');
+    sel.dispatchEvent(new Event('input'));
+    return;
+  }
+  st.models.push(v);
+  persistState();
+  renderModelOptions();
+  if(typeof renderModelsEditor==='function') renderModelsEditor();  // 設定タブ側も同期
+  sel.value=v;
+  document.getElementById('addModelModal').classList.remove('show');
+  sel.dispatchEvent(new Event('input'));  // 下書き保存・ボタン状態を通常経路で更新
+  showToast(`型番「${v}」を登録しました`);
 }
 function renderModelsEditor(){
   const c=document.getElementById('modelsEditor');
