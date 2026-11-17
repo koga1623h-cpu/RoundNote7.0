@@ -243,6 +243,14 @@ header h1{font-size:18px;font-weight:700;flex:1;color:var(--text);letter-spacing
 }
 .help-btn:active{background:var(--line-thin);color:var(--text);}
 .help-text{display:none;}
+/* ── 設定タブ：リストの折りたたみ ── */
+.acc-card .card-title{cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;margin:-16px;padding:16px;border-bottom:1px solid transparent;}
+.acc-card .card-title:active{background:var(--line-thin);}
+.acc-card.open .card-title{margin:-16px -16px 14px;border-bottom-color:var(--line-thin);padding-bottom:8px;}
+.acc-count{font-size:11px;font-weight:500;color:var(--text2);font-family:'DM Mono',monospace;}
+.acc-chev{margin-left:auto;width:16px;height:16px;color:var(--text2);flex-shrink:0;transition:transform .2s;}
+.acc-card.open .acc-chev{transform:rotate(180deg);}
+.acc-card:not(.open) .acc-body{display:none;}
 .help-text.show{display:block;}
 .ct-icon{width:18px;height:18px;flex-shrink:0;}
 
@@ -1329,7 +1337,7 @@ input[type=file]{display:none;}
       <div>
         <div class="qr-lbl-row">
           <label>ベッドNo <span class="required">*</span></label>
-          <button type="button" class="qr-btn" onclick="openQrScan()" aria-label="QRを読み取ってベッドNoに入力"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14v.01M21 21v.01M17 21v.01M21 17.5v.01"/></svg>QR</button>
+          <button type="button" class="qr-btn" onclick="openQrScan('bed')" aria-label="QRを読み取ってベッドNoに入力"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14v.01M21 21v.01M17 21v.01M21 17.5v.01"/></svg>QR</button>
         </div>
         <input type="text" id="inp-bed">
       </div>
@@ -1675,29 +1683,35 @@ input[type=file]{display:none;}
     <div class="storage-bar"><div id="storageBar" style="width:0%"></div></div>
     <div class="storage-note" id="storageNote"></div>
   </div>
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M10 21v-5h4v5"/></svg>病院名リスト</div>
+  <div class="card acc-card" id="acc-hospitals">
+    <div class="card-title" role="button" aria-expanded="false" onclick="toggleAcc('hospitals')"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M10 21v-5h4v5"/></svg>病院名リスト<span class="acc-count" id="acc-n-hospitals"></span><svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    <div class="acc-body">
     <div id="hospitalsEditor"></div>
     <div class="add-row">
       <input type="text" id="new-hospital-mgr" placeholder="病院名を追加...">
       <button class="btn btn-outline btn-sm" onclick="addHospitalMgr()">追加</button>
     </div>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>ベッド型番リスト</div>
+  <div class="card acc-card" id="acc-models">
+    <div class="card-title" role="button" aria-expanded="false" onclick="toggleAcc('models')"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>ベッド型番リスト<span class="acc-count" id="acc-n-models"></span><svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    <div class="acc-body">
     <div id="modelsEditor"></div>
     <div class="add-row">
       <input type="text" id="new-model-mgr" placeholder="型番を追加...">
       <button class="btn btn-outline btn-sm" onclick="addModelMgr()">追加</button>
     </div>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-title"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>破損部位リスト</div>
+  <div class="card acc-card" id="acc-parts">
+    <div class="card-title" role="button" aria-expanded="false" onclick="toggleAcc('parts')"><svg class="ct-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>破損部位リスト<span class="acc-count" id="acc-n-parts"></span><svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+    <div class="acc-body">
     <p style="font-size:12px;color:var(--text2);margin-bottom:12px;font-weight:500">✏️で編集、✕で削除</p>
     <div id="partsEditor"></div>
     <div class="add-row">
       <input type="text" id="new-part-mgr" placeholder="部位を追加...">
       <button class="btn btn-outline btn-sm" onclick="addPartMgr()">追加</button>
+    </div>
     </div>
   </div>
   <div class="card info-card">
@@ -1805,7 +1819,7 @@ input[type=file]{display:none;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       写真を撮って読む
     </button>
-    <p>近づけすぎるとピントが合いません。15〜20cmほど離してください。<br>読めたら自動で閉じて、ベッドNoに入ります</p>
+    <p>近づけすぎるとピントが合いません。15〜20cmほど離してください。<br>読めたら自動で閉じて、<span id="qrHint">ベッドNo</span>に入ります</p>
     <p id="qrInfo"></p>
   </div>
   <input type="file" id="qrPhotoInput" accept="image/*" capture="environment" onchange="handleQrPhoto(event)">
@@ -3818,10 +3832,11 @@ function sheetXML(rows, colWidths, opts){
 function stylesXML(){
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<fonts count="3">
+<fonts count="4">
 <font><sz val="11"/><name val="メイリオ"/></font>
 <font><b/><sz val="11"/><name val="メイリオ"/></font>
 <font><b/><sz val="12"/><name val="メイリオ"/></font>
+<font><b/><sz val="10"/><color rgb="FFA32D2D"/><name val="メイリオ"/></font>
 </fonts>
 <fills count="10">
 <fill><patternFill patternType="none"/></fill>
@@ -3841,7 +3856,7 @@ function stylesXML(){
 <border><left style="medium"><color rgb="FF606060"/></left><right style="medium"><color rgb="FF606060"/></right><top style="medium"><color rgb="FF606060"/></top><bottom style="medium"><color rgb="FF606060"/></bottom></border>
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="15">
+<cellXfs count="18">
 <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
 <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
 <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
@@ -3857,6 +3872,9 @@ function stylesXML(){
 <xf numFmtId="0" fontId="0" fillId="7" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="0" fillId="8" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="0" fillId="9" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="bottom" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf>
+<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="bottom" wrapText="1"/></xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="標準" xfId="0" builtinId="0"/></cellStyles>
 <dxfs count="1"><dxf><font><b/><color rgb="FF990000"/></font><fill><patternFill><bgColor rgb="FFFFB0B0"/></patternFill></fill></dxf></dxfs>
@@ -3911,106 +3929,119 @@ function jpegSize(bytes){
 }
 
 // 写真シートを組み立て（写真ありの記録のみ）。写真ゼロなら null を返す
-function buildPhotoSheet(recs){
+//   1シート = A4横1ページ = 写真6枚（3列×2段）。台をまたいで詰め、7枚目からは次のシートへ。
+//   各写真の上に「病棟/部屋/ベッド・型番・要交換内容」の見出し。シート名は 写真① 写真② …
+const PHOTOS_PER_SHEET = 6;
+function circledNum(n){ return n>=1 && n<=20 ? String.fromCharCode(0x2460+n-1) : '('+n+')'; }
+function buildPhotoSheets(recs){
   const EMU = 9525;            // 1px = 9525 EMU
   const boxW = 360, boxH = 270;             // 表示枠(px) 4:3写真がちょうど収まる
-  const padX = 4, padY = 5;                 // セル内マージン(px) ラベルや隣写真とのかぶり防止
-  const photoRowHt = Math.round((boxH + padY*2) * 0.75) + 12;  // 行高さ(pt) 下余白広め
+  const padX = 4, padY = 4;                 // セル内マージン(px)
+  const photoRowHt = Math.round((boxH + padY*2) * 0.75) + 4;  // 写真行の高さ(pt)
 
-  const withPhotos = recs.filter(r => (r.photoIds||[]).some(id=>photoStore[id]));
+  // ラウンド結果シートと同じ順（病棟→部屋→ベッド）
+  const withPhotos = recs.filter(r => (r.photoIds||[]).some(id=>photoStore[id])).sort((x,y)=>{
+    const wa=x.ward||'', wb=y.ward||''; if(wa!==wb) return wa.localeCompare(wb,'ja');
+    const ra=x.room||'', rb=y.room||''; if(ra!==rb) return ra.localeCompare(rb,'ja',{numeric:true});
+    return (x.bed||'').localeCompare(y.bed||'','ja',{numeric:true});
+  });
   if(!withPhotos.length) return null;
 
-  const media = [];     // {name, bytes}
-  const drawRels = [];  // drawing→media リレーション
-  const anchors = [];   // 画像配置XML
-  let imgCount = 0;
-
-  const rowsXml = [];
-  const breaks = [];    // 印刷の改ページ位置（2台ごと。見出しと写真が別ページに分かれないように）
-  let recNo = 0;
-  let rowNum = 1;       // 1始まり（sheetData用）
-
-  // タイトル行
-  rowsXml.push(`<row r="${rowNum}"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">写真一覧（${xmlEsc(withPhotos[0].hospital||'')}）</t></is></c></row>`);
-  rowNum += 2; // タイトル＋空行
-
+  // 写真を1枚ずつの並びに展開（見出し付き）
+  const items = [];
   withPhotos.forEach(r=>{
     const loc = [r.ward, r.room, r.bed].filter(Boolean).join(' / ');
     const ng = Object.values(r.casters||{}).includes('要交換');
     const bad = [];
     CASTER_POSITIONS.forEach(({id,label})=>{ if(r.casters&&r.casters[id]==='要交換') bad.push('キャスター'+label.replace('頭側・','頭').replace('足側・','足')); });
     Object.keys(r.partsSev||{}).forEach(p=>{ if(r.partsSev[p]==='重大') bad.push(p+qtySuffix(partQty(r,p))); });
-    const labelTxt = `${ng?'⚠ ':''}${loc}　${r.model||''}${r.year?'　'+r.year+'年式':''}${bad.length?'　｜ 要交換：'+bad.join(' / '):''}`;
-    if(recNo>0 && recNo%2===0) breaks.push(rowNum-1);
-    recNo++;
-    // ラベル行: 高さを明示（既定高だと狭く、ビューアによって写真とかぶるため）
-    rowsXml.push(`<row r="${rowNum}" ht="22" customHeight="1"><c r="A${rowNum}" t="inlineStr" s="1"><is><t xml:space="preserve">${xmlEsc(labelTxt)}</t></is></c></row>`);
-    rowNum++;
-
-    const photoRow0 = rowNum - 1; // drawingは0始まり行
-    // 空セルを1つ入れる: セルのない行は一部ビューアで高さ指定が無視され、写真が下のラベルにかぶるため
-    rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"><c r="A${rowNum}"/></row>`);
-    rowNum++;
-    // 記録間の空行も高さを明示（次のラベルとの間隔を確保）
-    rowsXml.push(`<row r="${rowNum}" ht="14" customHeight="1"><c r="A${rowNum}"/></row>`);
-    rowNum++;
-
     const ids = (r.photoIds||[]).filter(id=>photoStore[id]);
     ids.forEach((id,i)=>{
-      const bytes = dataUrlToBytes(photoStore[id]);
-      const {w,h} = jpegSize(bytes);
-      const scale = Math.min(boxW/w, boxH/h);
-      const cx = Math.round(w*scale)*EMU;
-      const cy = Math.round(h*scale)*EMU;
-      imgCount++;
-      const fname = `image${imgCount}.jpeg`;
-      media.push({name:`xl/media/${fname}`, bytes});
-      const rid = `rId${imgCount}`;
-      drawRels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${fname}"/>`);
-      // 写真1枚=1列(A/B/C)。列内オフセットに頼らないため、どのビューアでも重ならない
-      anchors.push(
-        `<xdr:oneCellAnchor>`+
-        `<xdr:from><xdr:col>${i}</xdr:col><xdr:colOff>${padX*EMU}</xdr:colOff><xdr:row>${photoRow0}</xdr:row><xdr:rowOff>${padY*EMU}</xdr:rowOff></xdr:from>`+
-        `<xdr:ext cx="${cx}" cy="${cy}"/>`+
-        `<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${imgCount}" name="${fname}"/><xdr:cNvPicPr/></xdr:nvPicPr>`+
-        `<xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>`+
-        `<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>`+
-        `</xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`
-      );
+      const label = i===0
+        ? `${ng?'⚠ ':''}${loc}　${r.model||''}${r.year?'　'+r.year+'年式':''}${bad.length?'\n要交換：'+bad.join(' / '):''}`
+        : `${ng?'⚠ ':''}${loc}　（${i+1}枚目）`;
+      items.push({id, label, ng});
     });
   });
 
-  const sheetXml =
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
-    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
-    '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>'+   // 横3枚を必ず1ページ幅に収める
-    '<cols><col min="1" max="3" width="52" customWidth="1"/></cols>'+
-    '<sheetData>'+rowsXml.join('')+'</sheetData>'+
-    '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'+
-    '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>'+
-    (breaks.length ? `<rowBreaks count="${breaks.length}" manualBreakCount="${breaks.length}">`+breaks.map(b=>`<brk id="${b}" max="16383" man="1"/>`).join('')+'</rowBreaks>' : '')+
-    '<drawing r:id="rId1"/>'+
-    '</worksheet>';
+  const hosp = withPhotos[0].hospital||'';
+  const total = Math.ceil(items.length / PHOTOS_PER_SHEET);
+  const media = [];     // 画像は全シート共通の通し番号
+  const sheets = [];
+  let imgCount = 0;
+  const col = ['A','B','C'];
 
-  const drawingXml =
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
-    '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'+
-    anchors.join('')+
-    '</xdr:wsDr>';
-
-  const drawingRelsXml =
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
-    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
-    drawRels.join('')+
-    '</Relationships>';
-
-  const sheetRelsXml =
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
-    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
-    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>'+
-    '</Relationships>';
-
-  return {sheetXml, drawingXml, drawingRelsXml, sheetRelsXml, media};
+  for(let pg=0; pg<total; pg++){
+    const part = items.slice(pg*PHOTOS_PER_SHEET, (pg+1)*PHOTOS_PER_SHEET);
+    const rowsXml = [], drawRels = [], anchors = [];
+    // 1行目：タイトル（左）とページ（右）
+    rowsXml.push(`<row r="1" ht="20" customHeight="1"><c r="A1" t="inlineStr" s="1"><is><t xml:space="preserve">写真一覧（${xmlEsc(hosp)}）</t></is></c><c r="C1" t="inlineStr" s="16"><is><t xml:space="preserve">写真${circledNum(pg+1)}　${pg+1} / ${total}</t></is></c></row>`);
+    rowsXml.push(`<row r="2" ht="6" customHeight="1"><c r="A2"/></row>`);
+    // 2段：見出し行 → 写真行 → 間隔
+    let rowNum = 3;
+    for(let line=0; line<2; line++){
+      const cells = part.slice(line*3, line*3+3);
+      if(!cells.length) break;
+      rowsXml.push(`<row r="${rowNum}" ht="32" customHeight="1">`+
+        cells.map((it,i)=>`<c r="${col[i]}${rowNum}" t="inlineStr" s="${it.ng?17:15}"><is><t xml:space="preserve">${xmlEsc(it.label)}</t></is></c>`).join('')+
+        `</row>`);
+      rowNum++;
+      const photoRow0 = rowNum - 1;   // drawingは0始まり行
+      rowsXml.push(`<row r="${rowNum}" ht="${photoRowHt}" customHeight="1"><c r="A${rowNum}"/></row>`);
+      rowNum++;
+      rowsXml.push(`<row r="${rowNum}" ht="10" customHeight="1"><c r="A${rowNum}"/></row>`);
+      rowNum++;
+      cells.forEach((it,i)=>{
+        const bytes = dataUrlToBytes(photoStore[it.id]);
+        const {w,h} = jpegSize(bytes);
+        const scale = Math.min(boxW/w, boxH/h);
+        const cx = Math.round(w*scale)*EMU, cy = Math.round(h*scale)*EMU;
+        imgCount++;
+        const fname = `image${imgCount}.jpeg`;
+        media.push({name:`xl/media/${fname}`, bytes});
+        const rid = `rId${anchors.length+1}`;
+        drawRels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${fname}"/>`);
+        anchors.push(
+          `<xdr:oneCellAnchor>`+
+          `<xdr:from><xdr:col>${i}</xdr:col><xdr:colOff>${padX*EMU}</xdr:colOff><xdr:row>${photoRow0}</xdr:row><xdr:rowOff>${padY*EMU}</xdr:rowOff></xdr:from>`+
+          `<xdr:ext cx="${cx}" cy="${cy}"/>`+
+          `<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${anchors.length+2}" name="${fname}"/><xdr:cNvPicPr/></xdr:nvPicPr>`+
+          `<xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>`+
+          `<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>`+
+          `</xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`
+        );
+      });
+    }
+    const k = pg+1;
+    sheets.push({
+      name: '写真' + circledNum(k),
+      sheetXml:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+        '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>'+
+        '<cols><col min="1" max="3" width="52" customWidth="1"/></cols>'+
+        '<sheetData>'+rowsXml.join('')+'</sheetData>'+
+        '<printOptions horizontalCentered="1"/>'+
+        '<pageMargins left="0.4" right="0.4" top="0.4" bottom="0.4" header="0.2" footer="0.2"/>'+
+        '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="1"/>'+   // 1シート＝必ず1ページ
+        '<drawing r:id="rId1"/>'+
+        '</worksheet>',
+      sheetRelsXml:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+        `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${k}.xml"/>`+
+        '</Relationships>',
+      drawingXml:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+        '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'+
+        anchors.join('')+'</xdr:wsDr>',
+      drawingRelsXml:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'+
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+        drawRels.join('')+'</Relationships>',
+    });
+  }
+  return {sheets, media};
 }
 
 // メイン: 提出用Excel出力
@@ -4433,7 +4464,8 @@ function exportReportXLSX(){
   const sheetWardSumXML  = sheetXML(wsRows, widthsWS);
   const sheetWardListXML = sheetXML(wlRows, widthsWL, {merges:wlMerges});
   const sheetCrossXML = sheetXML(crossRows, widthsCross);
-  const photoSheet = buildPhotoSheet(recs);
+  const photoSheet = buildPhotoSheets(recs);
+  const photoPages = photoSheet ? photoSheet.sheets : [];
 
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -4448,7 +4480,7 @@ function exportReportXLSX(){
 <Override PartName="/xl/worksheets/sheet8.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/worksheets/sheet9.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ''}
+${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/>' : ''}${photoPages.map((p,i)=>`<Override PartName="/xl/worksheets/sheet${100+i}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/drawings/drawing${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`).join('')}
 </Types>`;
 
   const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -4466,7 +4498,7 @@ ${photoSheet ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override Pa
 <sheet name="ベッド明細" sheetId="6" r:id="rId7"/>
 <sheet name="病棟別一覧" sheetId="8" r:id="rId9"/>
 <sheet name="買い替え提案" sheetId="3" r:id="rId3"/>
-${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
+${photoPages.map((p,i)=>`<sheet name="${p.name}" sheetId="${100+i}" r:id="rId${100+i}"/>`).join('')}
 </sheets>
 </workbook>`;
 
@@ -4480,7 +4512,7 @@ ${photoSheet ? '<sheet name="写真" sheetId="4" r:id="rId5"/>' : ''}
 <Relationship Id="rId8" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet7.xml"/>
 <Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet8.xml"/>
 <Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet9.xml"/>
-${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/>' : ''}
+${photoPages.map((p,i)=>`<Relationship Id="rId${100+i}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${100+i}.xml"/>`).join('')}
 </Relationships>`;
 
   const files = [
@@ -4496,13 +4528,13 @@ ${photoSheet ? '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/
     {name:'xl/worksheets/sheet7.xml', bytes:utf8Bytes(sheetWardSumXML)},
     {name:'xl/worksheets/sheet8.xml', bytes:utf8Bytes(sheetWardListXML)},
     {name:'xl/worksheets/sheet9.xml', bytes:utf8Bytes(sheetCrossXML)},
-    ...(photoSheet ? [
-      {name:'xl/worksheets/sheet4.xml', bytes:utf8Bytes(photoSheet.sheetXml)},
-      {name:'xl/worksheets/_rels/sheet4.xml.rels', bytes:utf8Bytes(photoSheet.sheetRelsXml)},
-      {name:'xl/drawings/drawing1.xml', bytes:utf8Bytes(photoSheet.drawingXml)},
-      {name:'xl/drawings/_rels/drawing1.xml.rels', bytes:utf8Bytes(photoSheet.drawingRelsXml)},
-      ...photoSheet.media,
-    ] : []),
+    ...photoPages.flatMap((p,i)=>[
+      {name:`xl/worksheets/sheet${100+i}.xml`, bytes:utf8Bytes(p.sheetXml)},
+      {name:`xl/worksheets/_rels/sheet${100+i}.xml.rels`, bytes:utf8Bytes(p.sheetRelsXml)},
+      {name:`xl/drawings/drawing${i+1}.xml`, bytes:utf8Bytes(p.drawingXml)},
+      {name:`xl/drawings/_rels/drawing${i+1}.xml.rels`, bytes:utf8Bytes(p.drawingRelsXml)},
+    ]),
+    ...(photoSheet ? photoSheet.media : []),
   ];
 
   const zip = buildZip(files);
@@ -4681,6 +4713,7 @@ function updateEquipToggleLabel(){
   else lbl.textContent='見守り機器・TV を入力';
 }
 function renderPartsEditor(){
+  applyAcc();
   const c=document.getElementById('partsEditor');
   if(!st.parts.length){c.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">登録なし</div>';return;}
   c.innerHTML=st.parts.map((p,i)=>`
@@ -5434,7 +5467,25 @@ function partDragEnd(e){
   }
 }
 
+// 設定タブのリスト折りたたみ（初期は閉。開閉状態は端末ごとに記憶）
+const ACC_KEY='roundNoteAccOpen';
+function accState(){ try{ return JSON.parse(localStorage.getItem(ACC_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function applyAcc(){
+  const o=accState();
+  ['hospitals','models','parts'].forEach(k=>{
+    const c=document.getElementById('acc-'+k); if(!c) return;
+    c.classList.toggle('open', !!o[k]);
+    const t=c.querySelector('.card-title'); if(t) t.setAttribute('aria-expanded', o[k]?'true':'false');
+    const n=document.getElementById('acc-n-'+k); if(n) n.textContent=(st[k]||[]).length+'件';
+  });
+}
+function toggleAcc(k){
+  const o=accState(); o[k]=!o[k];
+  try{ localStorage.setItem(ACC_KEY, JSON.stringify(o)); }catch(e){}
+  applyAcc();
+}
 function renderHospitalsEditor(){
+  applyAcc();
   const c=document.getElementById('hospitalsEditor');
   if(!st.hospitals.length){c.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">登録なし</div>';return;}
   c.innerHTML=st.hospitals.map((h,i)=>`
@@ -5567,6 +5618,7 @@ function confirmAddModel(){
   showToast(`型番「${v}」を登録しました`);
 }
 function renderModelsEditor(){
+  applyAcc();
   const c=document.getElementById('modelsEditor');
   if(!st.models.length){c.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">登録なし</div>';return;}
   c.innerHTML=st.models.map((m,i)=>`
@@ -5774,11 +5826,19 @@ function applyRoundMerge(data){
 const QR_BED_MARK = 'BD';
 let qrStream = null, qrTimer = 0, qrCanvas = null, qrHwZoom = false, qrTickNo = 0;
 
-function qrToBedNo(raw){
-  // 全角英数字→半角、前後空白・改行を除去
-  const s = String(raw==null?'':raw)
-    .replace(/[０-９Ａ-Ｚａ-ｚ]/g, ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0))
+// 読み取り先（どの入力欄に入れるか）。ベッドNoだけ「BD以降」の切り出しをする
+const QR_TARGETS = {
+  bed:   {id:'inp-bed',    label:'ベッドNo', conv:r=>qrToBedNo(r)},
+};
+let qrTarget = 'bed';
+// 全角英数字→半角、前後空白・改行を除去
+function qrClean(raw){
+  return String(raw==null?'':raw)
+    .replace(/[０-９Ａ-Ｚａ-ｚ－]/g, ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0))
     .replace(/[\r\n\t]+/g,' ').trim();
+}
+function qrToBedNo(raw){
+  const s = qrClean(raw);
   const i = s.toUpperCase().indexOf(QR_BED_MARK);
   return i >= 0 ? s.slice(i) : s;
 }
@@ -5792,7 +5852,9 @@ function qrDecode(imageData, both){
   }catch(e){ return null; }
 }
 
-async function openQrScan(){
+async function openQrScan(target){
+  qrTarget = QR_TARGETS[target] ? target : 'bed';
+  const hint = document.getElementById('qrHint'); if(hint) hint.textContent = QR_TARGETS[qrTarget].label;
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   const ov = document.getElementById('qrOverlay');
   ov.classList.add('show');
@@ -5864,14 +5926,15 @@ function closeQrScan(){
 }
 
 function applyQrResult(raw){
-  const val = qrToBedNo(raw);
+  const T = QR_TARGETS[qrTarget] || QR_TARGETS.bed;
+  const val = T.conv(raw);
   closeQrScan();
   if(!val){ showToast('⚠️ QRの中身が空でした','warn'); return; }
-  const el = document.getElementById('inp-bed');
+  const el = document.getElementById(T.id);
   el.value = val;
   el.dispatchEvent(new Event('input'));   // 下書き保存・保存ボタン状態を通常経路で更新
   if(navigator.vibrate) navigator.vibrate(30);
-  showToast('▣ ベッドNo：' + val);
+  showToast('▣ ' + T.label + '：' + val);
 }
 
 // 写真1枚からQRを探す：全体 → 中央拡大 → 画面を分割して総当たり
